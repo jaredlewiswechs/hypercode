@@ -10,9 +10,9 @@ kind Task
 
   on status
     if me.done
-      show [x] .me.title
+      show DONE .me.title
     else
-      show [ ] .me.title
+      show TODO .me.title
     end
   end
 end
@@ -28,7 +28,7 @@ put list t1, t2, t3, t4 into tasks
 send finish to t1
 send finish to t3
 
-show To-Do List
+show Task List
 for each t in tasks
   send status to t
 end

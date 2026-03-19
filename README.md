@@ -435,8 +435,8 @@ command double n
 end
 
 test double works
-  put double into result
-  check result == 0
+  put double 5 into result
+  check result == 10
 end
 
 test lists have correct count
@@ -570,9 +570,12 @@ show Lowest: (.scores.min)
 put scores where it >= 70 into passing
 put scores where it < 70 into failing
 
-show Passing: .passing
-show Failing: .failing
+show Passing scores: .passing
+show Failing scores: .failing
 show Pass rate: (.passing.count) out of (.scores.count)
+
+put scores each it / 2 into halved
+show Halved: .halved
 
 sort scores
 show Sorted: .scores
@@ -595,6 +598,7 @@ Lowest 45
 Passing scores 92, 87, 78, 95, 88, 71, 100
 Failing scores 45, 63, 55
 Pass rate 7 out of 10
+Halved 46, 43.5, 22.5, 39, 47.5, 31.5, 44, 35.5, 27.5, 50
 Sorted 45, 55, 63, 71, 78, 87, 88, 92, 95, 100
 Descending 100, 95, 92, 88, 87, 78, 71, 63, 55, 45
 Someone got a perfect score!
@@ -638,6 +642,7 @@ make a Bird called tweety with name Tweety
 
 put list rex, luna, tweety into animals
 
+show Zoo Roll Call
 for each a in animals
   send speak to a
   send describe to a
@@ -651,6 +656,7 @@ show Luna already knows (.luna.tricks) tricks
 Output:
 
 ```
+Zoo Roll Call
 Rex says Woof
 Rex has 4 legs
 Luna says Woof
@@ -675,9 +681,9 @@ kind Task
 
   on status
     if me.done
-      show [x] .me.title
+      show DONE .me.title
     else
-      show [ ] .me.title
+      show TODO .me.title
     end
   end
 end
@@ -692,6 +698,7 @@ put list t1, t2, t3, t4 into tasks
 send finish to t1
 send finish to t3
 
+show Task List
 for each t in tasks
   send status to t
 end
@@ -706,10 +713,11 @@ show Remaining: (.remaining.count)
 Output:
 
 ```
-[x] Buy groceries
-[ ] Walk the dog
-[x] Write HyperCode
-[ ] Do homework
+Task List
+DONE Buy groceries
+TODO Walk the dog
+DONE Write HyperCode
+TODO Do homework
 Completed 2
 Remaining 2
 ```
@@ -794,14 +802,32 @@ catch err
 end
 
 show Program continues running after errors!
+
+try
+  show Starting risky operation...
+  try
+    make a Ghost called casper
+  or
+    show Inner catch: Ghost kind does not exist either
+  end
+  show Outer block continues
+or
+  show This won't run because inner try handled it
+end
+
+show All done!
 ```
 
 Output:
 
 ```
-Caught an error! Unicorn kind doesn t exist.
+Caught an error! Unicorn kind does not exist.
 Error caught Cannot send message to non-instance: nothing
 Program continues running after errors!
+Starting risky operation...
+Inner catch Ghost kind does not exist either
+Outer block continues
+All done!
 ```
 
 ### Interactive Quiz
@@ -872,8 +898,8 @@ show .x
 
 const lexer = new Lexer(source);
 const tokens = lexer.tokenize();
-const parser = new Parser(tokens);
-const program = parser.parse();
+const parser = new Parser();
+const program = parser.parse(tokens);
 
 const interpreter = new Interpreter({
   output: (text) => console.log(text),

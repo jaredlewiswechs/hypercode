@@ -9,9 +9,9 @@ kind Student
 
   on report
     if send passing to me
-      show .me.name: .me.grade — passing
+      show .me.name scored .me.grade and is passing
     else
-      show .me.name: .me.grade — needs help
+      show .me.name scored .me.grade and needs help
     end
   end
 end
@@ -22,10 +22,10 @@ make a Student called charlie with name Charlie, grade 82
 
 put list alice, bob, charlie into students
 
-show === Class Report ===
+show Class Report
 for each s in students
   send report to s
 end
 
 put students where send passing to it into passing
-show Passing: (.passing.count) out of (.students.count)
+show (.passing.count) out of (.students.count) students passing

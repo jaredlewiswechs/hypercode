@@ -317,7 +317,7 @@ make a Student called charlie with name Charlie, grade 82
 
 put list alice, bob, charlie into students
 
-show === Class Report ===
+show Class Report
 for each s in students
   send report to s
 end
@@ -339,7 +339,7 @@ kind Question
       show Correct!
       return true
     else
-      show Wrong! The answer was .me.answer
+      show Wrong. The answer was .me.answer
       return false
     end
   end
@@ -363,7 +363,6 @@ for each q in questions
   end
 end
 
-show
 show You got .score out of .total`,
     };
 

@@ -27,10 +27,6 @@ end
 kind Bird from Animal
   sound is Tweet
   legs is 2
-
-  on fly
-    show .me.name is flying!
-  end
 end
 
 make a Dog called rex with name Rex

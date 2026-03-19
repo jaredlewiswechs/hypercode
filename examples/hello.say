@@ -1,0 +1,3 @@
+-- hello.say
+put ask What is your name into name
+show Hello .name, welcome to HyperCode!

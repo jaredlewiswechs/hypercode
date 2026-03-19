@@ -1,0 +1,35 @@
+-- quiz.say
+kind Question
+  text is Empty
+  answer is Empty
+
+  on check guess
+    if guess == me.answer
+      show Correct!
+      return true
+    else
+      show Wrong. The answer was .me.answer
+      return false
+    end
+  end
+end
+
+put 0 into score
+put 0 into total
+
+put list into questions
+  make a Question with text What planet is closest to the sun, answer Mercury
+  make a Question with text What language is this, answer HyperCode
+  make a Question with text How many legs does a spider have, answer 8
+end
+
+for each q in questions
+  ask .q.text
+  put it into guess
+  put total + 1 into total
+  if send check guess to q
+    put score + 1 into score
+  end
+end
+
+show You got .score out of .total

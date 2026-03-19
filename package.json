@@ -1,0 +1,28 @@
+{
+  "name": "hypercode",
+  "version": "1.0.0",
+  "description": "HyperCode (Say) language interpreter",
+  "main": "dist/index.js",
+  "bin": {
+    "say": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/cli.js",
+    "repl": "node dist/cli.js repl"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:35903/git/jaredlewiswechs/hypercode"
+  },
+  "keywords": ["language", "interpreter", "hypercode", "say"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

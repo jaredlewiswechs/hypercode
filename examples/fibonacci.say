@@ -1,0 +1,20 @@
+-- fibonacci.say — Generate the Fibonacci sequence
+put 0 into a
+put 1 into b
+put list a, b into fibs
+
+repeat 13 times
+  put a + b into temp
+  put b into a
+  put temp into b
+  add b to fibs
+end
+
+show Fibonacci sequence:
+for each n in fibs
+  show .n
+end
+
+show Sum: (.fibs.sum)
+show Count: (.fibs.count)
+show Max: (.fibs.max)

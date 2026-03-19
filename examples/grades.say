@@ -1,0 +1,29 @@
+-- grades.say — List operations and filtering
+
+put list 92, 87, 45, 78, 95, 63, 88, 71, 55, 100 into scores
+
+show All scores: .scores
+show Average: (.scores.average)
+show Highest: (.scores.max)
+show Lowest: (.scores.min)
+
+put scores where it >= 70 into passing
+put scores where it < 70 into failing
+
+show Passing scores: .passing
+show Failing scores: .failing
+show Pass rate: (.passing.count) out of (.scores.count)
+
+-- Double each score (as percentages of 50)
+put scores each it / 2 into halved
+show Halved: .halved
+
+sort scores
+show Sorted: .scores
+
+reverse scores
+show Descending: .scores
+
+if scores contains 100
+  show Someone got a perfect score!
+end

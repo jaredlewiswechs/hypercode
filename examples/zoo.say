@@ -1,0 +1,50 @@
+-- zoo.say — Inheritance with kinds
+
+kind Animal
+  name is Unknown
+  sound is ...
+  legs is 4
+
+  on speak
+    show .me.name says .me.sound
+  end
+
+  on describe
+    show .me.name has .me.legs legs
+  end
+end
+
+kind Dog from Animal
+  sound is Woof
+  tricks is 0
+
+  on learn
+    put me.tricks + 1 into me.tricks
+    show .me.name learned trick number .me.tricks
+  end
+end
+
+kind Bird from Animal
+  sound is Tweet
+  legs is 2
+
+  on fly
+    show .me.name is flying!
+  end
+end
+
+make a Dog called rex with name Rex
+make a Dog called luna with name Luna, tricks 3
+make a Bird called tweety with name Tweety
+
+put list rex, luna, tweety into animals
+
+show Zoo Roll Call
+for each a in animals
+  send speak to a
+  send describe to a
+end
+
+send learn to rex
+send learn to rex
+show Luna already knows (.luna.tricks) tricks

@@ -1,0 +1,32 @@
+-- string_fun.say — Working with text and string methods
+
+put hello world into greeting
+show Original: .greeting
+show Upper: (.greeting.upper)
+show Lower: (.greeting.lower)
+show Length: (.greeting.length)
+
+-- Build a sentence with interpolation
+put HyperCode into lang
+put fun into mood
+put 2026 into year
+show .lang is .mood in .year!
+
+-- Counting with loops
+put 0 into total
+for each i in 1 to 10
+  put total + i into total
+end
+show Sum of 1 to 10 = .total
+
+-- Nested conditions
+put 85 into score
+if score >= 90
+  show Grade: A
+else if score >= 80
+  show Grade: B
+else if score >= 70
+  show Grade: C
+else
+  show Grade: F
+end

@@ -1,0 +1,24 @@
+-- guessing_game.say — Number guessing with loops and conditions
+
+put 7 into secret
+put 0 into attempts
+
+show I'm thinking of a number between 1 and 10...
+
+repeat 5 times
+  put attempts + 1 into attempts
+  put ask Guess the number into guess
+
+  if guess == secret
+    show You got it in .attempts tries!
+    stop
+  end
+
+  if guess < secret
+    show Too low! Try again.
+  else
+    show Too high! Try again.
+  end
+end
+
+show The number was .secret

@@ -1,0 +1,33 @@
+-- error_handling.say — Try/catch patterns
+
+-- Basic try/or
+try
+  make a Unicorn called sparkle
+or
+  show Caught an error! Unicorn kind doesn't exist.
+end
+
+-- Try/catch with error variable
+try
+  put nothing into x
+  send fly to x
+catch err
+  show Error caught: (.err.message)
+end
+
+show Program continues running after errors!
+
+-- Nested error handling
+try
+  show Starting risky operation...
+  try
+    make a Ghost called casper
+  or
+    show Inner catch: Ghost kind doesn't exist either
+  end
+  show Outer block continues
+or
+  show This won't run because inner try handled it
+end
+
+show All done!

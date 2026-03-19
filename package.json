@@ -8,6 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:web": "esbuild src/index.ts --bundle --format=iife --global-name=HyperCode --outfile=web/say.js --target=es2020",
+    "serve": "node web/serve.js",
+    "ide": "npm run build:web && npm run serve",
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node dist/cli.js",
@@ -17,11 +20,17 @@
     "type": "git",
     "url": "http://local_proxy@127.0.0.1:35903/git/jaredlewiswechs/hypercode"
   },
-  "keywords": ["language", "interpreter", "hypercode", "say"],
+  "keywords": [
+    "language",
+    "interpreter",
+    "hypercode",
+    "say"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "esbuild": "^0.27.4",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"
   }

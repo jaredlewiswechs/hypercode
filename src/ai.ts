@@ -18,7 +18,7 @@ export class AIEngine {
   private available: boolean;
 
   constructor(options: AIOptions = {}) {
-    this.apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY || '';
+    this.apiKey = options.apiKey || (typeof process !== 'undefined' && process.env?.ANTHROPIC_API_KEY) || '';
     this.model = options.model || 'claude-sonnet-4-20250514';
     this.maxTokens = options.maxTokens || 1024;
     this.available = this.apiKey.length > 0;

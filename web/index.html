@@ -510,7 +510,7 @@ show Hello, World!
                 'into': { token: 'keyword', next: '@pop' },
                 'list': { token: 'type', next: '@pop' },
                 'map': { token: 'type', next: '@pop' },
-                'ask': { token: 'keyword', next: '@pop' },
+                'ask': { token: 'keyword', next: '@showLine' },
                 'pair': { token: 'keyword.connector', next: '@pop' },
                 'unique': { token: 'keyword.connector', next: '@pop' },
                 '@atoms': 'constant',

@@ -69,7 +69,11 @@ Use `put` when you have a plain value. Use `set` when you need math, function ca
 | Boolean | `true`, `false` | |
 | Nothing | `nothing` | Null value |
 | List | `list 1, 2, 3` | Ordered collection |
-| Map | `map` | Key-value dictionary |
+| Map | `map`, `map name: "Alice"` | Key-value dictionary |
+| Pair | `pair 1 and 2` | Two-element tuple |
+| Set | `unique 1, 2, 3` | Collection with no duplicates |
+| Enum | `enum Color is red, green, blue` | Named set of constants |
+| Lambda | `{ x -> x * 2 }` | Anonymous function |
 
 ### Strings
 
@@ -81,11 +85,36 @@ set name to "Alice"
 set message to "She said \"hello\""
 ```
 
+**String interpolation** with `{variable}` inside quoted strings:
+
+```say
+set name to "World"
+set msg to "Hello {name}!"
+show .msg
+-- Shows: Hello World!
+```
+
+**Triple-quoted strings** for multiline text:
+
+```say
+set poem to """roses are red
+violets are blue"""
+show .poem
+```
+
 **String concatenation** with `+`:
 
 ```say
 set full to first + " " + last
 show (.full)
+```
+
+**Regex matching** with `matches`:
+
+```say
+set valid to "hello123" matches "[a-z]+[0-9]+"
+show .valid
+-- Shows: true
 ```
 
 **String properties:**
@@ -191,6 +220,15 @@ set short to pi rounded to 2    -- 3.14
 show Pi is approximately (pi rounded to 3)
 ```
 
+Use `format` for explicit formatting:
+
+```say
+set x to 3.14159
+set result to x format 2 places
+show .result
+-- Shows: 3.14
+```
+
 ### Comparison
 
 Symbolic and English-style comparisons are both supported.
@@ -233,7 +271,7 @@ if x is not a boolean
 end
 ```
 
-Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`.
+Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`, `pair`, `set`, `enum`, `lambda`.
 
 ### Logic
 
@@ -285,6 +323,19 @@ is Sunday
   show Weekend!
 else
   show Regular day
+end
+```
+
+**Or fallthrough** — match multiple values in a single case:
+
+```say
+set x to 2
+
+when x
+  is 1 or 2
+    show one or two
+  is 3
+    show three
 end
 ```
 
@@ -356,6 +407,27 @@ end
 ```say
 for each i in 1 to 10
   show .i
+end
+```
+
+**Step value** — skip items in a range:
+
+```say
+for each i in 1 to 10 by 3
+  show .i
+end
+-- Shows: 1, 4, 7, 10
+```
+
+**Labeled loops** — break from outer loops:
+
+```say
+repeat 5 times as outer
+  repeat 5 times as inner
+    if something
+      stop outer
+    end
+  end
 end
 ```
 
@@ -456,6 +528,89 @@ end
 remove "age" from data
 ```
 
+### Pairs
+
+A pair holds exactly two values:
+
+```say
+set p to pair "hello" and "world"
+show .p           -- (hello, world)
+show .p.first     -- hello
+show .p.second    -- world
+```
+
+### Sets
+
+Sets are collections with no duplicate values. Create them with `unique`:
+
+```say
+set s to unique 1, 2, 3, 2, 1
+show .s.count     -- 3 (duplicates removed)
+```
+
+**Set properties:**
+
+| Property | Description |
+|----------|-------------|
+| `.count` | Number of unique items |
+| `.list` | Convert to a list |
+
+```say
+if s contains 2
+  show found
+end
+
+for each item in s
+  show .item
+end
+```
+
+### Enums
+
+Declare named constants with `enum`:
+
+```say
+enum Color is red, green, blue
+show .color
+-- Shows: [Enum Color: red, green, blue]
+```
+
+### Map Literals with Entries
+
+Create maps with initial key-value pairs inline:
+
+```say
+set m to map name: "Alice", age: 25
+show .m.name   -- Alice
+show .m.age    -- 25
+```
+
+### Destructuring
+
+Unpack lists and pairs into individual variables:
+
+```say
+set data to list 10, 20, 30
+set a, b, c from data
+show .a   -- 10
+show .b   -- 20
+show .c   -- 30
+
+set p to pair "x" and "y"
+set first, second from p
+```
+
+### Exists Check
+
+Check if a variable has been defined:
+
+```say
+set x to 5
+if x exists
+  show x is defined
+end
+```
+
 ### Kinds (Classes)
 
 Define object types with `kind`. Fields use `is` for default values. Methods use `on`.
@@ -509,6 +664,58 @@ send speak to rex
 send learn to rex
 ```
 
+### Contracts (Interfaces)
+
+Define a contract that kinds must implement:
+
+```say
+contract Describable
+  method describe
+end
+
+kind Dog implements Describable
+  name is "Rex"
+
+  on describe
+    show I am .me.name
+  end
+end
+
+make Dog called d
+send describe to d
+```
+
+### Secret (Private) Fields
+
+Mark fields as private with `secret`:
+
+```say
+kind Account
+  secret balance is 100
+
+  on getBalance
+    return me.balance
+  end
+end
+
+make Account called a
+set b to send getBalance to a
+show .b   -- 100
+-- Direct access from outside is prevented
+```
+
+### Static Methods
+
+Define methods on the kind itself, not on instances:
+
+```say
+kind MathHelper
+  static on double x
+    return x * 2
+  end
+end
+```
+
 ### Methods with Parameters
 
 `on` handlers accept parameters after the method name.
@@ -549,6 +756,132 @@ end
 
 set result to add 10 and 25
 show .result
+```
+
+### Guard Clause Returns
+
+Return early from a command based on a condition:
+
+```say
+command check x
+  return "small" if x < 10
+  return "big"
+end
+
+show (check 5)    -- small
+show (check 15)   -- big
+```
+
+### Type Annotations
+
+Add optional type annotations to command parameters:
+
+```say
+command add (a as number, b as number)
+  return a + b
+end
+show (add 3, 4)   -- 7
+```
+
+### Lambda Expressions
+
+Create anonymous functions with `{ params -> body }`:
+
+```say
+set double to { x -> x * 2 }
+show (double 5)   -- 10
+
+set factor to 3
+set mult to { x -> x * factor }
+show (mult 4)     -- 12
+```
+
+### Pipeline Operator
+
+Chain values through a series of functions with `|`:
+
+```say
+command double x
+  return x * 2
+end
+command add1 x
+  return x + 1
+end
+
+set result to 5 | double | add1
+show .result   -- 11
+```
+
+### Curry (Partial Application)
+
+Create a new function by fixing some arguments of an existing one:
+
+```say
+command add a, b
+  return a + b
+end
+
+set add5 to curry add 5
+show (add5 3)   -- 8
+```
+
+### Compose
+
+Combine two functions into one that applies them in sequence:
+
+```say
+set double to { x -> x * 2 }
+set inc to { x -> x + 1 }
+set doubleThenInc to compose double, inc
+show (doubleThenInc 3)   -- 7
+```
+
+### Templates
+
+Declare reusable code templates:
+
+```say
+template greeting name
+  show Hello .name
+end
+```
+
+### Environment Variables
+
+Read environment variables:
+
+```say
+set p to env "PATH"
+if p exists
+  show has path
+end
+```
+
+### Date and Time
+
+Access current date/time values:
+
+```say
+set y to current year
+set t to today
+show .y
+show .t
+```
+
+### JSON and CSV Parsing
+
+Parse data formats:
+
+```say
+-- Parse JSON
+set raw to "[1, 2, 3]"
+set data to json raw
+show .data.count   -- 3
+
+-- Parse CSV
+set csv_data to "name,age\nAlice,30"
+set rows to csv csv_data
+show .rows.count   -- 1 (data rows, first line is headers)
 ```
 
 ### File I/O
@@ -648,6 +981,68 @@ Output:
   PASS  lists have correct count
 
 2 passed, 0 failed, 2 total
+```
+
+### Mock Commands
+
+Replace commands with mock implementations in tests:
+
+```say
+command fetch_data
+  return "real data"
+end
+mock fetch_data returns "fake data"
+show (fetch_data)   -- fake data
+```
+
+### Benchmark
+
+Measure how long code takes to run:
+
+```say
+benchmark "sorting"
+  sort big_list
+end
+-- Shows: Benchmark "sorting": 12ms
+```
+
+### Snapshot Testing
+
+Save and verify values against snapshots:
+
+```say
+set x to 42
+snapshot x as "my_value"
+```
+
+### Turtle Graphics
+
+Draw with Logo-style turtle commands:
+
+```say
+forward 100
+turn right 90
+forward 50
+pen up
+forward 20
+pen down
+forward 50
+```
+
+### Animation
+
+Animate properties over time:
+
+```say
+animate ball.x from 0 to 100 over 500
+```
+
+### Scene Switching
+
+Switch between scenes in games/apps:
+
+```say
+switch scene "menu"
 ```
 
 ### Inspect and Explain
@@ -753,6 +1148,49 @@ end
 route GET "/about"
   respond with "<h1>About</h1><p>Made with HyperCode.</p>"
 end
+```
+
+### WebSocket Connections
+
+Connect to WebSocket servers:
+
+```say
+connect "ws://localhost:8080" as ws
+```
+
+### Emit Events
+
+Emit events to listeners:
+
+```say
+emit "click"
+emit "message" with "hello"
+```
+
+### Cookies
+
+Manage browser cookies:
+
+```say
+cookie set "user" to "Alice"
+show .cookie_user         -- Alice
+cookie delete "user"
+```
+
+### CORS (Cross-Origin)
+
+Allow cross-origin requests:
+
+```say
+allow "https://example.com"
+```
+
+### Streaming
+
+Start a data stream:
+
+```say
+stream "heartbeat"
 ```
 
 ### Persistent Storage (`remember` / `recall`)
@@ -1014,7 +1452,11 @@ npm test
 |---------|-------|-------------|
 | `kind` | `kind NAME ... end` | Define a class |
 | `from` | `kind Child from Parent` | Inherit from a parent kind |
+| `implements` | `kind X implements Y` | Implement a contract |
+| `contract` | `contract NAME ... end` | Define an interface |
 | `on` | `on METHOD ... end` | Define a method |
+| `static on` | `static on METHOD ... end` | Define a static method |
+| `secret` | `secret field is val` | Declare a private field |
 | `command` | `command NAME PARAMS ... end` | Define a function |
 | `return` | `return VALUE` | Return a value |
 | `end` | `end` | Close any block |
@@ -1022,6 +1464,7 @@ npm test
 | `it` | `it` | Last input or current iteration item |
 | `with` | `make a X called Y with ...` | Set properties inline |
 | `use` | `use "file.say"` | Import another file |
+| `template` | `template NAME PARAMS ... end` | Declare a reusable template |
 
 ### Control Flow
 
@@ -1031,20 +1474,28 @@ npm test
 | `else` | `else ... end` | Alternative branch |
 | `else if` | `else if COND ... end` | Chained conditional |
 | `when` | `when VALUE ... end` | Pattern matching |
+| `is ... or` | `is 1 or 2` | Match multiple values in when |
 | `repeat` | `repeat N times ... end` | Fixed loop |
 | `while` | `repeat while COND ... end` | Conditional loop |
 | `until` | `repeat until COND ... end` | Inverse conditional loop |
 | `forever` | `repeat forever ... end` | Infinite loop |
 | `for each` | `for each X in LIST ... end` | Iteration |
 | `to` | `1 to 10` | Range expression |
-| `stop` | `stop` | Break out of a loop |
+| `by` | `1 to 10 by 2` | Step value in range |
+| `as` | `repeat 5 times as label` | Label a loop |
+| `stop` | `stop` / `stop label` | Break out of a loop |
+| `\|` | `value \| fn1 \| fn2` | Pipeline operator |
+| `return ... if` | `return X if COND` | Guard clause return |
 
 ### Data
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `list` | `list 1, 2, 3` | Create a list |
-| `map` | `set x to map` | Create an empty map |
+| `map` | `map` / `map key: val` | Create a map (empty or with entries) |
+| `pair` | `pair A and B` | Create a two-element pair |
+| `unique` | `unique 1, 2, 3` | Create a set (no duplicates) |
+| `enum` | `enum Name is a, b, c` | Declare named constants |
 | `sort` | `sort LIST` | Sort in place |
 | `reverse` | `reverse LIST` | Reverse in place |
 | `shuffle` | `shuffle LIST` | Randomize order |
@@ -1053,6 +1504,17 @@ npm test
 | `each` | `LIST each TRANSFORM` | Map/transform items |
 | `random` | `random 1 to 6` | Generate random values |
 | `rounded` | `x rounded to 2` | Round to decimal places |
+| `format` | `x format 2 places` | Format to decimal places |
+| `set ... from` | `set a, b from list` | Destructure into variables |
+| `exists` | `if x exists` | Check if variable is defined |
+
+### Strings
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `matches` | `str matches "pattern"` | Regex match test |
+| `"""..."""` | `"""multiline"""` | Triple-quoted multiline string |
+| `"{var}"` | `"Hello {name}"` | Interpolated string |
 
 ### Type Checking
 
@@ -1061,13 +1523,18 @@ npm test
 | `is a` | `x is a number` | Check if value is a type |
 | `is not a` | `x is not a text` | Negated type check |
 
-### File I/O
+### File I/O & System
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `read` | `read "file.txt"` | Read file contents |
 | `write` | `write "file" with "text"` | Write to a file |
 | `append` | `append "file" with "text"` | Append to a file |
+| `env` | `env "PATH"` | Read environment variable |
+| `json` | `json raw_string` | Parse JSON string |
+| `csv` | `csv raw_string` | Parse CSV string |
+| `current year` | `current year` | Get current year |
+| `today` | `today` | Get today's date |
 
 ### Error Handling
 
@@ -1077,12 +1544,25 @@ npm test
 | `or` | `or ... end` | Catch block (no variable) |
 | `catch` | `catch VAR ... end` | Catch block with error |
 
+### Functional
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `{ -> }` | `{ x -> x * 2 }` | Lambda expression |
+| `curry` | `curry fn arg` | Partial application |
+| `compose` | `compose f, g` | Function composition |
+
 ### Testing
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `test` | `test NAME ... end` | Define a test block |
 | `check` | `check EXPRESSION` | Assert a condition is true |
+| `mock` | `mock fn returns val` | Mock a command |
+| `before` | `before ... end` | Setup block |
+| `after` | `after ... end` | Teardown block |
+| `benchmark` | `benchmark "name" ... end` | Measure execution time |
+| `snapshot` | `snapshot val as "name"` | Snapshot testing |
 
 ### AI
 
@@ -1103,6 +1583,11 @@ npm test
 | `serve` | `serve on port N` | Start a web server |
 | `route` | `route GET "/" ... end` | Define a route handler |
 | `respond` | `respond with "text"` | Send an HTTP response |
+| `connect` | `connect "ws://..." as name` | WebSocket connection |
+| `emit` | `emit "event"` | Emit an event |
+| `cookie` | `cookie set/delete "name"` | Manage cookies |
+| `allow` | `allow "origin"` | Set CORS origin |
+| `stream` | `stream "name"` | Start a data stream |
 
 ### Storage
 
@@ -1138,6 +1623,11 @@ npm test
 | `draw` | `draw circle at X, Y size N` | Draw a shape on the canvas |
 | `clear` | `clear canvas` | Clear the canvas |
 | `play` | `play sound NAME` | Play a sound |
+| `forward` | `forward 100` | Turtle: move forward |
+| `turn` | `turn right 90` | Turtle: turn direction |
+| `pen` | `pen up` / `pen down` | Turtle: lift/lower pen |
+| `animate` | `animate obj.prop from A to B over N` | Animate a property |
+| `switch scene` | `switch scene "menu"` | Switch to a scene |
 
 ### Debugging
 
@@ -1148,16 +1638,18 @@ npm test
 
 ## Operator Precedence (Highest to Lowest)
 
-1. Parentheses, literals, property access
+1. Parentheses, literals, property access, lambdas
 2. Unary (`-`, `not`)
 3. Exponent (`^`)
 4. Multiplication (`*`, `/`, `%`)
 5. Addition (`+`, `-`)
-6. Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`)
-7. `contains`
-8. `where`, `each`
-9. `and`
-10. `or`
+6. `format`, `matches`
+7. Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`)
+8. `contains`, `exists`
+9. `where`, `each`
+10. `and`
+11. `or`
+12. Pipeline (`|`)
 
 ## License
 

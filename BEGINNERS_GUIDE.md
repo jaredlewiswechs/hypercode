@@ -774,7 +774,191 @@ Use comments to:
 
 ---
 
-## Lesson 16: Drawing Pictures
+## Lesson 16: Pairs, Sets, and Enums
+
+HyperCode has extra data types beyond lists and maps.
+
+### Pairs
+
+A pair holds exactly two values:
+
+```say
+set p to pair "hello" and "world"
+show .p           -- (hello, world)
+show .p.first     -- hello
+show .p.second    -- world
+```
+
+You can unpack a pair into separate variables:
+
+```say
+set p to pair "x" and "y"
+set a, b from p
+show .a   -- x
+show .b   -- y
+```
+
+### Sets
+
+Sets are like lists but they automatically remove duplicates. Create them with `unique`:
+
+```say
+set s to unique 5, 3, 5, 1, 3
+show .s.count   -- 3 (only 5, 3, 1)
+```
+
+You can check membership and iterate just like lists:
+
+```say
+if s contains 3
+  show found it
+end
+
+for each item in s
+  show .item
+end
+```
+
+### Enums
+
+Enums define a fixed set of named values:
+
+```say
+enum Color is red, green, blue
+```
+
+**Try it yourself:** Create a pair for a student's name and grade, then unpack it and show both values.
+
+---
+
+## Lesson 17: Lambdas and Pipelines
+
+### Lambdas — Quick Functions
+
+Sometimes you need a tiny function that doesn't deserve a full `command` declaration. Use a lambda:
+
+```say
+set double to { x -> x * 2 }
+show (double 5)   -- 10
+```
+
+Lambdas remember the variables around them:
+
+```say
+set factor to 3
+set multiply to { x -> x * factor }
+show (multiply 4)   -- 12
+```
+
+### Pipelines — Chaining Functions
+
+The pipeline operator `|` passes a value through a chain of functions:
+
+```say
+command double x
+  return x * 2
+end
+command add1 x
+  return x + 1
+end
+
+set result to 5 | double | add1
+show .result   -- 11
+```
+
+This reads left-to-right: start with 5, double it (10), add 1 (11). Much easier to read than nested calls!
+
+Pipelines work with lambdas too:
+
+```say
+set double to { x -> x * 2 }
+set inc to { x -> x + 1 }
+set result to 3 | double | inc
+show .result   -- 7
+```
+
+**Try it yourself:** Create lambdas for `square` and `halve`, then use a pipeline to square 6 and halve the result.
+
+---
+
+## Lesson 18: String Superpowers
+
+### Interpolated Strings
+
+Put variables directly inside strings with curly braces:
+
+```say
+set name to "World"
+set msg to "Hello {name}!"
+show .msg   -- Hello World!
+```
+
+### Triple-Quoted Strings
+
+For text that spans multiple lines, wrap it in triple quotes:
+
+```say
+set poem to """Roses are red
+Violets are blue
+HyperCode is fun
+And so are you"""
+show .poem
+```
+
+### Pattern Matching with Regex
+
+Check if a string matches a pattern:
+
+```say
+set valid to "hello123" matches "[a-z]+[0-9]+"
+show .valid   -- true
+
+set digits_only to "hello" matches "^[0-9]+$"
+show .digits_only   -- false
+```
+
+### Formatting Numbers
+
+Format a number to specific decimal places:
+
+```say
+set pi to 3.14159
+set short to pi format 2 places
+show .short   -- 3.14
+```
+
+---
+
+## Lesson 19: Destructuring and Existence
+
+### Destructuring
+
+Unpack a list into individual variables in one line:
+
+```say
+set data to list 10, 20, 30
+set a, b, c from data
+show .a   -- 10
+show .b   -- 20
+show .c   -- 30
+```
+
+### Checking if Variables Exist
+
+Use `exists` to check if a variable has been defined:
+
+```say
+set x to 5
+if x exists
+  show x is defined
+end
+```
+
+This is useful when a variable might not have been set yet.
+
+---
+
+## Lesson 20: Drawing Pictures
 
 HyperCode can draw shapes! When you run a program with draw commands, it creates an SVG image file.
 
@@ -788,7 +972,7 @@ Shapes you can draw: `circle`, `rectangle`, `line`, `text`, `triangle`, `star`, 
 
 ---
 
-## Lesson 17: Remembering Things Between Runs
+## Lesson 21: Remembering Things Between Runs
 
 Normally, variables disappear when your program ends. Use `remember` to save values permanently:
 
@@ -811,7 +995,7 @@ forget "visit_count"
 
 ---
 
-## Lesson 18: Asking AI Questions
+## Lesson 22: Asking AI Questions
 
 If you have an AI API key set up, you can ask AI questions from your programs:
 
@@ -822,7 +1006,7 @@ show .answer
 
 ---
 
-## Lesson 19: The Browser Playground
+## Lesson 23: The Browser Playground
 
 You don't need to install anything to try HyperCode! Start the playground:
 
@@ -834,7 +1018,7 @@ Then open `http://localhost:3000` in your browser. You can write code, run it, a
 
 ---
 
-## Lesson 20: Running Tasks at the Same Time
+## Lesson 24: Running Tasks at the Same Time
 
 Use `do together` to run multiple blocks of code concurrently:
 
@@ -853,7 +1037,30 @@ show Both tasks done!
 
 ---
 
-## Lesson 21: Pattern Matching on Kinds
+## Lesson 25: Turtle Graphics
+
+Draw like the classic Logo language! Imagine a turtle on the screen holding a pen. You give it simple commands:
+
+```say
+forward 100        -- move forward 100 pixels
+turn right 90      -- turn 90 degrees to the right
+forward 50         -- move forward 50 pixels
+```
+
+You can lift the pen to move without drawing:
+
+```say
+pen up
+forward 50         -- moves but doesn't draw
+pen down
+forward 50         -- draws again
+```
+
+**Try it yourself:** Draw a square by going forward and turning right 4 times.
+
+---
+
+## Lesson 26: Pattern Matching on Kinds
 
 You can match objects by their type using `when ... is a`:
 
@@ -925,11 +1132,15 @@ end
 ```say
 repeat 10 times                  -- fixed count
 repeat 10 times with i           -- with counter
+repeat 5 times as label          -- labeled loop
 repeat while condition           -- while true
 repeat until condition           -- until true
 repeat forever                   -- infinite (use stop)
 for each item in list            -- iterate
 for each i in 1 to 10            -- range
+for each i in 1 to 10 by 2      -- range with step
+stop                             -- break loop
+stop label                       -- break labeled loop
 ```
 
 ### Lists
@@ -939,6 +1150,15 @@ add 4 to nums                   -- append
 remove 2 from nums              -- remove
 set big to nums where it > 2    -- filter
 set x2 to nums each it * 2     -- transform
+set a, b, c from nums           -- destructure
+```
+
+### Pairs & Sets
+```say
+set p to pair "a" and "b"       -- create pair
+show .p.first                    -- access first
+set s to unique 1, 2, 3, 2      -- create set (no dupes)
+show .s.count                    -- 3
 ```
 
 ### Commands
@@ -946,6 +1166,15 @@ set x2 to nums each it * 2     -- transform
 command add a and b
   return a + b
 end
+return "small" if x < 10        -- guard clause
+```
+
+### Lambdas & Pipelines
+```say
+set double to { x -> x * 2 }    -- lambda
+show (double 5)                  -- call it
+set result to 5 | double | inc  -- pipeline
+set add5 to curry add 5         -- partial application
 ```
 
 ### Kinds
@@ -960,11 +1189,24 @@ make a Person called p with name Alex
 send greet to p
 ```
 
+### Strings
+```say
+set msg to "Hello {name}!"      -- interpolation
+set s to """line 1
+line 2"""                        -- multiline
+set ok to "abc" matches "[a-z]+" -- regex
+set x to pi format 2 places     -- format number
+```
+
 ### Drawing
 ```say
 draw circle at 200, 200 size 50
 draw rectangle at 10, 10 size 100
 draw line from 0, 0 to 400, 400
+forward 100                      -- turtle graphics
+turn right 90                    -- turtle turn
+pen up                           -- lift pen
+pen down                         -- lower pen
 ```
 
 ### Storage
@@ -1032,11 +1274,17 @@ Here are some projects to try as you learn. They're listed from easiest to harde
 
 11. **Drawing Art** — Use `draw` commands to create a picture (house, face, flag, pattern). The SVG file is saved automatically.
 
-12. **Personal Website** — Use `serve` and `route` to build a multi-page website about yourself.
+12. **Turtle Art** — Use turtle graphics (`forward`, `turn`, `pen up/down`) to draw geometric patterns like spirals, stars, or fractals.
 
-13. **AI Study Helper** — Use `think` to build a study tool that explains topics, generates practice questions, or checks answers.
+13. **Personal Website** — Use `serve` and `route` to build a multi-page website about yourself.
 
-14. **Classroom Poll** — Use the classroom features to build a poll where students submit answers and the teacher sees results in real-time.
+14. **AI Study Helper** — Use `think` to build a study tool that explains topics, generates practice questions, or checks answers.
+
+15. **Data Pipeline** — Use lambdas and the pipeline operator to build a data processing pipeline that transforms, filters, and formats data.
+
+16. **Classroom Poll** — Use the classroom features to build a poll where students submit answers and the teacher sees results in real-time.
+
+17. **Card Game** — Use pairs to represent cards (pair "Hearts" and "Ace"), sets to track played cards, and enums for suits.
 
 ---
 
@@ -1059,15 +1307,19 @@ HyperCode is designed to remove the barriers that frustrate beginning programmer
 | 1 | Lessons 1-2 | Output, variables, `put` vs `set` |
 | 2 | Lessons 3-4 | Input, math, expressions |
 | 3 | Lesson 5 | Conditionals, comparisons, logic |
-| 4 | Lesson 6 | Loops: repeat, while, for each |
+| 4 | Lesson 6 | Loops: repeat, while, for each, labeled loops |
 | 5 | Lesson 7 | Lists, filtering, transforming |
 | 6 | Lesson 9 | Commands (functions), parameters, return |
 | 7 | Lesson 10 | Kinds (OOP), instances, methods |
 | 8 | Lessons 8, 11 | Maps, string operations |
 | 9 | Lessons 12-14 | Error handling, testing, file I/O |
-| 10 | Lessons 16-17 | Drawing, persistent storage |
-| 11 | Lessons 18-21 | AI, concurrency, pattern matching, web |
-| 12 | Projects | Student-chosen projects |
+| 10 | Lesson 15 | Comments |
+| 11 | Lessons 16-17 | Pairs, sets, enums, lambdas, pipelines |
+| 12 | Lessons 18-19 | String superpowers, destructuring |
+| 13 | Lessons 20-21 | Drawing, persistent storage |
+| 14 | Lesson 25 | Turtle graphics |
+| 15 | Lessons 22-26 | AI, playground, concurrency, pattern matching |
+| 16 | Projects | Student-chosen projects |
 
 ### Assessment Ideas
 

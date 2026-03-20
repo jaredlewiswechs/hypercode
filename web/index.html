@@ -423,9 +423,16 @@ show Hello, World!
       var atomSet = { 'true': true, 'false': true, 'nothing': true };
       var typeSet = { 'text': true, 'number': true, 'boolean': true, 'date': true, 'time': true };
 
+      // Keywords that start a text/template line (rest of line is plain text
+      // except for .dotInterpolation and (expressions))
+      var textLineKw = { 'show': true, 'ask': true };
+
       return {
-        startState: function() { return { inMultiComment: false, inTripleString: false }; },
+        startState: function() { return { inMultiComment: false, inTripleString: false, inTextLine: false, parenDepth: 0 }; },
         token: function(stream, state) {
+          // Reset text-line mode at the start of each line
+          if (stream.sol()) { state.inTextLine = false; state.parenDepth = 0; }
+
           // Multi-line comment
           if (state.inMultiComment) {
             if (stream.match('---')) { state.inMultiComment = false; return 'comment'; }
@@ -464,8 +471,29 @@ show Hello, World!
             }
             return 'string';
           }
-          // Dot-interpolation (.varName)
+          // Dot-interpolation (.varName) — always highlighted, even in text lines
           if (stream.match(/^\.[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)*/)) return 'variable-2';
+
+          // Inside a text-line (show/ask): treat most tokens as plain text
+          if (state.inTextLine && state.parenDepth === 0) {
+            // Opening paren starts an expression
+            if (stream.peek() === '(') {
+              stream.next();
+              state.parenDepth = 1;
+              return 'bracket';
+            }
+            // Everything else on the line is plain text
+            if (stream.match(/^[^\s.(]+/)) return 'variable';
+            stream.next();
+            return 'variable';
+          }
+
+          // Inside parenthesized expression within a text-line — highlight normally
+          if (state.inTextLine && state.parenDepth > 0) {
+            if (stream.peek() === '(') { stream.next(); state.parenDepth++; return 'bracket'; }
+            if (stream.peek() === ')') { stream.next(); state.parenDepth--; return 'bracket'; }
+          }
+
           // Pipeline operator
           if (stream.match('|>') || stream.match('|')) return 'operator';
           // Arrow
@@ -477,7 +505,11 @@ show Hello, World!
             var w = stream.current().toLowerCase();
             if (atomSet[w]) return 'atom';
             if (typeSet[w]) return 'builtin';
-            if (kwSet[w]) return 'keyword';
+            if (kwSet[w]) {
+              // If this keyword starts a text line, flag the state
+              if (textLineKw[w]) state.inTextLine = true;
+              return 'keyword';
+            }
             // Capitalized = type/class name
             var first = stream.current()[0];
             if (first === first.toUpperCase() && first !== first.toLowerCase()) return 'def';

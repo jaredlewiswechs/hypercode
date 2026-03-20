@@ -1,6 +1,6 @@
 # HyperCode (Say)
 
-An English-like programming language designed to be readable, intuitive, and fun. HyperCode uses natural language keywords — you `put` values `into` variables, `show` output, `ask` for input, define `kind`s (classes), and `send` messages to objects.
+An English-like programming language designed to be readable, intuitive, and fun. HyperCode uses natural language keywords — you `put` text `into` variables, `set` variables `to` expressions, `show` output, `ask` for input, define `kind`s (classes), and `send` messages to objects.
 
 Files use the `.say` extension and run with the `say` CLI.
 
@@ -40,24 +40,72 @@ show Hello .name, welcome to HyperCode!
 
 ### Variables
 
-Use `put VALUE into NAME` to store values. Variable names are plain identifiers.
+HyperCode has two ways to store values:
+
+- **`put VALUE into NAME`** — stores literal text or numbers as-is (no math evaluation)
+- **`set NAME to EXPRESSION`** — evaluates an expression and stores the result
 
 ```say
+-- put is for literal values
 put 42 into age
 put Hello World into greeting
 put true into active
 put nothing into empty
+
+-- set is for expressions and computed values
+set total to price * quantity
+set doubled to n * 2
+set result to add 5 and 3
 ```
+
+Use `put` when you have a plain value. Use `set` when you need math, function calls, or any computation.
 
 ### Data Types
 
 | Type | Examples | Notes |
 |------|----------|-------|
 | Number | `42`, `3.14`, `-5` | Integers and decimals |
-| Text | `Hello`, `Some words` | Unquoted strings |
+| Text | `Hello`, `"with spaces"` | Unquoted or quoted strings |
 | Boolean | `true`, `false` | |
 | Nothing | `nothing` | Null value |
 | List | `list 1, 2, 3` | Ordered collection |
+| Map | `map` | Key-value dictionary |
+
+### Strings
+
+Strings can be unquoted (in `put` and `show`) or quoted with double quotes (in `set` and expressions).
+
+```say
+put Hello World into greeting
+set name to "Alice"
+set message to "She said \"hello\""
+```
+
+**String concatenation** with `+`:
+
+```say
+set full to first + " " + last
+show (.full)
+```
+
+**String properties:**
+
+```say
+put hello world into text
+show (.text.upper)       -- HELLO WORLD
+show (.text.lower)       -- hello world
+show (.text.length)      -- 11
+show (.text.trim)        -- hello world
+show (.text.first)       -- h
+show (.text.last)        -- d
+```
+
+**String indexing:**
+
+```say
+set letter to text.at 3       -- l (1-based)
+set part to text.from 1 to 5  -- hello
+```
 
 ### Output
 
@@ -97,13 +145,50 @@ multi-line comment
 ### Arithmetic
 
 ```say
-put 10 + 3 into sum        -- 13
-put 10 - 3 into diff       -- 7
-put 10 * 3 into product    -- 30
-put 10 / 3 into quotient   -- 3.333...
-put 10 % 3 into remainder  -- 1
-put 2 ^ 8 into power       -- 256
-put (3 + 4) * 2 into grouped -- 14
+set sum to 10 + 3          -- 13
+set diff to 10 - 3         -- 7
+set product to 10 * 3      -- 30
+set quotient to 10 / 3     -- 3.333...
+set remainder to 10 % 3    -- 1
+set power to 2 ^ 8         -- 256
+set grouped to (3 + 4) * 2 -- 14
+```
+
+### Math Builtins
+
+Access math functions through the `math` module:
+
+```say
+set x to math.round 3.7      -- 4
+set x to math.floor 3.7      -- 3
+set x to math.ceil 3.2       -- 4
+set x to math.abs (-5)       -- 5
+set x to math.sqrt 16        -- 4
+```
+
+### Random
+
+Generate random values:
+
+```say
+-- Random integer in a range (inclusive)
+set roll to random 1 to 6
+
+-- Random pick from a list
+set color to random pick from colors
+
+-- Random decimal between 0 and 1
+set chance to random float
+```
+
+### Formatted Numbers
+
+Round numbers to a specific number of decimal places:
+
+```say
+set pi to 3.14159
+set short to pi rounded to 2    -- 3.14
+show Pi is approximately (pi rounded to 3)
 ```
 
 ### Comparison
@@ -125,6 +210,30 @@ if x is not 10 ... end
 if x is greater than 10 ... end
 if x is less than 10 ... end
 ```
+
+### Type Checking
+
+Check the type of a value at runtime:
+
+```say
+if x is a number
+  show x is a number
+end
+
+if name is a text
+  show name is text
+end
+
+if items is a list
+  show items is a list
+end
+
+if x is not a boolean
+  show x is not a boolean
+end
+```
+
+Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`.
 
 ### Logic
 
@@ -158,6 +267,27 @@ else
 end
 ```
 
+### When Blocks (Pattern Matching)
+
+Match a value against multiple cases:
+
+```say
+set day to "Monday"
+
+when day
+is Monday
+  show Start of the work week
+is Friday
+  show Almost the weekend!
+is Saturday
+  show Weekend!
+is Sunday
+  show Weekend!
+else
+  show Regular day
+end
+```
+
 ### Loops
 
 **Repeat N times:**
@@ -168,18 +298,27 @@ repeat 5 times
 end
 ```
 
+**Repeat with counter:**
+
+```say
+repeat 5 times with i
+  show Iteration .i
+end
+-- i goes from 1 to 5
+```
+
 **While / Until:**
 
 ```say
 put 1 into n
 repeat while n <= 10
   show .n
-  put n + 1 into n
+  set n to n + 1
 end
 
 put 0 into count
 repeat until count == 5
-  put count + 1 into count
+  set count to count + 1
 end
 ```
 
@@ -188,7 +327,7 @@ end
 ```say
 put 0 into n
 repeat forever
-  put n + 1 into n
+  set n to n + 1
   if n > 10
     stop
   end
@@ -201,6 +340,14 @@ end
 put list Red, Green, Blue into colors
 for each color in colors
   show .color
+end
+```
+
+**For each with index:**
+
+```say
+for each item at i in items
+  show Item .i is .item
 end
 ```
 
@@ -255,7 +402,7 @@ shuffle nums
 
 ```say
 put list 92, 45, 78, 55, 88 into scores
-put scores where it >= 70 into passing
+set passing to scores where it >= 70
 show .passing
 ```
 
@@ -263,7 +410,7 @@ show .passing
 
 ```say
 put list 1, 2, 3, 4, 5 into nums
-put nums each it * 10 into scaled
+set scaled to nums each it * 10
 show .scaled
 ```
 
@@ -273,6 +420,40 @@ show .scaled
 if scores contains 100
   show Perfect score found!
 end
+```
+
+### Maps (Dictionaries)
+
+Create key-value stores with `map`:
+
+```say
+set data to map
+set data.name to "Alice"
+set data.age to 30
+show (.data.name) is (.data.age) years old
+```
+
+**Map properties:**
+
+| Property | Description |
+|----------|-------------|
+| `.count` | Number of entries |
+| `.keys` | List of all keys |
+| `.values` | List of all values |
+
+```say
+show Keys: (.data.keys)
+show Count: (.data.count)
+```
+
+**Check and remove entries:**
+
+```say
+if data contains "name"
+  show Has a name
+end
+
+remove "age" from data
 ```
 
 ### Kinds (Classes)
@@ -289,14 +470,13 @@ kind Dog
   end
 
   on run
-    put me.energy - 10 into me.energy
+    set me.energy to me.energy - 10
     show .me.name runs! Energy: .me.energy
   end
 end
 
 make a Dog called rex with name Rex
 send bark to rex
-send run to rex
 send run to rex
 ```
 
@@ -308,7 +488,6 @@ Use `from` to inherit fields and methods from a parent kind.
 kind Animal
   name is Unknown
   sound is ...
-  legs is 4
 
   on speak
     show .me.name says .me.sound
@@ -320,21 +499,13 @@ kind Dog from Animal
   tricks is 0
 
   on learn
-    put me.tricks + 1 into me.tricks
+    set me.tricks to me.tricks + 1
     show .me.name learned trick number .me.tricks
   end
 end
 
-kind Bird from Animal
-  sound is Tweet
-  legs is 2
-end
-
 make a Dog called rex with name Rex
-make a Bird called tweety with name Tweety
-
 send speak to rex
-send speak to tweety
 send learn to rex
 ```
 
@@ -347,7 +518,7 @@ kind Calculator
   result is 0
 
   on add n
-    put me.result + n into me.result
+    set me.result to me.result + n
   end
 
   on reset
@@ -376,19 +547,38 @@ command add a and b
   return a + b
 end
 
-put add 10 and 25 into result
+set result to add 10 and 25
 show .result
 ```
 
-### String Properties
+### File I/O
+
+Read and write files:
 
 ```say
-put hello world into text
-show (.text.upper)
-show (.text.lower)
-show (.text.length)
-show (.text.trim)
+-- Write to a file
+write "output.txt" with "Hello, world!"
+
+-- Append to a file
+append "log.txt" with "New entry"
+
+-- Read a file as text
+set content to read "data.txt"
+
+-- Read a file as a list of lines
+set lines to read "data.txt" as list
 ```
+
+### Imports
+
+Import code from other `.say` files:
+
+```say
+use "helpers.say"
+use "utils/math.say"
+```
+
+The imported file is executed, making its commands and kinds available.
 
 ### String Interpolation
 
@@ -435,7 +625,7 @@ command double n
 end
 
 test double works
-  put double 5 into result
+  set result to double 5
   check result == 10
 end
 
@@ -472,8 +662,6 @@ end
 
 make a Cat called whiskers with name Whiskers
 explain whiskers
--- Output: Cat with name: Whiskers, lives: 9
--- Output: Can: (list of methods)
 ```
 
 ### The `it` Variable
@@ -485,8 +673,8 @@ ask What is your favorite color
 show You said .it
 
 put list 1, 2, 3, 4, 5 into nums
-put nums where it > 3 into big
-put nums each it * 2 into doubled
+set big to nums where it > 3
+set doubled to nums each it * 2
 ```
 
 ### The `me` Keyword
@@ -498,7 +686,7 @@ kind Counter
   value is 0
 
   on increment
-    put me.value + 1 into me.value
+    set me.value to me.value + 1
   end
 
   on report
@@ -509,365 +697,21 @@ end
 
 ## Examples
 
-### Fibonacci Sequence
-
-```say
-put 0 into a
-put 1 into b
-put list a, b into fibs
-
-repeat 13 times
-  put a + b into temp
-  put b into a
-  put temp into b
-  add b to fibs
-end
-
-show Fibonacci sequence:
-for each n in fibs
-  show .n
-end
-
-show Sum: (.fibs.sum)
-show Count: (.fibs.count)
-show Max: (.fibs.max)
-```
-
-Output:
-
-```
-Fibonacci sequence
-0
-1
-1
-2
-3
-5
-8
-13
-21
-34
-55
-89
-144
-233
-377
-Sum 986
-Count 15
-Max 377
-```
-
-### Grade Report with List Operations
-
-```say
-put list 92, 87, 45, 78, 95, 63, 88, 71, 55, 100 into scores
-
-show All scores: .scores
-show Average: (.scores.average)
-show Highest: (.scores.max)
-show Lowest: (.scores.min)
-
-put scores where it >= 70 into passing
-put scores where it < 70 into failing
-
-show Passing scores: .passing
-show Failing scores: .failing
-show Pass rate: (.passing.count) out of (.scores.count)
-
-put scores each it / 2 into halved
-show Halved: .halved
-
-sort scores
-show Sorted: .scores
-
-reverse scores
-show Descending: .scores
-
-if scores contains 100
-  show Someone got a perfect score!
-end
-```
-
-Output:
-
-```
-All scores 92, 87, 45, 78, 95, 63, 88, 71, 55, 100
-Average 77.4
-Highest 100
-Lowest 45
-Passing scores 92, 87, 78, 95, 88, 71, 100
-Failing scores 45, 63, 55
-Pass rate 7 out of 10
-Halved 46, 43.5, 22.5, 39, 47.5, 31.5, 44, 35.5, 27.5, 50
-Sorted 45, 55, 63, 71, 78, 87, 88, 92, 95, 100
-Descending 100, 95, 92, 88, 87, 78, 71, 63, 55, 45
-Someone got a perfect score!
-```
-
-### Zoo with Inheritance
-
-```say
-kind Animal
-  name is Unknown
-  sound is ...
-  legs is 4
-
-  on speak
-    show .me.name says .me.sound
-  end
-
-  on describe
-    show .me.name has .me.legs legs
-  end
-end
-
-kind Dog from Animal
-  sound is Woof
-  tricks is 0
-
-  on learn
-    put me.tricks + 1 into me.tricks
-    show .me.name learned trick number .me.tricks
-  end
-end
-
-kind Bird from Animal
-  sound is Tweet
-  legs is 2
-end
-
-make a Dog called rex with name Rex
-make a Dog called luna with name Luna, tricks 3
-make a Bird called tweety with name Tweety
-
-put list rex, luna, tweety into animals
-
-show Zoo Roll Call
-for each a in animals
-  send speak to a
-  send describe to a
-end
-
-send learn to rex
-send learn to rex
-show Luna already knows (.luna.tricks) tricks
-```
-
-Output:
-
-```
-Zoo Roll Call
-Rex says Woof
-Rex has 4 legs
-Luna says Woof
-Luna has 4 legs
-Tweety says Tweet
-Tweety has 2 legs
-Rex learned trick number 1
-Rex learned trick number 2
-Luna already knows 3 tricks
-```
-
-### To-Do List Manager
-
-```say
-kind Task
-  title is Untitled
-  done is false
-
-  on finish
-    put true into me.done
-  end
-
-  on status
-    if me.done
-      show DONE .me.title
-    else
-      show TODO .me.title
-    end
-  end
-end
-
-make a Task called t1 with title Buy groceries
-make a Task called t2 with title Walk the dog
-make a Task called t3 with title Write HyperCode
-make a Task called t4 with title Do homework
-
-put list t1, t2, t3, t4 into tasks
-
-send finish to t1
-send finish to t3
-
-show Task List
-for each t in tasks
-  send status to t
-end
-
-put tasks where it.done == true into completed
-put tasks where it.done == false into remaining
-
-show Completed: (.completed.count)
-show Remaining: (.remaining.count)
-```
-
-Output:
-
-```
-Task List
-DONE Buy groceries
-TODO Walk the dog
-DONE Write HyperCode
-TODO Do homework
-Completed 2
-Remaining 2
-```
-
-### Calculator with Commands
-
-```say
-command add a and b
-  return a + b
-end
-
-command multiply a and b
-  return a * b
-end
-
-command power base and exp
-  put 1 into result
-  repeat exp times
-    put result * base into result
-  end
-  return result
-end
-
-command clamp value and low and high
-  if value < low
-    return low
-  end
-  if value > high
-    return high
-  end
-  return value
-end
-
-put add 10 and 25 into sum
-show 10 + 25 = .sum
-
-put multiply 6 and 7 into product
-show 6 x 7 = .product
-
-put power 2 and 10 into big
-show 2^10 = .big
-
-put clamp 150 and 0 and 100 into c1
-show Clamp 150 to 0-100: .c1
-
-put -20 into neg
-put clamp neg and 0 and 100 into c2
-show Clamp -20 to 0-100: .c2
-
-put 17 % 5 into remainder
-show 17 mod 5 = .remainder
-
-put (3 + 4) * 2 into grouped
-show Grouped math = .grouped
-```
-
-Output:
-
-```
-10 + 25 = 35
-6 x 7 = 42
-2 ^ 10 = 1024
-Clamp 150 to 0 - 100 100
-Clamp - 20 to 0 - 100 0
-17 mod 5 = 2
-Grouped math = 14
-```
-
-### Error Handling
-
-```say
-try
-  make a Unicorn called sparkle
-or
-  show Caught an error! Unicorn kind does not exist.
-end
-
-try
-  send fly to nothing
-catch err
-  show Error caught: (.err.message)
-end
-
-show Program continues running after errors!
-
-try
-  show Starting risky operation...
-  try
-    make a Ghost called casper
-  or
-    show Inner catch: Ghost kind does not exist either
-  end
-  show Outer block continues
-or
-  show This won't run because inner try handled it
-end
-
-show All done!
-```
-
-Output:
-
-```
-Caught an error! Unicorn kind does not exist.
-Error caught Cannot send message to non-instance: nothing
-Program continues running after errors!
-Starting risky operation...
-Inner catch Ghost kind does not exist either
-Outer block continues
-All done!
-```
-
-### Interactive Quiz
-
-```say
-kind Question
-  text is Empty
-  answer is Empty
-
-  on check guess
-    if guess == me.answer
-      show Correct!
-      return true
-    else
-      show Wrong. The answer was .me.answer
-      return false
-    end
-  end
-end
-
-put 0 into score
-put 0 into total
-
-put list into questions
-  make a Question with text What planet is closest to the sun, answer Mercury
-  make a Question with text What language is this, answer HyperCode
-  make a Question with text How many legs does a spider have, answer 8
-end
-
-for each q in questions
-  ask .q.text
-  put it into guess
-  put total + 1 into total
-  if send check guess to q
-    put score + 1 into score
-  end
-end
-
-show You got .score out of .total
-```
+See the `examples/` directory for complete programs:
+
+| File | Description |
+|------|-------------|
+| `hello.say` | Hello world with user input |
+| `calculator.say` | Reusable math commands |
+| `fibonacci.say` | Fibonacci sequence generation |
+| `grades.say` | List filtering and statistics |
+| `string_fun.say` | Text manipulation and loops |
+| `guessing_game.say` | Number guessing with loops |
+| `quiz.say` | Interactive quiz with kinds |
+| `classroom.say` | Student reports with inheritance |
+| `zoo.say` | Animal hierarchy with inheritance |
+| `todo.say` | To-do list manager with kinds |
+| `error_handling.say` | Try/catch error patterns |
 
 ## Architecture
 
@@ -892,7 +736,7 @@ Source Code → Lexer → Tokens → Parser → AST → Interpreter → Output
 import { Lexer, Parser, Interpreter } from 'hypercode';
 
 const source = `
-put 10 into x
+set x to 10
 show .x
 `;
 
@@ -904,6 +748,9 @@ const program = parser.parse(tokens);
 const interpreter = new Interpreter({
   output: (text) => console.log(text),
   input: (prompt) => 'user input here',
+  readFile: (path) => fs.readFileSync(path, 'utf-8'),
+  writeFile: (path, content) => fs.writeFileSync(path, content, 'utf-8'),
+  appendFile: (path, content) => fs.appendFileSync(path, content, 'utf-8'),
   maxIterations: 100000,
 });
 
@@ -918,17 +765,23 @@ npm test
 
 ## Keyword Reference
 
+### Assignment
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `put` | `put VALUE into NAME` | Store literal text/numbers (no evaluation) |
+| `set` | `set NAME to EXPR` | Evaluate expression and store result |
+
 ### Core Verbs
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
-| `put` | `put VALUE into NAME` | Assign a value to a variable |
 | `show` | `show TEXT` | Print output |
 | `ask` | `ask PROMPT` | Get user input (stored in `it`) |
 | `make` | `make a KIND called NAME` | Create an instance |
 | `send` | `send METHOD to TARGET` | Call a method on an instance |
 | `add` | `add VALUE to LIST` | Append to a list |
-| `remove` | `remove VALUE from LIST` | Remove from a list |
+| `remove` | `remove VALUE from LIST` | Remove from a list or map |
 
 ### Structure
 
@@ -943,6 +796,7 @@ npm test
 | `me` | `me.property` | Reference to the current instance |
 | `it` | `it` | Last input or current iteration item |
 | `with` | `make a X called Y with ...` | Set properties inline |
+| `use` | `use "file.say"` | Import another file |
 
 ### Control Flow
 
@@ -951,6 +805,7 @@ npm test
 | `if` | `if COND ... end` | Conditional |
 | `else` | `else ... end` | Alternative branch |
 | `else if` | `else if COND ... end` | Chained conditional |
+| `when` | `when VALUE ... end` | Pattern matching |
 | `repeat` | `repeat N times ... end` | Fixed loop |
 | `while` | `repeat while COND ... end` | Conditional loop |
 | `until` | `repeat until COND ... end` | Inverse conditional loop |
@@ -959,17 +814,35 @@ npm test
 | `to` | `1 to 10` | Range expression |
 | `stop` | `stop` | Break out of a loop |
 
-### Lists
+### Data
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `list` | `list 1, 2, 3` | Create a list |
+| `map` | `set x to map` | Create an empty map |
 | `sort` | `sort LIST` | Sort in place |
 | `reverse` | `reverse LIST` | Reverse in place |
 | `shuffle` | `shuffle LIST` | Randomize order |
 | `contains` | `LIST contains VALUE` | Check membership |
 | `where` | `LIST where COND` | Filter items |
 | `each` | `LIST each TRANSFORM` | Map/transform items |
+| `random` | `random 1 to 6` | Generate random values |
+| `rounded` | `x rounded to 2` | Round to decimal places |
+
+### Type Checking
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `is a` | `x is a number` | Check if value is a type |
+| `is not a` | `x is not a text` | Negated type check |
+
+### File I/O
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `read` | `read "file.txt"` | Read file contents |
+| `write` | `write "file" with "text"` | Write to a file |
+| `append` | `append "file" with "text"` | Append to a file |
 
 ### Error Handling
 

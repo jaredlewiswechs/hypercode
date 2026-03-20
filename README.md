@@ -31,9 +31,9 @@ say test myfile.say
 
 ## Hello World
 
-```applescript
-put ask What is your name into name
-show Hello .name, welcome to HyperCode!
+```ansi
+[1;34mput[0m [1;34mask[0m What [1;34mis[0m your name [1;34minto[0m name
+[1;34mshow[0m Hello [36m.name[0m, welcome [1;34mto[0m HyperCode[31m![0m
 ```
 
 ## Language Guide
@@ -45,17 +45,17 @@ HyperCode has two ways to store values:
 - **`put VALUE into NAME`** — stores literal text or numbers as-is (no math evaluation)
 - **`set NAME to EXPRESSION`** — evaluates an expression and stores the result
 
-```applescript
--- put is for literal values
-put 42 into age
-put Hello World into greeting
-put true into active
-put nothing into empty
+```ansi
+[90m-- put is for literal values[0m
+[1;34mput[0m [33m42[0m [1;34minto[0m age
+[1;34mput[0m Hello World [1;34minto[0m greeting
+[1;34mput[0m [35mtrue[0m [1;34minto[0m active
+[1;34mput[0m [35mnothing[0m [1;34minto[0m empty
 
--- set is for expressions and computed values
-set total to price * quantity
-set doubled to n * 2
-set result to add 5 and 3
+[90m-- set is for expressions and computed values[0m
+[1;34mset[0m total [1;34mto[0m price [31m*[0m quantity
+[1;34mset[0m doubled [1;34mto[0m n [31m*[0m [33m2[0m
+[1;34mset[0m result [1;34mto[0m [1;34madd[0m [33m5[0m [1;34mand[0m [33m3[0m
 ```
 
 Use `put` when you have a plain value. Use `set` when you need math, function calls, or any computation.
@@ -79,364 +79,364 @@ Use `put` when you have a plain value. Use `set` when you need math, function ca
 
 Strings can be unquoted (in `put` and `show`) or quoted with double quotes (in `set` and expressions).
 
-```applescript
-put Hello World into greeting
-set name to "Alice"
-set message to "She said \"hello\""
+```ansi
+[1;34mput[0m Hello World [1;34minto[0m greeting
+[1;34mset[0m name [1;34mto[0m [32m"Alice"[0m
+[1;34mset[0m message [1;34mto[0m [32m"She said \"hello\""[0m
 ```
 
 **String interpolation** with `{variable}` inside quoted strings:
 
-```applescript
-set name to "World"
-set msg to "Hello {name}!"
-show .msg
--- Shows: Hello World!
+```ansi
+[1;34mset[0m name [1;34mto[0m [32m"World"[0m
+[1;34mset[0m msg [1;34mto[0m [32m"Hello {name}!"[0m
+[1;34mshow[0m [36m.msg[0m
+[90m-- Shows: Hello World![0m
 ```
 
 **Triple-quoted strings** for multiline text:
 
-```applescript
-set poem to """roses are red
-violets are blue"""
-show .poem
+```ansi
+[1;34mset[0m poem [1;34mto[0m [32m"""roses are red
+violets are blue"""[0m
+[1;34mshow[0m [36m.poem[0m
 ```
 
 **String concatenation** with `+`:
 
-```applescript
-set full to first + " " + last
-show (.full)
+```ansi
+[1;34mset[0m full [1;34mto[0m first [31m+[0m [32m" "[0m [31m+[0m last
+[1;34mshow[0m ([36m.full[0m)
 ```
 
 **Regex matching** with `matches`:
 
-```applescript
-set valid to "hello123" matches "[a-z]+[0-9]+"
-show .valid
--- Shows: true
+```ansi
+[1;34mset[0m valid [1;34mto[0m [32m"hello123"[0m [1;34mmatches[0m [32m"[a-z]+[0-9]+"[0m
+[1;34mshow[0m [36m.valid[0m
+[90m-- Shows: true[0m
 ```
 
 **String properties:**
 
-```applescript
-put hello world into text
-show (.text.upper)       -- HELLO WORLD
-show (.text.lower)       -- hello world
-show (.text.length)      -- 11
-show (.text.trim)        -- hello world
-show (.text.first)       -- h
-show (.text.last)        -- d
+```ansi
+[1;34mput[0m hello world [1;34minto[0m [1;34mtext[0m
+[1;34mshow[0m ([36m.text.upper[0m)       [90m-- HELLO WORLD[0m
+[1;34mshow[0m ([36m.text.lower[0m)       [90m-- hello world[0m
+[1;34mshow[0m ([36m.text.length[0m)      [90m-- 11[0m
+[1;34mshow[0m ([36m.text.trim[0m)        [90m-- hello world[0m
+[1;34mshow[0m ([36m.text.first[0m)       [90m-- h[0m
+[1;34mshow[0m ([36m.text.last[0m)        [90m-- d[0m
 ```
 
 **String indexing:**
 
-```applescript
-set letter to text.at 3       -- l (1-based)
-set part to text.from 1 to 5  -- hello
+```ansi
+[1;34mset[0m letter [1;34mto[0m [1;34mtext[0m[36m.at[0m [33m3[0m       [90m-- l (1-based)[0m
+[1;34mset[0m part [1;34mto[0m [1;34mtext[0m[36m.from[0m [33m1[0m [1;34mto[0m [33m5[0m  [90m-- hello[0m
 ```
 
 ### Output
 
 `show` prints to the console. Use `.variable` for interpolation and `(expression)` for inline math.
 
-```applescript
-put 10 into x
-put 20 into y
-show The value of x is .x
-show The sum is (x + y)
+```ansi
+[1;34mput[0m [33m10[0m [1;34minto[0m x
+[1;34mput[0m [33m20[0m [1;34minto[0m y
+[1;34mshow[0m The value [1;34mof[0m x [1;34mis[0m [36m.x[0m
+[1;34mshow[0m The sum [1;34mis[0m (x [31m+[0m y)
 ```
 
 ### Input
 
 `ask` prompts the user and stores the answer in `it`.
 
-```applescript
-put ask What is your name into name
-show Hello .name
+```ansi
+[1;34mput[0m [1;34mask[0m What [1;34mis[0m your name [1;34minto[0m name
+[1;34mshow[0m Hello [36m.name[0m
 
-ask How old are you
-put it into age
-show You are .age years old
+[1;34mask[0m How old are you
+[1;34mput[0m [1;34mit[0m [1;34minto[0m age
+[1;34mshow[0m You are [36m.age[0m years old
 ```
 
 ### Comments
 
-```applescript
--- This is a single-line comment
+```ansi
+[90m-- This is a single-line comment[0m
 
----
-This is a
-multi-line comment
----
+[90m---[0m
+This [1;34mis[0m [1;34ma[0m
+multi[31m-[0m[1;34mline[0m comment
+[90m---[0m
 ```
 
 ### Arithmetic
 
-```applescript
-set sum to 10 + 3          -- 13
-set diff to 10 - 3         -- 7
-set product to 10 * 3      -- 30
-set quotient to 10 / 3     -- 3.333...
-set remainder to 10 % 3    -- 1
-set power to 2 ^ 8         -- 256
-set grouped to (3 + 4) * 2 -- 14
+```ansi
+[1;34mset[0m sum [1;34mto[0m [33m10[0m [31m+[0m [33m3[0m          [90m-- 13[0m
+[1;34mset[0m diff [1;34mto[0m [33m10[0m [31m-[0m [33m3[0m         [90m-- 7[0m
+[1;34mset[0m product [1;34mto[0m [33m10[0m [31m*[0m [33m3[0m      [90m-- 30[0m
+[1;34mset[0m quotient [1;34mto[0m [33m10[0m [31m/[0m [33m3[0m     [90m-- 3.333...[0m
+[1;34mset[0m remainder [1;34mto[0m [33m10[0m [31m%[0m [33m3[0m    [90m-- 1[0m
+[1;34mset[0m power [1;34mto[0m [33m2[0m [31m^[0m [33m8[0m         [90m-- 256[0m
+[1;34mset[0m grouped [1;34mto[0m ([33m3[0m [31m+[0m [33m4[0m) [31m*[0m [33m2[0m [90m-- 14[0m
 ```
 
 ### Math Builtins
 
 Access math functions through the `math` module:
 
-```applescript
-set x to math.round 3.7      -- 4
-set x to math.floor 3.7      -- 3
-set x to math.ceil 3.2       -- 4
-set x to math.abs (-5)       -- 5
-set x to math.sqrt 16        -- 4
+```ansi
+[1;34mset[0m x [1;34mto[0m [1;34mmath[0m[36m.round[0m [33m3.7[0m      [90m-- 4[0m
+[1;34mset[0m x [1;34mto[0m [1;34mmath[0m[36m.floor[0m [33m3.7[0m      [90m-- 3[0m
+[1;34mset[0m x [1;34mto[0m [1;34mmath[0m[36m.ceil[0m [33m3.2[0m       [90m-- 4[0m
+[1;34mset[0m x [1;34mto[0m [1;34mmath[0m[36m.abs[0m ([33m-5[0m)       [90m-- 5[0m
+[1;34mset[0m x [1;34mto[0m [1;34mmath[0m[36m.sqrt[0m [33m16[0m        [90m-- 4[0m
 ```
 
 ### Random
 
 Generate random values:
 
-```applescript
--- Random integer in a range (inclusive)
-set roll to random 1 to 6
+```ansi
+[90m-- Random integer in a range (inclusive)[0m
+[1;34mset[0m roll [1;34mto[0m [1;34mrandom[0m [33m1[0m [1;34mto[0m [33m6[0m
 
--- Random pick from a list
-set color to random pick from colors
+[90m-- Random pick from a list[0m
+[1;34mset[0m color [1;34mto[0m [1;34mrandom[0m [1;34mpick[0m [1;34mfrom[0m colors
 
--- Random decimal between 0 and 1
-set chance to random float
+[90m-- Random decimal between 0 and 1[0m
+[1;34mset[0m chance [1;34mto[0m [1;34mrandom[0m [1;34mfloat[0m
 ```
 
 ### Formatted Numbers
 
 Round numbers to a specific number of decimal places:
 
-```applescript
-set pi to 3.14159
-set short to pi rounded to 2    -- 3.14
-show Pi is approximately (pi rounded to 3)
+```ansi
+[1;34mset[0m pi [1;34mto[0m [33m3.14159[0m
+[1;34mset[0m short [1;34mto[0m pi [1;34mrounded[0m [1;34mto[0m [33m2[0m    [90m-- 3.14[0m
+[1;34mshow[0m Pi [1;34mis[0m approximately (pi [1;34mrounded[0m [1;34mto[0m [33m3[0m)
 ```
 
 Use `format` for explicit formatting:
 
-```applescript
-set x to 3.14159
-set result to x format 2 places
-show .result
--- Shows: 3.14
+```ansi
+[1;34mset[0m x [1;34mto[0m [33m3.14159[0m
+[1;34mset[0m result [1;34mto[0m x [1;34mformat[0m [33m2[0m [1;34mplaces[0m
+[1;34mshow[0m [36m.result[0m
+[90m-- Shows: 3.14[0m
 ```
 
 ### Comparison
 
 Symbolic and English-style comparisons are both supported.
 
-```applescript
--- Symbolic
-if x == 10 ... end
-if x != 10 ... end
-if x > 10  ... end
-if x < 10  ... end
-if x >= 10 ... end
-if x <= 10 ... end
+```ansi
+[90m-- Symbolic[0m
+[1;34mif[0m x [31m==[0m [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [31m!=[0m [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [31m>[0m [33m10[0m  ... [1;34mend[0m
+[1;34mif[0m x [31m<[0m [33m10[0m  ... [1;34mend[0m
+[1;34mif[0m x [31m>=[0m [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [31m<=[0m [33m10[0m ... [1;34mend[0m
 
--- English
-if x is 10 ... end
-if x is not 10 ... end
-if x is greater than 10 ... end
-if x is less than 10 ... end
+[90m-- English[0m
+[1;34mif[0m x [1;34mis[0m [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [1;34mis[0m [1;34mnot[0m [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [1;34mis[0m greater than [33m10[0m ... [1;34mend[0m
+[1;34mif[0m x [1;34mis[0m less than [33m10[0m ... [1;34mend[0m
 ```
 
 ### Type Checking
 
 Check the type of a value at runtime:
 
-```applescript
-if x is a number
-  show x is a number
-end
+```ansi
+[1;34mif[0m x [1;34mis[0m [1;34ma[0m number
+  [1;34mshow[0m x [1;34mis[0m [1;34ma[0m number
+[1;34mend[0m
 
-if name is a text
-  show name is text
-end
+[1;34mif[0m name [1;34mis[0m [1;34ma[0m [1;34mtext[0m
+  [1;34mshow[0m name [1;34mis[0m [1;34mtext[0m
+[1;34mend[0m
 
-if items is a list
-  show items is a list
-end
+[1;34mif[0m items [1;34mis[0m [1;34ma[0m [1;34mlist[0m
+  [1;34mshow[0m items [1;34mis[0m [1;34ma[0m [1;34mlist[0m
+[1;34mend[0m
 
-if x is not a boolean
-  show x is not a boolean
-end
+[1;34mif[0m x [1;34mis[0m [1;34mnot[0m [1;34ma[0m boolean
+  [1;34mshow[0m x [1;34mis[0m [1;34mnot[0m [1;34ma[0m boolean
+[1;34mend[0m
 ```
 
 Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`, `pair`, `set`, `enum`, `lambda`.
 
 ### Logic
 
-```applescript
-if x > 0 and x < 100
-  show In range
-end
+```ansi
+[1;34mif[0m x [31m>[0m [33m0[0m [1;34mand[0m x [31m<[0m [33m100[0m
+  [1;34mshow[0m In range
+[1;34mend[0m
 
-if name is Alice or name is Bob
-  show Welcome back
-end
+[1;34mif[0m name [1;34mis[0m Alice [1;34mor[0m name [1;34mis[0m Bob
+  [1;34mshow[0m Welcome back
+[1;34mend[0m
 
-if not active
-  show Inactive
-end
+[1;34mif[0m [1;34mnot[0m active
+  [1;34mshow[0m Inactive
+[1;34mend[0m
 ```
 
 ### Conditionals
 
-```applescript
-put 85 into score
+```ansi
+[1;34mput[0m [33m85[0m [1;34minto[0m score
 
-if score >= 90
-  show Grade: A
-else if score >= 80
-  show Grade: B
-else if score >= 70
-  show Grade: C
-else
-  show Grade: F
-end
+[1;34mif[0m score [31m>=[0m [33m90[0m
+  [1;34mshow[0m Grade: A
+[1;34melse[0m [1;34mif[0m score [31m>=[0m [33m80[0m
+  [1;34mshow[0m Grade: B
+[1;34melse[0m [1;34mif[0m score [31m>=[0m [33m70[0m
+  [1;34mshow[0m Grade: C
+[1;34melse[0m
+  [1;34mshow[0m Grade: F
+[1;34mend[0m
 ```
 
 ### When Blocks (Pattern Matching)
 
 Match a value against multiple cases:
 
-```applescript
-set day to "Monday"
+```ansi
+[1;34mset[0m day [1;34mto[0m [32m"Monday"[0m
 
-when day
-is Monday
-  show Start of the work week
-is Friday
-  show Almost the weekend!
-is Saturday
-  show Weekend!
-is Sunday
-  show Weekend!
-else
-  show Regular day
-end
+[1;34mwhen[0m day
+[1;34mis[0m Monday
+  [1;34mshow[0m Start [1;34mof[0m [1;34mthe[0m work week
+[1;34mis[0m Friday
+  [1;34mshow[0m Almost [1;34mthe[0m weekend[31m![0m
+[1;34mis[0m Saturday
+  [1;34mshow[0m Weekend[31m![0m
+[1;34mis[0m Sunday
+  [1;34mshow[0m Weekend[31m![0m
+[1;34melse[0m
+  [1;34mshow[0m Regular day
+[1;34mend[0m
 ```
 
 **Or fallthrough** — match multiple values in a single case:
 
-```applescript
-set x to 2
+```ansi
+[1;34mset[0m x [1;34mto[0m [33m2[0m
 
-when x
-  is 1 or 2
-    show one or two
-  is 3
-    show three
-end
+[1;34mwhen[0m x
+  [1;34mis[0m [33m1[0m [1;34mor[0m [33m2[0m
+    [1;34mshow[0m one [1;34mor[0m two
+  [1;34mis[0m [33m3[0m
+    [1;34mshow[0m three
+[1;34mend[0m
 ```
 
 ### Loops
 
 **Repeat N times:**
 
-```applescript
-repeat 5 times
-  show Hello!
-end
+```ansi
+[1;34mrepeat[0m [33m5[0m [1;34mtimes[0m
+  [1;34mshow[0m Hello[31m![0m
+[1;34mend[0m
 ```
 
 **Repeat with counter:**
 
-```applescript
-repeat 5 times with i
-  show Iteration .i
-end
--- i goes from 1 to 5
+```ansi
+[1;34mrepeat[0m [33m5[0m [1;34mtimes[0m [1;34mwith[0m i
+  [1;34mshow[0m Iteration [36m.i[0m
+[1;34mend[0m
+[90m-- i goes from 1 to 5[0m
 ```
 
 **While / Until:**
 
-```applescript
-put 1 into n
-repeat while n <= 10
-  show .n
-  set n to n + 1
-end
+```ansi
+[1;34mput[0m [33m1[0m [1;34minto[0m n
+[1;34mrepeat[0m [1;34mwhile[0m n [31m<=[0m [33m10[0m
+  [1;34mshow[0m [36m.n[0m
+  [1;34mset[0m n [1;34mto[0m n [31m+[0m [33m1[0m
+[1;34mend[0m
 
-put 0 into count
-repeat until count == 5
-  set count to count + 1
-end
+[1;34mput[0m [33m0[0m [1;34minto[0m count
+[1;34mrepeat[0m [1;34muntil[0m count [31m==[0m [33m5[0m
+  [1;34mset[0m count [1;34mto[0m count [31m+[0m [33m1[0m
+[1;34mend[0m
 ```
 
 **Forever (with stop):**
 
-```applescript
-put 0 into n
-repeat forever
-  set n to n + 1
-  if n > 10
-    stop
-  end
-end
+```ansi
+[1;34mput[0m [33m0[0m [1;34minto[0m n
+[1;34mrepeat[0m [1;34mforever[0m
+  [1;34mset[0m n [1;34mto[0m n [31m+[0m [33m1[0m
+  [1;34mif[0m n [31m>[0m [33m10[0m
+    [1;34mstop[0m
+  [1;34mend[0m
+[1;34mend[0m
 ```
 
 **For each:**
 
-```applescript
-put list Red, Green, Blue into colors
-for each color in colors
-  show .color
-end
+```ansi
+[1;34mput[0m [1;34mlist[0m Red, Green, Blue [1;34minto[0m colors
+[1;34mfor[0m [1;34meach[0m color [1;34min[0m colors
+  [1;34mshow[0m [36m.color[0m
+[1;34mend[0m
 ```
 
 **For each with index:**
 
-```applescript
-for each item at i in items
-  show Item .i is .item
-end
+```ansi
+[1;34mfor[0m [1;34meach[0m item [1;34mat[0m i [1;34min[0m items
+  [1;34mshow[0m Item [36m.i[0m [1;34mis[0m [36m.item[0m
+[1;34mend[0m
 ```
 
 **Ranges:**
 
-```applescript
-for each i in 1 to 10
-  show .i
-end
+```ansi
+[1;34mfor[0m [1;34meach[0m i [1;34min[0m [33m1[0m [1;34mto[0m [33m10[0m
+  [1;34mshow[0m [36m.i[0m
+[1;34mend[0m
 ```
 
 **Step value** — skip items in a range:
 
-```applescript
-for each i in 1 to 10 by 3
-  show .i
-end
--- Shows: 1, 4, 7, 10
+```ansi
+[1;34mfor[0m [1;34meach[0m i [1;34min[0m [33m1[0m [1;34mto[0m [33m10[0m [1;34mby[0m [33m3[0m
+  [1;34mshow[0m [36m.i[0m
+[1;34mend[0m
+[90m-- Shows: 1, 4, 7, 10[0m
 ```
 
 **Labeled loops** — break from outer loops:
 
-```applescript
-repeat 5 times as outer
-  repeat 5 times as inner
-    if something
-      stop outer
-    end
-  end
-end
+```ansi
+[1;34mrepeat[0m [33m5[0m [1;34mtimes[0m [1;34mas[0m outer
+  [1;34mrepeat[0m [33m5[0m [1;34mtimes[0m [1;34mas[0m inner
+    [1;34mif[0m something
+      [1;34mstop[0m outer
+    [1;34mend[0m
+  [1;34mend[0m
+[1;34mend[0m
 ```
 
 ### Lists
 
 Create lists with the `list` keyword.
 
-```applescript
-put list 10, 50, 80, 90, 30 into scores
+```ansi
+[1;34mput[0m [1;34mlist[0m [33m10[0m, [33m50[0m, [33m80[0m, [33m90[0m, [33m30[0m [1;34minto[0m scores
 ```
 
 **Built-in properties:**
@@ -451,58 +451,58 @@ put list 10, 50, 80, 90, 30 into scores
 | `.max` | Largest number |
 | `.min` | Smallest number |
 
-```applescript
-put list 10, 20, 30, 40, 50 into nums
-show First is (.nums.first)
-show Last is (.nums.last)
-show Count is (.nums.count)
-show Sum is (.nums.sum)
-show Average is (.nums.average)
+```ansi
+[1;34mput[0m [1;34mlist[0m [33m10[0m, [33m20[0m, [33m30[0m, [33m40[0m, [33m50[0m [1;34minto[0m nums
+[1;34mshow[0m First [1;34mis[0m ([36m.nums.first[0m)
+[1;34mshow[0m Last [1;34mis[0m ([36m.nums.last[0m)
+[1;34mshow[0m Count [1;34mis[0m ([36m.nums.count[0m)
+[1;34mshow[0m Sum [1;34mis[0m ([36m.nums.sum[0m)
+[1;34mshow[0m Average [1;34mis[0m ([36m.nums.average[0m)
 ```
 
 **Modify lists:**
 
-```applescript
-add 60 to nums
-remove 10 from nums
-sort nums
-reverse nums
-shuffle nums
+```ansi
+[1;34madd[0m [33m60[0m [1;34mto[0m nums
+[1;34mremove[0m [33m10[0m [1;34mfrom[0m nums
+[1;34msort[0m nums
+[1;34mreverse[0m nums
+[1;34mshuffle[0m nums
 ```
 
 **Filter with `where`:**
 
-```applescript
-put list 92, 45, 78, 55, 88 into scores
-set passing to scores where it >= 70
-show .passing
+```ansi
+[1;34mput[0m [1;34mlist[0m [33m92[0m, [33m45[0m, [33m78[0m, [33m55[0m, [33m88[0m [1;34minto[0m scores
+[1;34mset[0m passing [1;34mto[0m scores [1;34mwhere[0m [1;34mit[0m [31m>=[0m [33m70[0m
+[1;34mshow[0m [36m.passing[0m
 ```
 
 **Transform with `each`:**
 
-```applescript
-put list 1, 2, 3, 4, 5 into nums
-set scaled to nums each it * 10
-show .scaled
+```ansi
+[1;34mput[0m [1;34mlist[0m [33m1[0m, [33m2[0m, [33m3[0m, [33m4[0m, [33m5[0m [1;34minto[0m nums
+[1;34mset[0m scaled [1;34mto[0m nums [1;34meach[0m [1;34mit[0m [31m*[0m [33m10[0m
+[1;34mshow[0m [36m.scaled[0m
 ```
 
 **Check membership:**
 
-```applescript
-if scores contains 100
-  show Perfect score found!
-end
+```ansi
+[1;34mif[0m scores [1;34mcontains[0m [33m100[0m
+  [1;34mshow[0m Perfect score found[31m![0m
+[1;34mend[0m
 ```
 
 ### Maps (Dictionaries)
 
 Create key-value stores with `map`:
 
-```applescript
-set data to map
-set data.name to "Alice"
-set data.age to 30
-show (.data.name) is (.data.age) years old
+```ansi
+[1;34mset[0m data [1;34mto[0m [1;34mmap[0m
+[1;34mset[0m data[36m.name[0m [1;34mto[0m [32m"Alice"[0m
+[1;34mset[0m data[36m.age[0m [1;34mto[0m [33m30[0m
+[1;34mshow[0m ([36m.data.name[0m) [1;34mis[0m ([36m.data.age[0m) years old
 ```
 
 **Map properties:**
@@ -513,39 +513,39 @@ show (.data.name) is (.data.age) years old
 | `.keys` | List of all keys |
 | `.values` | List of all values |
 
-```applescript
-show Keys: (.data.keys)
-show Count: (.data.count)
+```ansi
+[1;34mshow[0m Keys: ([36m.data.keys[0m)
+[1;34mshow[0m Count: ([36m.data.count[0m)
 ```
 
 **Check and remove entries:**
 
-```applescript
-if data contains "name"
-  show Has a name
-end
+```ansi
+[1;34mif[0m data [1;34mcontains[0m [32m"name"[0m
+  [1;34mshow[0m Has [1;34ma[0m name
+[1;34mend[0m
 
-remove "age" from data
+[1;34mremove[0m [32m"age"[0m [1;34mfrom[0m data
 ```
 
 ### Pairs
 
 A pair holds exactly two values:
 
-```applescript
-set p to pair "hello" and "world"
-show .p           -- (hello, world)
-show .p.first     -- hello
-show .p.second    -- world
+```ansi
+[1;34mset[0m p [1;34mto[0m [1;34mpair[0m [32m"hello"[0m [1;34mand[0m [32m"world"[0m
+[1;34mshow[0m [36m.p[0m           [90m-- (hello, world)[0m
+[1;34mshow[0m [36m.p.first[0m     [90m-- hello[0m
+[1;34mshow[0m [36m.p.second[0m    [90m-- world[0m
 ```
 
 ### Sets
 
 Sets are collections with no duplicate values. Create them with `unique`:
 
-```applescript
-set s to unique 1, 2, 3, 2, 1
-show .s.count     -- 3 (duplicates removed)
+```ansi
+[1;34mset[0m s [1;34mto[0m [1;34munique[0m [33m1[0m, [33m2[0m, [33m3[0m, [33m2[0m, [33m1[0m
+[1;34mshow[0m [36m.s.count[0m     [90m-- 3 (duplicates removed)[0m
 ```
 
 **Set properties:**
@@ -555,360 +555,360 @@ show .s.count     -- 3 (duplicates removed)
 | `.count` | Number of unique items |
 | `.list` | Convert to a list |
 
-```applescript
-if s contains 2
-  show found
-end
+```ansi
+[1;34mif[0m s [1;34mcontains[0m [33m2[0m
+  [1;34mshow[0m found
+[1;34mend[0m
 
-for each item in s
-  show .item
-end
+[1;34mfor[0m [1;34meach[0m item [1;34min[0m s
+  [1;34mshow[0m [36m.item[0m
+[1;34mend[0m
 ```
 
 ### Enums
 
 Declare named constants with `enum`:
 
-```applescript
-enum Color is red, green, blue
-show .color
--- Shows: [Enum Color: red, green, blue]
+```ansi
+[1;34menum[0m Color [1;34mis[0m red, green, blue
+[1;34mshow[0m [36m.color[0m
+[90m-- Shows: [Enum Color: red, green, blue][0m
 ```
 
 ### Map Literals with Entries
 
 Create maps with initial key-value pairs inline:
 
-```applescript
-set m to map name: "Alice", age: 25
-show .m.name   -- Alice
-show .m.age    -- 25
+```ansi
+[1;34mset[0m m [1;34mto[0m [1;34mmap[0m name: [32m"Alice"[0m, age: [33m25[0m
+[1;34mshow[0m [36m.m.name[0m   [90m-- Alice[0m
+[1;34mshow[0m [36m.m.age[0m    [90m-- 25[0m
 ```
 
 ### Destructuring
 
 Unpack lists and pairs into individual variables:
 
-```applescript
-set data to list 10, 20, 30
-set a, b, c from data
-show .a   -- 10
-show .b   -- 20
-show .c   -- 30
+```ansi
+[1;34mset[0m data [1;34mto[0m [1;34mlist[0m [33m10[0m, [33m20[0m, [33m30[0m
+[1;34mset[0m [1;34ma[0m, b, c [1;34mfrom[0m data
+[1;34mshow[0m [36m.a[0m   [90m-- 10[0m
+[1;34mshow[0m [36m.b[0m   [90m-- 20[0m
+[1;34mshow[0m [36m.c[0m   [90m-- 30[0m
 
-set p to pair "x" and "y"
-set first, second from p
+[1;34mset[0m p [1;34mto[0m [1;34mpair[0m [32m"x"[0m [1;34mand[0m [32m"y"[0m
+[1;34mset[0m first, second [1;34mfrom[0m p
 ```
 
 ### Exists Check
 
 Check if a variable has been defined:
 
-```applescript
-set x to 5
-if x exists
-  show x is defined
-end
+```ansi
+[1;34mset[0m x [1;34mto[0m [33m5[0m
+[1;34mif[0m x [1;34mexists[0m
+  [1;34mshow[0m x [1;34mis[0m defined
+[1;34mend[0m
 ```
 
 ### Kinds (Classes)
 
 Define object types with `kind`. Fields use `is` for default values. Methods use `on`.
 
-```applescript
-kind Dog
-  name is Unknown
-  energy is 100
+```ansi
+[1;34mkind[0m Dog
+  name [1;34mis[0m Unknown
+  energy [1;34mis[0m [33m100[0m
 
-  on bark
-    show .me.name says Woof!
-  end
+  [1;34mon[0m bark
+    [1;34mshow[0m [36m.me.name[0m says Woof[31m![0m
+  [1;34mend[0m
 
-  on run
-    set me.energy to me.energy - 10
-    show .me.name runs! Energy: .me.energy
-  end
-end
+  [1;34mon[0m run
+    [1;34mset[0m [1;34mme[0m[36m.energy[0m [1;34mto[0m [1;34mme[0m[36m.energy[0m [31m-[0m [33m10[0m
+    [1;34mshow[0m [36m.me.name[0m runs[31m![0m Energy: [36m.me.energy[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-make a Dog called rex with name Rex
-send bark to rex
-send run to rex
+[1;34mmake[0m [1;34ma[0m Dog [1;34mcalled[0m rex [1;34mwith[0m name Rex
+[1;34msend[0m bark [1;34mto[0m rex
+[1;34msend[0m run [1;34mto[0m rex
 ```
 
 ### Inheritance
 
 Use `from` to inherit fields and methods from a parent kind.
 
-```applescript
-kind Animal
-  name is Unknown
-  sound is ...
+```ansi
+[1;34mkind[0m Animal
+  name [1;34mis[0m Unknown
+  [1;34msound[0m [1;34mis[0m ...
 
-  on speak
-    show .me.name says .me.sound
-  end
-end
+  [1;34mon[0m speak
+    [1;34mshow[0m [36m.me.name[0m says [36m.me.sound[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-kind Dog from Animal
-  sound is Woof
-  tricks is 0
+[1;34mkind[0m Dog [1;34mfrom[0m Animal
+  [1;34msound[0m [1;34mis[0m Woof
+  tricks [1;34mis[0m [33m0[0m
 
-  on learn
-    set me.tricks to me.tricks + 1
-    show .me.name learned trick number .me.tricks
-  end
-end
+  [1;34mon[0m learn
+    [1;34mset[0m [1;34mme[0m[36m.tricks[0m [1;34mto[0m [1;34mme[0m[36m.tricks[0m [31m+[0m [33m1[0m
+    [1;34mshow[0m [36m.me.name[0m learned trick number [36m.me.tricks[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-make a Dog called rex with name Rex
-send speak to rex
-send learn to rex
+[1;34mmake[0m [1;34ma[0m Dog [1;34mcalled[0m rex [1;34mwith[0m name Rex
+[1;34msend[0m speak [1;34mto[0m rex
+[1;34msend[0m learn [1;34mto[0m rex
 ```
 
 ### Contracts (Interfaces)
 
 Define a contract that kinds must implement:
 
-```applescript
-contract Describable
-  method describe
-end
+```ansi
+[1;34mcontract[0m Describable
+  [1;34mmethod[0m describe
+[1;34mend[0m
 
-kind Dog implements Describable
-  name is "Rex"
+[1;34mkind[0m Dog [1;34mimplements[0m Describable
+  name [1;34mis[0m [32m"Rex"[0m
 
-  on describe
-    show I am .me.name
-  end
-end
+  [1;34mon[0m describe
+    [1;34mshow[0m I am [36m.me.name[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-make Dog called d
-send describe to d
+[1;34mmake[0m Dog [1;34mcalled[0m d
+[1;34msend[0m describe [1;34mto[0m d
 ```
 
 ### Secret (Private) Fields
 
 Mark fields as private with `secret`:
 
-```applescript
-kind Account
-  secret balance is 100
+```ansi
+[1;34mkind[0m Account
+  [1;34msecret[0m balance [1;34mis[0m [33m100[0m
 
-  on getBalance
-    return me.balance
-  end
-end
+  [1;34mon[0m getBalance
+    [1;34mreturn[0m [1;34mme[0m[36m.balance[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-make Account called a
-set b to send getBalance to a
-show .b   -- 100
--- Direct access from outside is prevented
+[1;34mmake[0m Account [1;34mcalled[0m [1;34ma[0m
+[1;34mset[0m b [1;34mto[0m [1;34msend[0m getBalance [1;34mto[0m [1;34ma[0m
+[1;34mshow[0m [36m.b[0m   [90m-- 100[0m
+[90m-- Direct access from outside is prevented[0m
 ```
 
 ### Static Methods
 
 Define methods on the kind itself, not on instances:
 
-```applescript
-kind MathHelper
-  static on double x
-    return x * 2
-  end
-end
+```ansi
+[1;34mkind[0m MathHelper
+  [1;34mstatic[0m [1;34mon[0m double x
+    [1;34mreturn[0m x [31m*[0m [33m2[0m
+  [1;34mend[0m
+[1;34mend[0m
 ```
 
 ### Methods with Parameters
 
 `on` handlers accept parameters after the method name.
 
-```applescript
-kind Calculator
-  result is 0
+```ansi
+[1;34mkind[0m Calculator
+  result [1;34mis[0m [33m0[0m
 
-  on add n
-    set me.result to me.result + n
-  end
+  [1;34mon[0m [1;34madd[0m n
+    [1;34mset[0m [1;34mme[0m[36m.result[0m [1;34mto[0m [1;34mme[0m[36m.result[0m [31m+[0m n
+  [1;34mend[0m
 
-  on reset
-    put 0 into me.result
-  end
-end
+  [1;34mon[0m reset
+    [1;34mput[0m [33m0[0m [1;34minto[0m [1;34mme[0m[36m.result[0m
+  [1;34mend[0m
+[1;34mend[0m
 
-make a Calculator called calc
-send add 10 to calc
-send add 25 to calc
-show (.calc.result)
+[1;34mmake[0m [1;34ma[0m Calculator [1;34mcalled[0m calc
+[1;34msend[0m [1;34madd[0m [33m10[0m [1;34mto[0m calc
+[1;34msend[0m [1;34madd[0m [33m25[0m [1;34mto[0m calc
+[1;34mshow[0m ([36m.calc.result[0m)
 ```
 
 ### Commands (Functions)
 
 Define reusable functions with `command`. Use `and` to separate multiple parameters.
 
-```applescript
-command greet someone
-  show Hello .someone
-end
+```ansi
+[1;34mcommand[0m greet someone
+  [1;34mshow[0m Hello [36m.someone[0m
+[1;34mend[0m
 
 greet World
 
-command add a and b
-  return a + b
-end
+[1;34mcommand[0m [1;34madd[0m [1;34ma[0m [1;34mand[0m b
+  [1;34mreturn[0m [1;34ma[0m [31m+[0m b
+[1;34mend[0m
 
-set result to add 10 and 25
-show .result
+[1;34mset[0m result [1;34mto[0m [1;34madd[0m [33m10[0m [1;34mand[0m [33m25[0m
+[1;34mshow[0m [36m.result[0m
 ```
 
 ### Guard Clause Returns
 
 Return early from a command based on a condition:
 
-```applescript
-command check x
-  return "small" if x < 10
-  return "big"
-end
+```ansi
+[1;34mcommand[0m [1;34mcheck[0m x
+  [1;34mreturn[0m [32m"small"[0m [1;34mif[0m x [31m<[0m [33m10[0m
+  [1;34mreturn[0m [32m"big"[0m
+[1;34mend[0m
 
-show (check 5)    -- small
-show (check 15)   -- big
+[1;34mshow[0m ([1;34mcheck[0m [33m5[0m)    [90m-- small[0m
+[1;34mshow[0m ([1;34mcheck[0m [33m15[0m)   [90m-- big[0m
 ```
 
 ### Type Annotations
 
 Add optional type annotations to command parameters:
 
-```applescript
-command add (a as number, b as number)
-  return a + b
-end
-show (add 3, 4)   -- 7
+```ansi
+[1;34mcommand[0m [1;34madd[0m ([1;34ma[0m [1;34mas[0m number, b [1;34mas[0m number)
+  [1;34mreturn[0m [1;34ma[0m [31m+[0m b
+[1;34mend[0m
+[1;34mshow[0m ([1;34madd[0m [33m3[0m, [33m4[0m)   [90m-- 7[0m
 ```
 
 ### Lambda Expressions
 
 Create anonymous functions with `{ params -> body }`:
 
-```applescript
-set double to { x -> x * 2 }
-show (double 5)   -- 10
+```ansi
+[1;34mset[0m double [1;34mto[0m { x [31m->[0m x [31m*[0m [33m2[0m }
+[1;34mshow[0m (double [33m5[0m)   [90m-- 10[0m
 
-set factor to 3
-set mult to { x -> x * factor }
-show (mult 4)     -- 12
+[1;34mset[0m factor [1;34mto[0m [33m3[0m
+[1;34mset[0m mult [1;34mto[0m { x [31m->[0m x [31m*[0m factor }
+[1;34mshow[0m (mult [33m4[0m)     [90m-- 12[0m
 ```
 
 ### Pipeline Operator
 
 Chain values through a series of functions with `|`:
 
-```applescript
-command double x
-  return x * 2
-end
-command add1 x
-  return x + 1
-end
+```ansi
+[1;34mcommand[0m double x
+  [1;34mreturn[0m x [31m*[0m [33m2[0m
+[1;34mend[0m
+[1;34mcommand[0m add1 x
+  [1;34mreturn[0m x [31m+[0m [33m1[0m
+[1;34mend[0m
 
-set result to 5 | double | add1
-show .result   -- 11
+[1;34mset[0m result [1;34mto[0m [33m5[0m [31m|[0m double [31m|[0m add1
+[1;34mshow[0m [36m.result[0m   [90m-- 11[0m
 ```
 
 ### Curry (Partial Application)
 
 Create a new function by fixing some arguments of an existing one:
 
-```applescript
-command add a, b
-  return a + b
-end
+```ansi
+[1;34mcommand[0m [1;34madd[0m [1;34ma[0m, b
+  [1;34mreturn[0m [1;34ma[0m [31m+[0m b
+[1;34mend[0m
 
-set add5 to curry add 5
-show (add5 3)   -- 8
+[1;34mset[0m add5 [1;34mto[0m [1;34mcurry[0m [1;34madd[0m [33m5[0m
+[1;34mshow[0m (add5 [33m3[0m)   [90m-- 8[0m
 ```
 
 ### Compose
 
 Combine two functions into one that applies them in sequence:
 
-```applescript
-set double to { x -> x * 2 }
-set inc to { x -> x + 1 }
-set doubleThenInc to compose double, inc
-show (doubleThenInc 3)   -- 7
+```ansi
+[1;34mset[0m double [1;34mto[0m { x [31m->[0m x [31m*[0m [33m2[0m }
+[1;34mset[0m inc [1;34mto[0m { x [31m->[0m x [31m+[0m [33m1[0m }
+[1;34mset[0m doubleThenInc [1;34mto[0m [1;34mcompose[0m double, inc
+[1;34mshow[0m (doubleThenInc [33m3[0m)   [90m-- 7[0m
 ```
 
 ### Templates
 
 Declare reusable code templates:
 
-```applescript
-template greeting name
-  show Hello .name
-end
+```ansi
+[1;34mtemplate[0m greeting name
+  [1;34mshow[0m Hello [36m.name[0m
+[1;34mend[0m
 ```
 
 ### Environment Variables
 
 Read environment variables:
 
-```applescript
-set p to env "PATH"
-if p exists
-  show has path
-end
+```ansi
+[1;34mset[0m p [1;34mto[0m [1;34menv[0m [32m"PATH"[0m
+[1;34mif[0m p [1;34mexists[0m
+  [1;34mshow[0m has path
+[1;34mend[0m
 ```
 
 ### Date and Time
 
 Access current date/time values:
 
-```applescript
-set y to current year
-set t to today
-show .y
-show .t
+```ansi
+[1;34mset[0m y [1;34mto[0m [1;34mcurrent[0m year
+[1;34mset[0m t [1;34mto[0m [1;34mtoday[0m
+[1;34mshow[0m [36m.y[0m
+[1;34mshow[0m [36m.t[0m
 ```
 
 ### JSON and CSV Parsing
 
 Parse data formats:
 
-```applescript
--- Parse JSON
-set raw to "[1, 2, 3]"
-set data to json raw
-show .data.count   -- 3
+```ansi
+[90m-- Parse JSON[0m
+[1;34mset[0m raw [1;34mto[0m [32m"[1, 2, 3]"[0m
+[1;34mset[0m data [1;34mto[0m [1;34mjson[0m raw
+[1;34mshow[0m [36m.data.count[0m   [90m-- 3[0m
 
--- Parse CSV
-set csv_data to "name,age\nAlice,30"
-set rows to csv csv_data
-show .rows.count   -- 1 (data rows, first line is headers)
+[90m-- Parse CSV[0m
+[1;34mset[0m csv_data [1;34mto[0m [32m"name,age\nAlice,30"[0m
+[1;34mset[0m rows [1;34mto[0m [1;34mcsv[0m csv_data
+[1;34mshow[0m [36m.rows.count[0m   [90m-- 1 (data rows, first line is headers)[0m
 ```
 
 ### File I/O
 
 Read and write files:
 
-```applescript
--- Write to a file
-write "output.txt" with "Hello, world!"
+```ansi
+[90m-- Write to a file[0m
+[1;34mwrite[0m [32m"output.txt"[0m [1;34mwith[0m [32m"Hello, world!"[0m
 
--- Append to a file
-append "log.txt" with "New entry"
+[90m-- Append to a file[0m
+[1;34mappend[0m [32m"log.txt"[0m [1;34mwith[0m [32m"New entry"[0m
 
--- Read a file as text
-set content to read "data.txt"
+[90m-- Read a file as text[0m
+[1;34mset[0m content [1;34mto[0m [1;34mread[0m [32m"data.txt"[0m
 
--- Read a file as a list of lines
-set lines to read "data.txt" as list
+[90m-- Read a file as a list of lines[0m
+[1;34mset[0m lines [1;34mto[0m [1;34mread[0m [32m"data.txt"[0m [1;34mas[0m [1;34mlist[0m
 ```
 
 ### Imports
 
 Import code from other `.say` files:
 
-```applescript
-use "helpers.say"
-use "utils/math.say"
+```ansi
+[1;34muse[0m [32m"helpers.say"[0m
+[1;34muse[0m [32m"utils/math.say"[0m
 ```
 
 The imported file is executed, making its commands and kinds available.
@@ -917,55 +917,55 @@ The imported file is executed, making its commands and kinds available.
 
 Use `.variable` anywhere in `show` to insert a value. Use `.object.property` for nested access. Use `(expression)` for computed values.
 
-```applescript
-put HyperCode into lang
-put 2026 into year
-show .lang was created in .year
-show That was (2026 - year) years ago
+```ansi
+[1;34mput[0m HyperCode [1;34minto[0m lang
+[1;34mput[0m [33m2026[0m [1;34minto[0m year
+[1;34mshow[0m [36m.lang[0m was created [1;34min[0m [36m.year[0m
+[1;34mshow[0m That was ([33m2026[0m [31m-[0m year) years ago
 ```
 
 ### Error Handling
 
 **Basic try/or:**
 
-```applescript
-try
-  make a Unicorn called sparkle
-or
-  show Caught: Unicorn kind does not exist
-end
+```ansi
+[1;34mtry[0m
+  [1;34mmake[0m [1;34ma[0m Unicorn [1;34mcalled[0m sparkle
+[1;34mor[0m
+  [1;34mshow[0m Caught: Unicorn [1;34mkind[0m [1;34mdoes[0m [1;34mnot[0m [1;34mexist[0m
+[1;34mend[0m
 ```
 
 **Try/catch with error variable:**
 
-```applescript
-try
-  send fly to nothing
-catch err
-  show Error: (.err.message)
-end
+```ansi
+[1;34mtry[0m
+  [1;34msend[0m fly [1;34mto[0m [35mnothing[0m
+[1;34mcatch[0m err
+  [1;34mshow[0m Error: ([36m.err.message[0m)
+[1;34mend[0m
 
-show Program continues after errors
+[1;34mshow[0m Program continues [1;34mafter[0m errors
 ```
 
 ### Testing
 
 Define tests with `test` blocks and assertions with `check`.
 
-```applescript
-command double n
-  return n + n
-end
+```ansi
+[1;34mcommand[0m double n
+  [1;34mreturn[0m n [31m+[0m n
+[1;34mend[0m
 
-test double works
-  set result to double 5
-  check result == 10
-end
+[1;34mtest[0m double works
+  [1;34mset[0m result [1;34mto[0m double [33m5[0m
+  [1;34mcheck[0m result [31m==[0m [33m10[0m
+[1;34mend[0m
 
-test lists have correct count
-  put list 1, 2, 3 into nums
-  check nums.count == 3
-end
+[1;34mtest[0m lists have correct count
+  [1;34mput[0m [1;34mlist[0m [33m1[0m, [33m2[0m, [33m3[0m [1;34minto[0m nums
+  [1;34mcheck[0m nums[36m.count[0m [31m==[0m [33m3[0m
+[1;34mend[0m
 ```
 
 Run with:
@@ -987,117 +987,117 @@ Output:
 
 Replace commands with mock implementations in tests:
 
-```applescript
-command fetch_data
-  return "real data"
-end
-mock fetch_data returns "fake data"
-show (fetch_data)   -- fake data
+```ansi
+[1;34mcommand[0m fetch_data
+  [1;34mreturn[0m [32m"real data"[0m
+[1;34mend[0m
+[1;34mmock[0m fetch_data [1;34mreturns[0m [32m"fake data"[0m
+[1;34mshow[0m (fetch_data)   [90m-- fake data[0m
 ```
 
 ### Benchmark
 
 Measure how long code takes to run:
 
-```applescript
-benchmark "sorting"
-  sort big_list
-end
--- Shows: Benchmark "sorting": 12ms
+```ansi
+[1;34mbenchmark[0m [32m"sorting"[0m
+  [1;34msort[0m big_list
+[1;34mend[0m
+[90m-- Shows: Benchmark "sorting": 12ms[0m
 ```
 
 ### Snapshot Testing
 
 Save and verify values against snapshots:
 
-```applescript
-set x to 42
-snapshot x as "my_value"
+```ansi
+[1;34mset[0m x [1;34mto[0m [33m42[0m
+[1;34msnapshot[0m x [1;34mas[0m [32m"my_value"[0m
 ```
 
 ### Turtle Graphics
 
 Draw with Logo-style turtle commands:
 
-```applescript
-forward 100
-turn right 90
-forward 50
-pen up
-forward 20
-pen down
-forward 50
+```ansi
+[1;34mforward[0m [33m100[0m
+[1;34mturn[0m [1;34mright[0m [33m90[0m
+[1;34mforward[0m [33m50[0m
+[1;34mpen[0m [1;34mup[0m
+[1;34mforward[0m [33m20[0m
+[1;34mpen[0m [1;34mdown[0m
+[1;34mforward[0m [33m50[0m
 ```
 
 ### Animation
 
 Animate properties over time:
 
-```applescript
-animate ball.x from 0 to 100 over 500
+```ansi
+[1;34manimate[0m ball[36m.x[0m [1;34mfrom[0m [33m0[0m [1;34mto[0m [33m100[0m [1;34mover[0m [33m500[0m
 ```
 
 ### Scene Switching
 
 Switch between scenes in games/apps:
 
-```applescript
-switch scene "menu"
+```ansi
+[1;34mswitch[0m [1;34mscene[0m [32m"menu"[0m
 ```
 
 ### Inspect and Explain
 
 Use `explain` for detailed info about a value. Use `?` for a quick inspection.
 
-```applescript
-kind Cat
-  name is Unknown
-  lives is 9
-end
+```ansi
+[1;34mkind[0m Cat
+  name [1;34mis[0m Unknown
+  lives [1;34mis[0m [33m9[0m
+[1;34mend[0m
 
-make a Cat called whiskers with name Whiskers
-explain whiskers
+[1;34mmake[0m [1;34ma[0m Cat [1;34mcalled[0m whiskers [1;34mwith[0m name Whiskers
+[1;34mexplain[0m whiskers
 ```
 
 ### The `it` Variable
 
 `it` holds the last input value or the current item in `where`/`each` expressions.
 
-```applescript
-ask What is your favorite color
-show You said .it
+```ansi
+[1;34mask[0m What [1;34mis[0m your favorite color
+[1;34mshow[0m You said [36m.it[0m
 
-put list 1, 2, 3, 4, 5 into nums
-set big to nums where it > 3
-set doubled to nums each it * 2
+[1;34mput[0m [1;34mlist[0m [33m1[0m, [33m2[0m, [33m3[0m, [33m4[0m, [33m5[0m [1;34minto[0m nums
+[1;34mset[0m big [1;34mto[0m nums [1;34mwhere[0m [1;34mit[0m [31m>[0m [33m3[0m
+[1;34mset[0m doubled [1;34mto[0m nums [1;34meach[0m [1;34mit[0m [31m*[0m [33m2[0m
 ```
 
 ### The `me` Keyword
 
 Inside an `on` handler, `me` refers to the current instance.
 
-```applescript
-kind Counter
-  value is 0
+```ansi
+[1;34mkind[0m Counter
+  value [1;34mis[0m [33m0[0m
 
-  on increment
-    set me.value to me.value + 1
-  end
+  [1;34mon[0m increment
+    [1;34mset[0m [1;34mme[0m[36m.value[0m [1;34mto[0m [1;34mme[0m[36m.value[0m [31m+[0m [33m1[0m
+  [1;34mend[0m
 
-  on report
-    show Count is .me.value
-  end
-end
+  [1;34mon[0m report
+    [1;34mshow[0m Count [1;34mis[0m [36m.me.value[0m
+  [1;34mend[0m
+[1;34mend[0m
 ```
 
 ### Graphics (Draw)
 
 Draw shapes to a canvas. When running from the CLI, an SVG file is automatically saved.
 
-```applescript
-draw circle at 200, 200 size 80
-draw rectangle at 50, 50 size 100
-draw line from 0, 400 to 400, 0
+```ansi
+[1;34mdraw[0m [1;34mcircle[0m [1;34mat[0m [33m200[0m, [33m200[0m [1;34msize[0m [33m80[0m
+[1;34mdraw[0m [1;34mrectangle[0m [1;34mat[0m [33m50[0m, [33m50[0m [1;34msize[0m [33m100[0m
+[1;34mdraw[0m [1;34mline[0m [1;34mfrom[0m [33m0[0m, [33m400[0m [1;34mto[0m [33m400[0m, [33m0[0m
 ```
 
 Supported shapes: `circle`, `rectangle`, `line`, `text`, `ellipse`, `triangle`, `star`.
@@ -1106,30 +1106,30 @@ Supported shapes: `circle`, `rectangle`, `line`, `text`, `ellipse`, `triangle`, 
 
 Play sounds (outputs descriptions in CLI mode):
 
-```applescript
-play sound ding
+```ansi
+[1;34mplay[0m [1;34msound[0m [1;34mding[0m
 ```
 
 ### AI Integration (`think`)
 
 Ask an AI a question (requires `ANTHROPIC_API_KEY` environment variable):
 
-```applescript
-set answer to think "What is the capital of France?"
-show .answer
+```ansi
+[1;34mset[0m answer [1;34mto[0m [1;34mthink[0m [32m"What is the capital of France?"[0m
+[1;34mshow[0m [36m.answer[0m
 
-put ask Ask me anything into question
-set response to think question
-show .response
+[1;34mput[0m [1;34mask[0m Ask [1;34mme[0m anything [1;34minto[0m question
+[1;34mset[0m response [1;34mto[0m [1;34mthink[0m question
+[1;34mshow[0m [36m.response[0m
 ```
 
 ### HTTP Fetch
 
 Make HTTP requests and work with web data:
 
-```applescript
-set data to fetch "https://api.example.com/data"
-show .data
+```ansi
+[1;34mset[0m data [1;34mto[0m [1;34mfetch[0m [32m"https://api.example.com/data"[0m
+[1;34mshow[0m [36m.data[0m
 ```
 
 JSON responses are automatically converted to maps and lists.
@@ -1138,84 +1138,84 @@ JSON responses are automatically converted to maps and lists.
 
 Serve web pages from HyperCode:
 
-```applescript
-serve on port 8080
+```ansi
+[1;34mserve[0m [1;34mon[0m [1;34mport[0m [33m8080[0m
 
-route GET "/"
-  respond with "<h1>Hello from HyperCode!</h1>"
-end
+[1;34mroute[0m [1;34mGET[0m [32m"/"[0m
+  [1;34mrespond[0m [1;34mwith[0m [32m"<h1>Hello from HyperCode!</h1>"[0m
+[1;34mend[0m
 
-route GET "/about"
-  respond with "<h1>About</h1><p>Made with HyperCode.</p>"
-end
+[1;34mroute[0m [1;34mGET[0m [32m"/about"[0m
+  [1;34mrespond[0m [1;34mwith[0m [32m"<h1>About</h1><p>Made with HyperCode.</p>"[0m
+[1;34mend[0m
 ```
 
 ### WebSocket Connections
 
 Connect to WebSocket servers:
 
-```applescript
-connect "ws://localhost:8080" as ws
+```ansi
+[1;34mconnect[0m [32m"ws://localhost:8080"[0m [1;34mas[0m ws
 ```
 
 ### Emit Events
 
 Emit events to listeners:
 
-```applescript
-emit "click"
-emit "message" with "hello"
+```ansi
+[1;34memit[0m [32m"click"[0m
+[1;34memit[0m [32m"message"[0m [1;34mwith[0m [32m"hello"[0m
 ```
 
 ### Cookies
 
 Manage browser cookies:
 
-```applescript
-cookie set "user" to "Alice"
-show .cookie_user         -- Alice
-cookie delete "user"
+```ansi
+[1;34mcookie[0m [1;34mset[0m [32m"user"[0m [1;34mto[0m [32m"Alice"[0m
+[1;34mshow[0m [36m.cookie_user[0m         [90m-- Alice[0m
+[1;34mcookie[0m delete [32m"user"[0m
 ```
 
 ### CORS (Cross-Origin)
 
 Allow cross-origin requests:
 
-```applescript
-allow "https://example.com"
+```ansi
+[1;34mallow[0m [32m"https://example.com"[0m
 ```
 
 ### Streaming
 
 Start a data stream:
 
-```applescript
-stream "heartbeat"
+```ansi
+[1;34mstream[0m [32m"heartbeat"[0m
 ```
 
 ### Persistent Storage (`remember` / `recall`)
 
 Store values that survive between program runs:
 
-```applescript
--- Save a value
-remember "high_score" as 100
+```ansi
+[90m-- Save a value[0m
+[1;34mremember[0m [32m"high_score"[0m [1;34mas[0m [33m100[0m
 
--- Load it later (even after restarting)
-set best to recall "high_score"
-show Best score: .best
+[90m-- Load it later (even after restarting)[0m
+[1;34mset[0m best [1;34mto[0m [1;34mrecall[0m [32m"high_score"[0m
+[1;34mshow[0m Best score: [36m.best[0m
 
--- Delete a stored value
-forget "high_score"
+[90m-- Delete a stored value[0m
+[1;34mforget[0m [32m"high_score"[0m
 ```
 
 ### Packages (`grab`)
 
 Import community packages:
 
-```applescript
-grab "colors"
-grab "trivia-api"
+```ansi
+[1;34mgrab[0m [32m"colors"[0m
+[1;34mgrab[0m [32m"trivia-api"[0m
 ```
 
 Packages are loaded from `packages/<name>/index.say`.
@@ -1224,53 +1224,53 @@ Packages are loaded from `packages/<name>/index.say`.
 
 Run multiple blocks of code at the same time:
 
-```applescript
-do together
-  show Task 1 running
-  repeat 3 times
-    show Working on task 1...
-  end
-and
-  show Task 2 running
-  repeat 3 times
-    show Working on task 2...
-  end
-end
+```ansi
+[1;34mdo[0m [1;34mtogether[0m
+  [1;34mshow[0m Task [33m1[0m running
+  [1;34mrepeat[0m [33m3[0m [1;34mtimes[0m
+    [1;34mshow[0m Working [1;34mon[0m task [33m1...[0m
+  [1;34mend[0m
+[1;34mand[0m
+  [1;34mshow[0m Task [33m2[0m running
+  [1;34mrepeat[0m [33m3[0m [1;34mtimes[0m
+    [1;34mshow[0m Working [1;34mon[0m task [33m2...[0m
+  [1;34mend[0m
+[1;34mend[0m
 ```
 
 ### Event Listeners
 
 Listen for events and run code when they happen:
 
-```applescript
-listen for click as data
-  show Clicked: .data
-end
+```ansi
+[1;34mlisten[0m [1;34mfor[0m click [1;34mas[0m data
+  [1;34mshow[0m Clicked: [36m.data[0m
+[1;34mend[0m
 ```
 
 ### Timers (`every`)
 
 Run code on a recurring interval:
 
-```applescript
-every 2 seconds
-  show Tick!
-end
+```ansi
+[1;34mevery[0m [33m2[0m [1;34mseconds[0m
+  [1;34mshow[0m Tick[31m![0m
+[1;34mend[0m
 ```
 
 ### Pattern Matching on Kinds
 
 Match objects by their type in `when` blocks:
 
-```applescript
-when animal
-is a Dog
-  show It's a dog!
-is a Bird
-  show It's a bird!
-else
-  show Unknown animal
-end
+```ansi
+[1;34mwhen[0m animal
+[1;34mis[0m [1;34ma[0m Dog
+  [1;34mshow[0m It[32m's a dog![0m
+[1;34mis[0m [1;34ma[0m Bird
+  [1;34mshow[0m It[32m's a bird![0m
+[1;34melse[0m
+  [1;34mshow[0m Unknown animal
+[1;34mend[0m
 ```
 
 ## CLI Commands

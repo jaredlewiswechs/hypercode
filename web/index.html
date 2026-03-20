@@ -115,6 +115,10 @@
     .cm-s-say .cm-operator { color: #ff7b72; }
     .cm-s-say .cm-bracket { color: var(--text-dim); }
     .cm-s-say .cm-def { color: #d2a8ff; }
+    .cm-s-say .cm-string { color: #a5d6ff; }
+    .cm-s-say .cm-string-2 { color: #a5d6ff; font-style: italic; }
+    .cm-s-say .cm-property { color: #ffa657; }
+    .cm-s-say .cm-builtin { color: #79c0ff; }
     .cm-s-say .cm-error-line { background: rgba(248,81,73,0.1) !important; }
 
     /* ── Output ── */
@@ -380,40 +384,110 @@ show Hello, World!
 
     // ── Define CodeMirror mode ──
     CodeMirror.defineMode('say', function() {
-      const kwSet = new Set([
-        'put','into','show','ask','make','send','add','remove','go','open','hide',
-        'draw','wait','play','clear','stop','kind','from','on','me','end','return',
-        'command','use','test','check','new','if','else','repeat','times','while',
-        'until','forever','for','each','in','to','at','a','called','with','it',
-        'list','sort','reverse','shuffle','contains','where','try','or','catch',
-        'is','not','and','greater','less','than','explain'
-      ]);
-      const atomSet = new Set(['true','false','nothing']);
+      // Core action keywords
+      var actions = 'put,into,set,show,ask,make,send,add,remove,go,open,hide,' +
+        'draw,wait,play,clear,stop,return,use,grab';
+      // Control flow
+      var control = 'if,else,repeat,times,while,until,forever,for,each,in,to,at,' +
+        'by,as,when,is,try,or,catch,do,together';
+      // Definition / structure
+      var defs = 'kind,from,on,me,end,command,template,contract,implements,secret,static,' +
+        'test,check,mock,before,after,benchmark,snapshot,enum';
+      // Articles / connectors
+      var connectors = 'a,called,with,it,not,and,greater,less,than,new,where,contains';
+      // Collections
+      var collections = 'list,map,pair,unique,sort,reverse,shuffle';
+      // I/O & system
+      var system = 'read,write,append,fetch,serve,respond,route,status,request,' +
+        'remember,recall,forget,think,explain,listen,every,second,seconds,' +
+        'emit,connect,stream,cookie,allow,env,current,today,arguments,files,folder';
+      // Graphics & UI
+      var graphics = 'canvas,circle,rectangle,line,color,size,fill,stroke,width,height,' +
+        'animate,moving,over,sprite,load,touches,scene,switch,layer,' +
+        'forward,backward,turn,left,right,pen,up,down,note,sound';
+      // Types
+      var types = 'text,number,boolean,date,time';
+      // Functional
+      var functional = 'apply,curry,compose';
+      // Education
+      var education = 'classroom,submit,collect,visualize,challenge,grade,rubric';
+      // Debug
+      var debug = 'debug,step,breakpoint,watch,profile,lint,save,history';
+
+      var allKw = (actions + ',' + control + ',' + defs + ',' + connectors + ',' +
+        collections + ',' + system + ',' + graphics + ',' + types + ',' +
+        functional + ',' + education + ',' + debug).split(',');
+      var kwSet = {};
+      for (var i = 0; i < allKw.length; i++) kwSet[allKw[i]] = true;
+
+      var atomSet = { 'true': true, 'false': true, 'nothing': true };
+      var typeSet = { 'text': true, 'number': true, 'boolean': true, 'date': true, 'time': true };
 
       return {
-        startState: function() { return { inMultiComment: false }; },
+        startState: function() { return { inMultiComment: false, inTripleString: false }; },
         token: function(stream, state) {
+          // Multi-line comment
           if (state.inMultiComment) {
-            if (stream.match('---')) { state.inMultiComment = false; stream.skipToEnd(); return 'comment'; }
+            if (stream.match('---')) { state.inMultiComment = false; return 'comment'; }
             stream.skipToEnd();
             return 'comment';
           }
-          if (stream.match('---')) { state.inMultiComment = true; stream.skipToEnd(); return 'comment'; }
+          // Triple-quoted string
+          if (state.inTripleString) {
+            if (stream.match('"""')) { state.inTripleString = false; return 'string'; }
+            // Interpolation inside triple string
+            if (stream.match(/^\{[^}]*\}/)) return 'string-2';
+            stream.next();
+            return 'string';
+          }
+          // Start of triple comment
+          if (stream.match('---')) { state.inMultiComment = true; return 'comment'; }
+          // Single-line comment
           if (stream.match('--')) { stream.skipToEnd(); return 'comment'; }
+          // Whitespace
           if (stream.eatSpace()) return null;
+          // Triple-quoted string start
+          if (stream.match('"""')) { state.inTripleString = true; return 'string'; }
+          // Double-quoted string
+          if (stream.peek() === '"') {
+            stream.next();
+            while (!stream.eol()) {
+              var ch = stream.next();
+              if (ch === '\\') { stream.next(); continue; }
+              if (ch === '{') {
+                // Read interpolation
+                while (!stream.eol() && stream.peek() !== '}') stream.next();
+                if (stream.peek() === '}') stream.next();
+                continue;
+              }
+              if (ch === '"') return 'string';
+            }
+            return 'string';
+          }
+          // Dot-interpolation (.varName)
           if (stream.match(/^\.[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)*/)) return 'variable-2';
+          // Pipeline operator
+          if (stream.match('|>') || stream.match('|')) return 'operator';
+          // Arrow
+          if (stream.match('->')) return 'operator';
+          // Numbers
           if (stream.match(/^-?\d+(\.\d+)?/)) return 'number';
+          // Identifiers and keywords
           if (stream.match(/^[a-zA-Z_]\w*/)) {
             var w = stream.current().toLowerCase();
-            if (atomSet.has(w)) return 'atom';
-            if (kwSet.has(w)) return 'keyword';
-            if (stream.current()[0] === stream.current()[0].toUpperCase() &&
-                stream.current()[0] !== stream.current()[0].toLowerCase()) return 'def';
+            if (atomSet[w]) return 'atom';
+            if (typeSet[w]) return 'builtin';
+            if (kwSet[w]) return 'keyword';
+            // Capitalized = type/class name
+            var first = stream.current()[0];
+            if (first === first.toUpperCase() && first !== first.toLowerCase()) return 'def';
             return 'variable';
           }
+          // Operators
           if (stream.match(/^[+\-*\/%\^]/)) return 'operator';
           if (stream.match(/^[><=!]=?/)) return 'operator';
-          if (stream.match(/^[(),?]/)) return 'bracket';
+          // Brackets/delimiters
+          if (stream.match(/^[(){}\[\],?:]/)) return 'bracket';
           stream.next();
           return null;
         }

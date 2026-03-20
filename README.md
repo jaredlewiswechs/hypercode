@@ -31,7 +31,7 @@ say test myfile.say
 
 ## Hello World
 
-```say
+```lua
 put ask What is your name into name
 show Hello .name, welcome to HyperCode!
 ```
@@ -45,7 +45,7 @@ HyperCode has two ways to store values:
 - **`put VALUE into NAME`** — stores literal text or numbers as-is (no math evaluation)
 - **`set NAME to EXPRESSION`** — evaluates an expression and stores the result
 
-```say
+```lua
 -- put is for literal values
 put 42 into age
 put Hello World into greeting
@@ -79,7 +79,7 @@ Use `put` when you have a plain value. Use `set` when you need math, function ca
 
 Strings can be unquoted (in `put` and `show`) or quoted with double quotes (in `set` and expressions).
 
-```say
+```lua
 put Hello World into greeting
 set name to "Alice"
 set message to "She said \"hello\""
@@ -87,7 +87,7 @@ set message to "She said \"hello\""
 
 **String interpolation** with `{variable}` inside quoted strings:
 
-```say
+```lua
 set name to "World"
 set msg to "Hello {name}!"
 show .msg
@@ -96,7 +96,7 @@ show .msg
 
 **Triple-quoted strings** for multiline text:
 
-```say
+```lua
 set poem to """roses are red
 violets are blue"""
 show .poem
@@ -104,14 +104,14 @@ show .poem
 
 **String concatenation** with `+`:
 
-```say
+```lua
 set full to first + " " + last
 show (.full)
 ```
 
 **Regex matching** with `matches`:
 
-```say
+```lua
 set valid to "hello123" matches "[a-z]+[0-9]+"
 show .valid
 -- Shows: true
@@ -119,7 +119,7 @@ show .valid
 
 **String properties:**
 
-```say
+```lua
 put hello world into text
 show (.text.upper)       -- HELLO WORLD
 show (.text.lower)       -- hello world
@@ -131,7 +131,7 @@ show (.text.last)        -- d
 
 **String indexing:**
 
-```say
+```lua
 set letter to text.at 3       -- l (1-based)
 set part to text.from 1 to 5  -- hello
 ```
@@ -140,7 +140,7 @@ set part to text.from 1 to 5  -- hello
 
 `show` prints to the console. Use `.variable` for interpolation and `(expression)` for inline math.
 
-```say
+```lua
 put 10 into x
 put 20 into y
 show The value of x is .x
@@ -151,7 +151,7 @@ show The sum is (x + y)
 
 `ask` prompts the user and stores the answer in `it`.
 
-```say
+```lua
 put ask What is your name into name
 show Hello .name
 
@@ -162,7 +162,7 @@ show You are .age years old
 
 ### Comments
 
-```say
+```lua
 -- This is a single-line comment
 
 ---
@@ -173,7 +173,7 @@ multi-line comment
 
 ### Arithmetic
 
-```say
+```lua
 set sum to 10 + 3          -- 13
 set diff to 10 - 3         -- 7
 set product to 10 * 3      -- 30
@@ -187,7 +187,7 @@ set grouped to (3 + 4) * 2 -- 14
 
 Access math functions through the `math` module:
 
-```say
+```lua
 set x to math.round 3.7      -- 4
 set x to math.floor 3.7      -- 3
 set x to math.ceil 3.2       -- 4
@@ -199,7 +199,7 @@ set x to math.sqrt 16        -- 4
 
 Generate random values:
 
-```say
+```lua
 -- Random integer in a range (inclusive)
 set roll to random 1 to 6
 
@@ -214,7 +214,7 @@ set chance to random float
 
 Round numbers to a specific number of decimal places:
 
-```say
+```lua
 set pi to 3.14159
 set short to pi rounded to 2    -- 3.14
 show Pi is approximately (pi rounded to 3)
@@ -222,7 +222,7 @@ show Pi is approximately (pi rounded to 3)
 
 Use `format` for explicit formatting:
 
-```say
+```lua
 set x to 3.14159
 set result to x format 2 places
 show .result
@@ -233,7 +233,7 @@ show .result
 
 Symbolic and English-style comparisons are both supported.
 
-```say
+```lua
 -- Symbolic
 if x == 10 ... end
 if x != 10 ... end
@@ -253,7 +253,7 @@ if x is less than 10 ... end
 
 Check the type of a value at runtime:
 
-```say
+```lua
 if x is a number
   show x is a number
 end
@@ -275,7 +275,7 @@ Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`, `pair`, 
 
 ### Logic
 
-```say
+```lua
 if x > 0 and x < 100
   show In range
 end
@@ -291,7 +291,7 @@ end
 
 ### Conditionals
 
-```say
+```lua
 put 85 into score
 
 if score >= 90
@@ -309,7 +309,7 @@ end
 
 Match a value against multiple cases:
 
-```say
+```lua
 set day to "Monday"
 
 when day
@@ -328,7 +328,7 @@ end
 
 **Or fallthrough** — match multiple values in a single case:
 
-```say
+```lua
 set x to 2
 
 when x
@@ -343,7 +343,7 @@ end
 
 **Repeat N times:**
 
-```say
+```lua
 repeat 5 times
   show Hello!
 end
@@ -351,7 +351,7 @@ end
 
 **Repeat with counter:**
 
-```say
+```lua
 repeat 5 times with i
   show Iteration .i
 end
@@ -360,7 +360,7 @@ end
 
 **While / Until:**
 
-```say
+```lua
 put 1 into n
 repeat while n <= 10
   show .n
@@ -375,7 +375,7 @@ end
 
 **Forever (with stop):**
 
-```say
+```lua
 put 0 into n
 repeat forever
   set n to n + 1
@@ -387,7 +387,7 @@ end
 
 **For each:**
 
-```say
+```lua
 put list Red, Green, Blue into colors
 for each color in colors
   show .color
@@ -396,7 +396,7 @@ end
 
 **For each with index:**
 
-```say
+```lua
 for each item at i in items
   show Item .i is .item
 end
@@ -404,7 +404,7 @@ end
 
 **Ranges:**
 
-```say
+```lua
 for each i in 1 to 10
   show .i
 end
@@ -412,7 +412,7 @@ end
 
 **Step value** — skip items in a range:
 
-```say
+```lua
 for each i in 1 to 10 by 3
   show .i
 end
@@ -421,7 +421,7 @@ end
 
 **Labeled loops** — break from outer loops:
 
-```say
+```lua
 repeat 5 times as outer
   repeat 5 times as inner
     if something
@@ -435,7 +435,7 @@ end
 
 Create lists with the `list` keyword.
 
-```say
+```lua
 put list 10, 50, 80, 90, 30 into scores
 ```
 
@@ -451,7 +451,7 @@ put list 10, 50, 80, 90, 30 into scores
 | `.max` | Largest number |
 | `.min` | Smallest number |
 
-```say
+```lua
 put list 10, 20, 30, 40, 50 into nums
 show First is (.nums.first)
 show Last is (.nums.last)
@@ -462,7 +462,7 @@ show Average is (.nums.average)
 
 **Modify lists:**
 
-```say
+```lua
 add 60 to nums
 remove 10 from nums
 sort nums
@@ -472,7 +472,7 @@ shuffle nums
 
 **Filter with `where`:**
 
-```say
+```lua
 put list 92, 45, 78, 55, 88 into scores
 set passing to scores where it >= 70
 show .passing
@@ -480,7 +480,7 @@ show .passing
 
 **Transform with `each`:**
 
-```say
+```lua
 put list 1, 2, 3, 4, 5 into nums
 set scaled to nums each it * 10
 show .scaled
@@ -488,7 +488,7 @@ show .scaled
 
 **Check membership:**
 
-```say
+```lua
 if scores contains 100
   show Perfect score found!
 end
@@ -498,7 +498,7 @@ end
 
 Create key-value stores with `map`:
 
-```say
+```lua
 set data to map
 set data.name to "Alice"
 set data.age to 30
@@ -513,14 +513,14 @@ show (.data.name) is (.data.age) years old
 | `.keys` | List of all keys |
 | `.values` | List of all values |
 
-```say
+```lua
 show Keys: (.data.keys)
 show Count: (.data.count)
 ```
 
 **Check and remove entries:**
 
-```say
+```lua
 if data contains "name"
   show Has a name
 end
@@ -532,7 +532,7 @@ remove "age" from data
 
 A pair holds exactly two values:
 
-```say
+```lua
 set p to pair "hello" and "world"
 show .p           -- (hello, world)
 show .p.first     -- hello
@@ -543,7 +543,7 @@ show .p.second    -- world
 
 Sets are collections with no duplicate values. Create them with `unique`:
 
-```say
+```lua
 set s to unique 1, 2, 3, 2, 1
 show .s.count     -- 3 (duplicates removed)
 ```
@@ -555,7 +555,7 @@ show .s.count     -- 3 (duplicates removed)
 | `.count` | Number of unique items |
 | `.list` | Convert to a list |
 
-```say
+```lua
 if s contains 2
   show found
 end
@@ -569,7 +569,7 @@ end
 
 Declare named constants with `enum`:
 
-```say
+```lua
 enum Color is red, green, blue
 show .color
 -- Shows: [Enum Color: red, green, blue]
@@ -579,7 +579,7 @@ show .color
 
 Create maps with initial key-value pairs inline:
 
-```say
+```lua
 set m to map name: "Alice", age: 25
 show .m.name   -- Alice
 show .m.age    -- 25
@@ -589,7 +589,7 @@ show .m.age    -- 25
 
 Unpack lists and pairs into individual variables:
 
-```say
+```lua
 set data to list 10, 20, 30
 set a, b, c from data
 show .a   -- 10
@@ -604,7 +604,7 @@ set first, second from p
 
 Check if a variable has been defined:
 
-```say
+```lua
 set x to 5
 if x exists
   show x is defined
@@ -615,7 +615,7 @@ end
 
 Define object types with `kind`. Fields use `is` for default values. Methods use `on`.
 
-```say
+```lua
 kind Dog
   name is Unknown
   energy is 100
@@ -639,7 +639,7 @@ send run to rex
 
 Use `from` to inherit fields and methods from a parent kind.
 
-```say
+```lua
 kind Animal
   name is Unknown
   sound is ...
@@ -668,7 +668,7 @@ send learn to rex
 
 Define a contract that kinds must implement:
 
-```say
+```lua
 contract Describable
   method describe
 end
@@ -689,7 +689,7 @@ send describe to d
 
 Mark fields as private with `secret`:
 
-```say
+```lua
 kind Account
   secret balance is 100
 
@@ -708,7 +708,7 @@ show .b   -- 100
 
 Define methods on the kind itself, not on instances:
 
-```say
+```lua
 kind MathHelper
   static on double x
     return x * 2
@@ -720,7 +720,7 @@ end
 
 `on` handlers accept parameters after the method name.
 
-```say
+```lua
 kind Calculator
   result is 0
 
@@ -743,7 +743,7 @@ show (.calc.result)
 
 Define reusable functions with `command`. Use `and` to separate multiple parameters.
 
-```say
+```lua
 command greet someone
   show Hello .someone
 end
@@ -762,7 +762,7 @@ show .result
 
 Return early from a command based on a condition:
 
-```say
+```lua
 command check x
   return "small" if x < 10
   return "big"
@@ -776,7 +776,7 @@ show (check 15)   -- big
 
 Add optional type annotations to command parameters:
 
-```say
+```lua
 command add (a as number, b as number)
   return a + b
 end
@@ -787,7 +787,7 @@ show (add 3, 4)   -- 7
 
 Create anonymous functions with `{ params -> body }`:
 
-```say
+```lua
 set double to { x -> x * 2 }
 show (double 5)   -- 10
 
@@ -800,7 +800,7 @@ show (mult 4)     -- 12
 
 Chain values through a series of functions with `|`:
 
-```say
+```lua
 command double x
   return x * 2
 end
@@ -816,7 +816,7 @@ show .result   -- 11
 
 Create a new function by fixing some arguments of an existing one:
 
-```say
+```lua
 command add a, b
   return a + b
 end
@@ -829,7 +829,7 @@ show (add5 3)   -- 8
 
 Combine two functions into one that applies them in sequence:
 
-```say
+```lua
 set double to { x -> x * 2 }
 set inc to { x -> x + 1 }
 set doubleThenInc to compose double, inc
@@ -840,7 +840,7 @@ show (doubleThenInc 3)   -- 7
 
 Declare reusable code templates:
 
-```say
+```lua
 template greeting name
   show Hello .name
 end
@@ -850,7 +850,7 @@ end
 
 Read environment variables:
 
-```say
+```lua
 set p to env "PATH"
 if p exists
   show has path
@@ -861,7 +861,7 @@ end
 
 Access current date/time values:
 
-```say
+```lua
 set y to current year
 set t to today
 show .y
@@ -872,7 +872,7 @@ show .t
 
 Parse data formats:
 
-```say
+```lua
 -- Parse JSON
 set raw to "[1, 2, 3]"
 set data to json raw
@@ -888,7 +888,7 @@ show .rows.count   -- 1 (data rows, first line is headers)
 
 Read and write files:
 
-```say
+```lua
 -- Write to a file
 write "output.txt" with "Hello, world!"
 
@@ -906,7 +906,7 @@ set lines to read "data.txt" as list
 
 Import code from other `.say` files:
 
-```say
+```lua
 use "helpers.say"
 use "utils/math.say"
 ```
@@ -917,7 +917,7 @@ The imported file is executed, making its commands and kinds available.
 
 Use `.variable` anywhere in `show` to insert a value. Use `.object.property` for nested access. Use `(expression)` for computed values.
 
-```say
+```lua
 put HyperCode into lang
 put 2026 into year
 show .lang was created in .year
@@ -928,7 +928,7 @@ show That was (2026 - year) years ago
 
 **Basic try/or:**
 
-```say
+```lua
 try
   make a Unicorn called sparkle
 or
@@ -938,7 +938,7 @@ end
 
 **Try/catch with error variable:**
 
-```say
+```lua
 try
   send fly to nothing
 catch err
@@ -952,7 +952,7 @@ show Program continues after errors
 
 Define tests with `test` blocks and assertions with `check`.
 
-```say
+```lua
 command double n
   return n + n
 end
@@ -987,7 +987,7 @@ Output:
 
 Replace commands with mock implementations in tests:
 
-```say
+```lua
 command fetch_data
   return "real data"
 end
@@ -999,7 +999,7 @@ show (fetch_data)   -- fake data
 
 Measure how long code takes to run:
 
-```say
+```lua
 benchmark "sorting"
   sort big_list
 end
@@ -1010,7 +1010,7 @@ end
 
 Save and verify values against snapshots:
 
-```say
+```lua
 set x to 42
 snapshot x as "my_value"
 ```
@@ -1019,7 +1019,7 @@ snapshot x as "my_value"
 
 Draw with Logo-style turtle commands:
 
-```say
+```lua
 forward 100
 turn right 90
 forward 50
@@ -1033,7 +1033,7 @@ forward 50
 
 Animate properties over time:
 
-```say
+```lua
 animate ball.x from 0 to 100 over 500
 ```
 
@@ -1041,7 +1041,7 @@ animate ball.x from 0 to 100 over 500
 
 Switch between scenes in games/apps:
 
-```say
+```lua
 switch scene "menu"
 ```
 
@@ -1049,7 +1049,7 @@ switch scene "menu"
 
 Use `explain` for detailed info about a value. Use `?` for a quick inspection.
 
-```say
+```lua
 kind Cat
   name is Unknown
   lives is 9
@@ -1063,7 +1063,7 @@ explain whiskers
 
 `it` holds the last input value or the current item in `where`/`each` expressions.
 
-```say
+```lua
 ask What is your favorite color
 show You said .it
 
@@ -1076,7 +1076,7 @@ set doubled to nums each it * 2
 
 Inside an `on` handler, `me` refers to the current instance.
 
-```say
+```lua
 kind Counter
   value is 0
 
@@ -1094,7 +1094,7 @@ end
 
 Draw shapes to a canvas. When running from the CLI, an SVG file is automatically saved.
 
-```say
+```lua
 draw circle at 200, 200 size 80
 draw rectangle at 50, 50 size 100
 draw line from 0, 400 to 400, 0
@@ -1106,7 +1106,7 @@ Supported shapes: `circle`, `rectangle`, `line`, `text`, `ellipse`, `triangle`, 
 
 Play sounds (outputs descriptions in CLI mode):
 
-```say
+```lua
 play sound ding
 ```
 
@@ -1114,7 +1114,7 @@ play sound ding
 
 Ask an AI a question (requires `ANTHROPIC_API_KEY` environment variable):
 
-```say
+```lua
 set answer to think "What is the capital of France?"
 show .answer
 
@@ -1127,7 +1127,7 @@ show .response
 
 Make HTTP requests and work with web data:
 
-```say
+```lua
 set data to fetch "https://api.example.com/data"
 show .data
 ```
@@ -1138,7 +1138,7 @@ JSON responses are automatically converted to maps and lists.
 
 Serve web pages from HyperCode:
 
-```say
+```lua
 serve on port 8080
 
 route GET "/"
@@ -1154,7 +1154,7 @@ end
 
 Connect to WebSocket servers:
 
-```say
+```lua
 connect "ws://localhost:8080" as ws
 ```
 
@@ -1162,7 +1162,7 @@ connect "ws://localhost:8080" as ws
 
 Emit events to listeners:
 
-```say
+```lua
 emit "click"
 emit "message" with "hello"
 ```
@@ -1171,7 +1171,7 @@ emit "message" with "hello"
 
 Manage browser cookies:
 
-```say
+```lua
 cookie set "user" to "Alice"
 show .cookie_user         -- Alice
 cookie delete "user"
@@ -1181,7 +1181,7 @@ cookie delete "user"
 
 Allow cross-origin requests:
 
-```say
+```lua
 allow "https://example.com"
 ```
 
@@ -1189,7 +1189,7 @@ allow "https://example.com"
 
 Start a data stream:
 
-```say
+```lua
 stream "heartbeat"
 ```
 
@@ -1197,7 +1197,7 @@ stream "heartbeat"
 
 Store values that survive between program runs:
 
-```say
+```lua
 -- Save a value
 remember "high_score" as 100
 
@@ -1213,7 +1213,7 @@ forget "high_score"
 
 Import community packages:
 
-```say
+```lua
 grab "colors"
 grab "trivia-api"
 ```
@@ -1224,7 +1224,7 @@ Packages are loaded from `packages/<name>/index.say`.
 
 Run multiple blocks of code at the same time:
 
-```say
+```lua
 do together
   show Task 1 running
   repeat 3 times
@@ -1242,7 +1242,7 @@ end
 
 Listen for events and run code when they happen:
 
-```say
+```lua
 listen for click as data
   show Clicked: .data
 end
@@ -1252,7 +1252,7 @@ end
 
 Run code on a recurring interval:
 
-```say
+```lua
 every 2 seconds
   show Tick!
 end
@@ -1262,7 +1262,7 @@ end
 
 Match objects by their type in `when` blocks:
 
-```say
+```lua
 when animal
 is a Dog
   show It's a dog!
@@ -1484,7 +1484,7 @@ npm test
 | `by` | `1 to 10 by 2` | Step value in range |
 | `as` | `repeat 5 times as label` | Label a loop |
 | `stop` | `stop` / `stop label` | Break out of a loop |
-| `\|` | `value \| fn1 \| fn2` | Pipeline operator |
+| `|` | `value | fn1 | fn2` | Pipeline operator |
 | `return ... if` | `return X if COND` | Guard clause return |
 
 ### Data

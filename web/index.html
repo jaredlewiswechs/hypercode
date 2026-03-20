@@ -63,8 +63,8 @@
     }
     .btn-run { background: var(--green-dim); color: #fff; border-color: rgba(63,185,80,0.4); }
     .btn-run:hover { background: var(--green); }
-    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-run:disabled:hover { background: var(--green-dim); }
+    .btn-run.disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-run.disabled:hover { background: var(--green-dim); }
     .btn-clear { background: transparent; color: var(--text-dim); border-color: var(--border); }
     .btn-clear:hover { color: var(--text); border-color: var(--text-dim); }
     .shortcut-hint {
@@ -147,6 +147,24 @@
     }
     .resizer:hover, .resizer.active { background: var(--accent); }
 
+    /* ── Error decorations (referenced by Monaco) ── */
+    .error-line-decoration {
+      background: rgba(248, 81, 73, 0.15) !important;
+      border-left: 3px solid var(--red) !important;
+    }
+    .error-glyph {
+      background: var(--red);
+      border-radius: 50%;
+      width: 8px !important;
+      height: 8px !important;
+      margin-left: 4px;
+      margin-top: 8px;
+    }
+
+    /* ── Download button ── */
+    .btn-download { background: transparent; color: var(--text-dim); border-color: var(--border); }
+    .btn-download:hover { color: var(--text); border-color: var(--text-dim); }
+
     /* ── Scrollbar ── */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -179,6 +197,7 @@
         <span id="runLabel">Run</span>
       </button>
       <button class="btn-clear" id="clearBtn" title="Clear output">Clear</button>
+      <button class="btn-download" id="downloadBtn" title="Download .say file">&#8681; Save</button>
       <span class="shortcut-hint" id="shortcutHint"></span>
     </div>
   </header>
@@ -209,7 +228,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Ready</span>
     </div>
-    <span id="position">Ln 1, Col 1</span>
+    <span><span id="lineCount">4 lines</span> &middot; <span id="position">Ln 1, Col 1</span></span>
   </footer>
 
   <script src="say.js"></script>
@@ -657,13 +676,34 @@ show Hello, World!
         return div;
       }
 
+      // ── UI helpers for run state ──
+      function setRunningUI() {
+        runIcon.textContent = '\u25A0';
+        runLabel.textContent = 'Stop';
+        runBtn.style.background = 'transparent';
+        runBtn.style.borderColor = 'rgba(248,81,73,0.4)';
+        runBtn.style.color = '#f85149';
+      }
+      function setReadyUI() {
+        runIcon.textContent = '\u25B6';
+        runLabel.textContent = 'Run';
+        runBtn.style.background = '';
+        runBtn.style.borderColor = '';
+        runBtn.style.color = '';
+      }
+
       // ── Run ──
       async function runCode() {
-        if (isRunning) return;
+        if (isRunning) {
+          // Stop the running program
+          if (currentReject) {
+            currentReject(new Error('Aborted'));
+            currentReject = null;
+          }
+          return;
+        }
         isRunning = true;
-        runBtn.disabled = true;
-        runIcon.textContent = '\u23F3';
-        runLabel.textContent = 'Running';
+        setRunningUI();
         statusDot.className = 'status-dot running';
         statusText.textContent = 'Running...';
 
@@ -764,9 +804,7 @@ show Hello, World!
 
         isRunning = false;
         currentReject = null;
-        runBtn.disabled = false;
-        runIcon.textContent = '\u25B6';
-        runLabel.textContent = 'Run';
+        setReadyUI();
       }
 
       // ── Event handlers ──
@@ -833,6 +871,100 @@ show Hello, World!
 
       // ── Handle window resize ──
       window.addEventListener('resize', function () { editor.layout(); });
+
+      // ── Auto-complete for HyperCode keywords ──
+      monaco.languages.registerCompletionItemProvider('hypercode', {
+        provideCompletionItems: function (model, position) {
+          var word = model.getWordUntilPosition(position);
+          var range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word.startColumn,
+            endColumn: word.endColumn,
+          };
+
+          var keywords = [
+            // Actions
+            'show', 'put', 'set', 'ask', 'make', 'send', 'add', 'remove',
+            'draw', 'return', 'sort', 'reverse', 'shuffle',
+            'read', 'write', 'append', 'fetch', 'serve', 'respond', 'route',
+            'remember', 'recall', 'forget', 'think', 'explain',
+            // Control
+            'if', 'else', 'repeat', 'times', 'while', 'until', 'forever',
+            'for', 'each', 'in', 'to', 'end',
+            // Structure
+            'kind', 'from', 'on', 'me', 'command', 'test', 'check',
+            'enum', 'benchmark',
+            // Connectors
+            'called', 'with', 'into', 'it', 'not', 'and', 'where', 'contains',
+            // Types
+            'list', 'map', 'text', 'number', 'boolean', 'true', 'false', 'nothing',
+          ];
+
+          var snippets = [
+            { label: 'if...end', insert: 'if ${1:condition}\n  ${2}\nend', doc: 'If block' },
+            { label: 'repeat...times', insert: 'repeat ${1:n} times\n  ${2}\nend', doc: 'Repeat N times' },
+            { label: 'for each...in', insert: 'for each ${1:item} in ${2:list}\n  ${3}\nend', doc: 'For each loop' },
+            { label: 'command...end', insert: 'command ${1:name} ${2:param}\n  ${3}\nend', doc: 'Define a command' },
+            { label: 'kind...end', insert: 'kind ${1:Name}\n  ${2:prop} is ${3:value}\n\n  on ${4:method}\n    ${5}\n  end\nend', doc: 'Define a Kind (class)' },
+            { label: 'test...end', insert: 'test ${1:name}\n  ${2}\n  check ${3:expression}\nend', doc: 'Define a test' },
+            { label: 'try...catch', insert: 'try\n  ${1}\ncatch ${2:err}\n  show ${3:error}\nend', doc: 'Try/catch block' },
+            { label: 'repeat while', insert: 'repeat while ${1:condition}\n  ${2}\nend', doc: 'While loop' },
+          ];
+
+          var suggestions = keywords.map(function (kw) {
+            return {
+              label: kw,
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: kw,
+              range: range,
+            };
+          });
+
+          snippets.forEach(function (s) {
+            suggestions.push({
+              label: s.label,
+              kind: monaco.languages.CompletionItemKind.Snippet,
+              insertText: s.insert,
+              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+              documentation: s.doc,
+              range: range,
+            });
+          });
+
+          return { suggestions: suggestions };
+        },
+      });
+
+      // ── LocalStorage persistence ──
+      var STORAGE_KEY = 'hypercode-editor-content';
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved !== null && saved !== '') {
+        editor.setValue(saved);
+      }
+      editor.getModel().onDidChangeContent(function () {
+        localStorage.setItem(STORAGE_KEY, editor.getValue());
+        // Update line count
+        var lines = editor.getModel().getLineCount();
+        document.getElementById('lineCount').textContent = lines + (lines === 1 ? ' line' : ' lines');
+      });
+
+      // ── Initial line count ──
+      (function () {
+        var lines = editor.getModel().getLineCount();
+        document.getElementById('lineCount').textContent = lines + (lines === 1 ? ' line' : ' lines');
+      })();
+
+      // ── Download button ──
+      document.getElementById('downloadBtn').addEventListener('click', function () {
+        var code = editor.getValue();
+        var blob = new Blob([code], { type: 'text/plain' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'program.say';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
 
       // ── Focus editor on load ──
       editor.focus();

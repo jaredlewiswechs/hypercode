@@ -365,16 +365,18 @@ show Hello, World!
 
         // Keywords grouped by role
         actions: [
-          'put', 'into', 'set', 'show', 'ask', 'make', 'send', 'add', 'remove',
+          'into', 'set', 'make', 'send', 'add', 'remove',
           'go', 'open', 'hide', 'draw', 'wait', 'play', 'clear', 'stop', 'return',
           'use', 'grab', 'sort', 'reverse', 'shuffle', 'read', 'write', 'append',
           'fetch', 'serve', 'respond', 'route', 'remember', 'recall', 'forget',
           'think', 'explain', 'listen', 'emit', 'connect', 'stream',
+          'animate', 'forward', 'backward', 'turn', 'pen', 'switch', 'cookie',
+          'allow', 'share', 'snapshot',
         ],
         control: [
           'if', 'else', 'repeat', 'times', 'while', 'until', 'forever',
           'for', 'each', 'in', 'to', 'at', 'by', 'as', 'when', 'is',
-          'try', 'or', 'catch', 'do', 'together',
+          'try', 'or', 'catch', 'do', 'together', 'every', 'scene',
         ],
         structure: [
           'kind', 'from', 'on', 'me', 'end', 'command', 'template', 'contract',
@@ -384,8 +386,11 @@ show Hello, World!
         connectors: [
           'a', 'called', 'with', 'it', 'not', 'and', 'greater', 'less', 'than',
           'new', 'where', 'contains',
+          'random', 'pick', 'rounded', 'unique', 'pair', 'exists', 'matches',
+          'format', 'places', 'curry', 'compose', 'csv', 'json', 'env',
+          'current', 'today', 'left', 'right', 'up', 'down',
         ],
-        typeKeywords: ['text', 'number', 'boolean', 'date', 'time'],
+        typeKeywords: ['text', 'number', 'boolean', 'date', 'time', 'list', 'map', 'lambda'],
         atoms: ['true', 'false', 'nothing'],
 
         operators: [
@@ -410,9 +415,12 @@ show Hello, World!
             // Numbers
             [/-?\d+(\.\d+)?/, 'number'],
 
-            // Identifiers & keywords
+            // Identifiers & keywords — show/ask/put get special line states
             [/[a-zA-Z_]\w*/, {
               cases: {
+                'show': { token: 'keyword', next: '@showLine' },
+                'ask': { token: 'keyword', next: '@showLine' },
+                'put': { token: 'keyword', next: '@putLine' },
                 '@atoms': 'constant',
                 '@typeKeywords': 'type',
                 '@actions': 'keyword',
@@ -423,8 +431,9 @@ show Hello, World!
               }
             }],
 
-            // Operators
-            [/[|][>]/, 'operator'],
+            // Operators — != must come before the general comparison rule
+            [/!=/, 'operator'],
+            [/\|>?/, 'operator'],
             [/->/, 'operator'],
             [/[+\-*\/%\^]/, 'operator'],
             [/[><=]=?/, 'operator'],
@@ -436,6 +445,67 @@ show Hello, World!
 
             // Whitespace
             [/\s+/, 'white'],
+          ],
+
+          // After show/ask: rest of line is plain text with interpolation support
+          showLine: [
+            [/\.[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/, 'variable.interpolation'],
+            [/\(/, { token: '@brackets', next: '@showExpr' }],
+            [/"/, 'string', '@string'],
+            [/\s+/, 'white'],
+            [/$/, { token: '', next: '@pop' }],
+            [/[^\s.()"]+/, 'identifier'],
+            [/./, 'identifier'],
+          ],
+
+          // Expression inside () in show/ask lines — normal highlighting
+          showExpr: [
+            [/\)/, { token: '@brackets', next: '@pop' }],
+            [/\(/, { token: '@brackets', next: '@showExpr' }],
+            [/"/, 'string', '@string'],
+            [/\.[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/, 'variable.interpolation'],
+            [/-?\d+(\.\d+)?/, 'number'],
+            [/[a-zA-Z_]\w*/, {
+              cases: {
+                '@atoms': 'constant',
+                '@typeKeywords': 'type',
+                '@actions': 'keyword',
+                '@control': 'keyword.control',
+                '@structure': 'keyword.structure',
+                '@connectors': 'keyword.connector',
+                '@default': { cases: { '[A-Z].*': 'type.identifier', '@default': 'identifier' } }
+              }
+            }],
+            [/!=/, 'operator'],
+            [/\|>?/, 'operator'],
+            [/->/, 'operator'],
+            [/[+\-*\/%\^]/, 'operator'],
+            [/[><=]=?/, 'operator'],
+            [/[{}[\]]/, '@brackets'],
+            [/[,.:;]/, 'delimiter'],
+            [/\s+/, 'white'],
+          ],
+
+          // After put: literal text until 'into', with special forms
+          putLine: [
+            [/\.[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/, 'variable.interpolation'],
+            [/"/, 'string', '@string'],
+            [/-?\d+(\.\d+)?/, 'number'],
+            [/[a-zA-Z_]\w*/, {
+              cases: {
+                'into': { token: 'keyword', next: '@pop' },
+                'list': { token: 'type', next: '@pop' },
+                'map': { token: 'type', next: '@pop' },
+                'ask': { token: 'keyword', next: '@pop' },
+                'pair': { token: 'keyword.connector', next: '@pop' },
+                'unique': { token: 'keyword.connector', next: '@pop' },
+                '@atoms': 'constant',
+                '@default': 'identifier',
+              }
+            }],
+            [/\s+/, 'white'],
+            [/$/, { token: '', next: '@pop' }],
+            [/./, 'identifier'],
           ],
 
           multiComment: [

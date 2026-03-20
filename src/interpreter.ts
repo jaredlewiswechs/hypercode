@@ -544,7 +544,15 @@ export class Interpreter {
         }
       }
     }
-    this.output(pieces.join(' '));
+    // Join pieces, but don't add space before punctuation
+    let showResult = '';
+    for (let i = 0; i < pieces.length; i++) {
+      if (i > 0 && !/^[!?,.:;]/.test(pieces[i])) {
+        showResult += ' ';
+      }
+      showResult += pieces[i];
+    }
+    this.output(showResult);
     return null;
   }
 

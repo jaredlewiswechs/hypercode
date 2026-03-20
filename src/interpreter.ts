@@ -1,4 +1,6 @@
 import * as AST from './ast';
+import { Lexer } from './lexer';
+import { Parser } from './parser';
 
 export class ReturnSignal {
   constructor(public value: SayValue) {}
@@ -12,7 +14,7 @@ export class CheckFailure extends Error {
   }
 }
 
-export type SayValue = number | string | boolean | null | SayList | SayInstance | SayKind | SayUIElement | undefined;
+export type SayValue = number | string | boolean | null | SayList | SayMap | SayInstance | SayKind | SayUIElement | undefined;
 
 export class SayList {
   items: SayValue[];
@@ -68,6 +70,50 @@ export class SayList {
 
   toString(): string {
     return this.items.map(toString).join(', ');
+  }
+}
+
+export class SayMap {
+  entries: Map<string, SayValue>;
+
+  constructor() {
+    this.entries = new Map();
+  }
+
+  get(key: string): SayValue {
+    return this.entries.get(key) ?? null;
+  }
+
+  set(key: string, value: SayValue): void {
+    this.entries.set(key, value);
+  }
+
+  has(key: string): boolean {
+    return this.entries.has(key);
+  }
+
+  remove(key: string): boolean {
+    return this.entries.delete(key);
+  }
+
+  get count(): number {
+    return this.entries.size;
+  }
+
+  get keys(): SayList {
+    return new SayList(Array.from(this.entries.keys()));
+  }
+
+  get values(): SayList {
+    return new SayList(Array.from(this.entries.values()));
+  }
+
+  toString(): string {
+    const parts: string[] = [];
+    for (const [k, v] of this.entries) {
+      parts.push(`${k}: ${toString(v)}`);
+    }
+    return `{${parts.join(', ')}}`;
   }
 }
 
@@ -191,6 +237,9 @@ export interface InterpreterOptions {
   output?: (text: string) => void;
   input?: (prompt: string) => string | Promise<string>;
   maxIterations?: number;
+  readFile?: (path: string) => string | Promise<string>;
+  writeFile?: (path: string, content: string) => void | Promise<void>;
+  appendFile?: (path: string, content: string) => void | Promise<void>;
 }
 
 export class Interpreter {
@@ -204,6 +253,9 @@ export class Interpreter {
   private input: (prompt: string) => string | Promise<string>;
   private maxIterations: number;
   private itValue: SayValue = null;
+  private readFile: (path: string) => string | Promise<string>;
+  private writeFile: (path: string, content: string) => void | Promise<void>;
+  private appendFile: (path: string, content: string) => void | Promise<void>;
 
   constructor(options: InterpreterOptions = {}) {
     this.globalEnv = new Environment();
@@ -211,6 +263,9 @@ export class Interpreter {
     this.output = options.output || ((text: string) => console.log(text));
     this.input = options.input || (() => '');
     this.maxIterations = options.maxIterations || 100000;
+    this.readFile = options.readFile || (() => { throw new Error('File reading not available'); });
+    this.writeFile = options.writeFile || (() => { throw new Error('File writing not available'); });
+    this.appendFile = options.appendFile || (() => { throw new Error('File appending not available'); });
     this.registerBuiltins();
   }
 
@@ -251,6 +306,7 @@ export class Interpreter {
   private async execute(node: AST.ASTNode): Promise<SayValue> {
     switch (node.type) {
       case 'PutStatement': return this.executePut(node);
+      case 'SetStatement': return this.executeSet(node);
       case 'ShowStatement': return this.executeShow(node);
       case 'AskExpression': return this.executeAsk(node);
       case 'IfStatement': return this.executeIf(node);
@@ -283,12 +339,20 @@ export class Interpreter {
       case 'PlayStatement': return null; // Visual stub
       case 'ExpressionStatement': return this.evaluate(node.expression);
       case 'ListLiteralMultiline': return this.executeListMultiline(node);
+      case 'WhenStatement': return this.executeWhen(node);
+      case 'WriteStatement': return this.executeWrite(node);
       default:
         return null;
     }
   }
 
   private async executePut(node: AST.PutStatement): Promise<SayValue> {
+    const value = await this.evaluate(node.value);
+    await this.assignTarget(node.target, value);
+    return value;
+  }
+
+  private async executeSet(node: AST.SetStatement): Promise<SayValue> {
     const value = await this.evaluate(node.value);
     await this.assignTarget(node.target, value);
     return value;
@@ -350,14 +414,24 @@ export class Interpreter {
     switch (node.variant) {
       case 'times': {
         const count = toNumber(await this.evaluate(node.count!));
-        for (let i = 0; i < count; i++) {
-          if (++iterations > this.maxIterations) throw new Error('Maximum iterations exceeded');
-          try {
-            await this.executeBlock(node.body);
-          } catch (e) {
-            if (e instanceof StopSignal) break;
-            throw e;
+        const childEnv = node.counterVariable ? new Environment(this.env) : null;
+        const prevEnv = this.env;
+        if (childEnv) this.env = childEnv;
+        try {
+          for (let i = 0; i < count; i++) {
+            if (++iterations > this.maxIterations) throw new Error('Maximum iterations exceeded');
+            if (node.counterVariable && childEnv) {
+              childEnv.define(node.counterVariable, i + 1); // 1-based
+            }
+            try {
+              await this.executeBlock(node.body);
+            } catch (e) {
+              if (e instanceof StopSignal) break;
+              throw e;
+            }
           }
+        } finally {
+          if (childEnv) this.env = prevEnv;
         }
         break;
       }
@@ -551,6 +625,8 @@ export class Interpreter {
 
     if (target instanceof SayList) {
       target.remove(value);
+    } else if (target instanceof SayMap) {
+      target.remove(toString(value));
     }
 
     return null;
@@ -601,8 +677,37 @@ export class Interpreter {
     return null;
   }
 
-  private executeUse(_node: AST.UseStatement): SayValue {
-    // Module system stub - math is pre-loaded
+  private async executeUse(node: AST.UseStatement): Promise<SayValue> {
+    // Built-in modules
+    if (node.module === 'math') return null; // already loaded
+
+    // File imports
+    const tryImport = async (filePath: string): Promise<boolean> => {
+      try {
+        const source = await this.readFile(filePath);
+        const lexer = new Lexer(source);
+        const tokens = lexer.tokenize();
+        const parser = new Parser();
+        const program = parser.parse(tokens);
+        for (const child of program.body) {
+          await this.execute(child);
+        }
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    if (node.module.endsWith('.say') || node.module.endsWith('.hypercode')) {
+      await tryImport(node.module);
+      return null;
+    }
+
+    // Try adding .say extension
+    if (!(await tryImport(node.module + '.say'))) {
+      await tryImport(node.module + '.hypercode');
+    }
+
     return null;
   }
 
@@ -652,6 +757,8 @@ export class Interpreter {
     const target = await this.evaluate(node.target);
     if (target instanceof SayInstance) {
       this.output(target.toString());
+    } else if (target instanceof SayMap) {
+      this.output(`Map (${target.toString()}) count: ${target.count}`);
     } else if (target instanceof SayList) {
       this.output(`List (${target.toString()}) count: ${target.count}`);
     } else if (target instanceof SayKind) {
@@ -685,6 +792,31 @@ export class Interpreter {
     const list = new SayList(items);
     this.env.set(node.target, list);
     return list;
+  }
+
+  private async executeWhen(node: AST.WhenStatement): Promise<SayValue> {
+    const target = await this.evaluate(node.target);
+    for (const c of node.cases) {
+      const caseValue = await this.evaluate(c.value);
+      if (valuesEqual(target, caseValue)) {
+        return this.executeBlock(c.body);
+      }
+    }
+    if (node.elseBody.length > 0) {
+      return this.executeBlock(node.elseBody);
+    }
+    return null;
+  }
+
+  private async executeWrite(node: AST.WriteStatement): Promise<SayValue> {
+    const path = toString(await this.evaluate(node.path));
+    const value = toString(await this.evaluate(node.value));
+    if (node.append) {
+      await this.appendFile(path, value);
+    } else {
+      await this.writeFile(path, value);
+    }
+    return null;
   }
 
   private async executeBlock(body: AST.ASTNode[]): Promise<SayValue> {
@@ -807,11 +939,35 @@ export class Interpreter {
           args.push(await this.evaluate(arg));
         }
 
+        // Math module methods
+        if (obj instanceof SayInstance && obj.kind.name === 'Module') {
+          const mathModule = this.globalEnv.get('math');
+          if (obj === mathModule) {
+            switch (node.method) {
+              case 'round': return Math.round(toNumber(args[0]));
+              case 'floor': return Math.floor(toNumber(args[0]));
+              case 'ceil': return Math.ceil(toNumber(args[0]));
+              case 'abs': return Math.abs(toNumber(args[0]));
+              case 'sqrt': return Math.sqrt(toNumber(args[0]));
+              case 'power': return Math.pow(toNumber(args[0]), toNumber(args[1]));
+              case 'random': {
+                if (args.length === 0) return Math.random();
+                if (args.length >= 2) {
+                  const min = toNumber(args[0]);
+                  const max = toNumber(args[1]);
+                  return Math.floor(Math.random() * (max - min + 1)) + min;
+                }
+                return Math.random();
+              }
+            }
+          }
+        }
+
         if (obj instanceof SayInstance) {
           const method = obj.methods.get(node.method);
           if (method) return this.callMethod(obj, method, args);
 
-          // Built-in string methods
+          // Built-in property access
           const propVal = obj.get(node.method);
           if (propVal !== null) return propVal;
         }
@@ -827,6 +983,15 @@ export class Interpreter {
           if (node.method === 'length') return obj.length;
           if (node.method === 'trim') return obj.trim();
           if (node.method === 'split') return new SayList(obj.split(toString(args[0])));
+          if (node.method === 'at') {
+            const idx = toNumber(args[0]);
+            return (idx >= 1 && idx <= obj.length) ? obj[idx - 1] : null;
+          }
+          if (node.method === 'from') {
+            const start = toNumber(args[0]);
+            const end = toNumber(args[1]);
+            return obj.slice(Math.max(0, start - 1), end);
+          }
         }
 
         return null;
@@ -881,6 +1046,8 @@ export class Interpreter {
         const collection = await this.evaluate(node.collection);
         const value = await this.evaluate(node.value);
         if (collection instanceof SayList) return collection.contains(value);
+        if (collection instanceof SayMap) return collection.has(toString(value));
+        if (typeof collection === 'string') return collection.includes(toString(value));
         return false;
       }
 
@@ -902,6 +1069,69 @@ export class Interpreter {
       case 'AskExpression':
         return this.executeAsk(node);
 
+      case 'MapLiteral':
+        return new SayMap();
+
+      case 'RandomExpression': {
+        if (node.variant === 'float') return Math.random();
+        if (node.variant === 'range') {
+          const min = toNumber(await this.evaluate(node.start!));
+          const max = toNumber(await this.evaluate(node.end!));
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        if (node.variant === 'pick') {
+          const source = await this.evaluate(node.source!);
+          if (source instanceof SayList && source.items.length > 0) {
+            const idx = Math.floor(Math.random() * source.items.length);
+            return source.items[idx];
+          }
+          return null;
+        }
+        return null;
+      }
+
+      case 'TypeCheckExpression': {
+        const val = await this.evaluate(node.value);
+        let result = false;
+        switch (node.targetType) {
+          case 'number': result = typeof val === 'number'; break;
+          case 'text': result = typeof val === 'string'; break;
+          case 'list': result = val instanceof SayList; break;
+          case 'map': result = val instanceof SayMap; break;
+          case 'nothing': result = val === null || val === undefined; break;
+          default: {
+            if (val instanceof SayInstance) {
+              result = val.kind.name === node.targetType;
+              if (!result) {
+                let parent = val.kind.parent;
+                while (parent) {
+                  if (parent.name === node.targetType) { result = true; break; }
+                  parent = parent.parent;
+                }
+              }
+            }
+            break;
+          }
+        }
+        return node.negated ? !result : result;
+      }
+
+      case 'RoundedExpression': {
+        const val = toNumber(await this.evaluate(node.value));
+        const dec = toNumber(await this.evaluate(node.decimals));
+        const factor = Math.pow(10, dec);
+        return Math.round(val * factor) / factor;
+      }
+
+      case 'ReadExpression': {
+        const path = toString(await this.evaluate(node.path));
+        const content = await this.readFile(path);
+        if (node.asType === 'list') {
+          return new SayList(content.split('\n'));
+        }
+        return content;
+      }
+
       default:
         return null;
     }
@@ -910,6 +1140,14 @@ export class Interpreter {
   private getProperty(obj: SayValue, property: string): SayValue {
     if (obj instanceof SayInstance) {
       return obj.get(property) ?? null;
+    }
+    if (obj instanceof SayMap) {
+      switch (property) {
+        case 'count': return obj.count;
+        case 'keys': return obj.keys;
+        case 'values': return obj.values;
+        default: return obj.get(property);
+      }
     }
     if (obj instanceof SayList) {
       switch (property) {
@@ -930,6 +1168,8 @@ export class Interpreter {
       if (property === 'upper') return obj.toUpperCase();
       if (property === 'lower') return obj.toLowerCase();
       if (property === 'trim') return obj.trim();
+      if (property === 'first') return obj.length > 0 ? obj[0] : null;
+      if (property === 'last') return obj.length > 0 ? obj[obj.length - 1] : null;
     }
     return null;
   }
@@ -969,7 +1209,9 @@ export class Interpreter {
         this.env.set(target.object.name, autoObj);
         obj = autoObj;
       }
-      if (obj instanceof SayInstance) {
+      if (obj instanceof SayMap) {
+        obj.set(target.property, value);
+      } else if (obj instanceof SayInstance) {
         obj.set(target.property, value);
       } else if (obj instanceof SayUIElement) {
         obj.set(target.property, value);
@@ -998,9 +1240,18 @@ export class Interpreter {
             current.set(path[i], next);
           }
           current = next;
+        } else if (current instanceof SayMap) {
+          let next = current.get(path[i]);
+          if (next === null || next === undefined) {
+            next = new SayMap();
+            current.set(path[i], next);
+          }
+          current = next;
         }
       }
       if (current instanceof SayInstance) {
+        current.set(path[path.length - 1], value);
+      } else if (current instanceof SayMap) {
         current.set(path[path.length - 1], value);
       }
       return;
@@ -1015,9 +1266,8 @@ export class Interpreter {
 
     switch (op) {
       case '+':
-        // String concatenation if either side is a string and not purely numeric
-        if ((typeof left === 'string' && isNaN(Number(left))) ||
-            (typeof right === 'string' && isNaN(Number(right)))) {
+        // String concatenation if either side is a string
+        if (typeof left === 'string' || typeof right === 'string') {
           return toString(left) + toString(right);
         }
         return l + r;
@@ -1089,6 +1339,7 @@ export function toNumber(val: SayValue): number {
 export function toString(val: SayValue): string {
   if (val === null || val === undefined) return 'nothing';
   if (val instanceof SayList) return val.toString();
+  if (val instanceof SayMap) return val.toString();
   if (val instanceof SayInstance) return val.toString();
   if (val instanceof SayKind) return `[Kind ${val.name}]`;
   if (val instanceof SayUIElement) return val.toString();
@@ -1100,6 +1351,7 @@ export function isTruthy(val: SayValue): boolean {
   if (typeof val === 'boolean') return val;
   if (typeof val === 'number') return val !== 0;
   if (typeof val === 'string') return val.length > 0;
+  if (val instanceof SayMap) return true;
   return true;
 }
 

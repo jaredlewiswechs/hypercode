@@ -45,6 +45,9 @@ async function runFile(filePath: string) {
           });
         });
       },
+      readFile: (path: string) => fs.readFileSync(path, 'utf-8'),
+      writeFile: (path: string, content: string) => fs.writeFileSync(path, content, 'utf-8'),
+      appendFile: (path: string, content: string) => fs.appendFileSync(path, content, 'utf-8'),
     });
 
     await interpreter.run(program);
@@ -132,7 +135,7 @@ async function startRepl() {
     // Track block depth
     const words = trimmed.split(/\s+/);
     for (const word of words) {
-      if (['if', 'repeat', 'for', 'kind', 'on', 'command', 'test', 'try'].includes(word)) {
+      if (['if', 'repeat', 'for', 'kind', 'on', 'command', 'test', 'try', 'when'].includes(word)) {
         blockDepth++;
       }
       if (word === 'end') {

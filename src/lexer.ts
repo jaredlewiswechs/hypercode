@@ -55,6 +55,12 @@ export class Lexer {
         continue;
       }
 
+      // String literals
+      if (ch === '"') {
+        this.readString();
+        continue;
+      }
+
       // Numbers
       if (this.isDigit(ch) || (ch === '-' && this.pos + 1 < this.source.length && this.isDigit(this.source[this.pos + 1]) && this.shouldBeNegativeNumber())) {
         this.readNumber();
@@ -179,7 +185,7 @@ export class Lexer {
       TokenType.PERCENT, TokenType.CARET, TokenType.LPAREN, TokenType.COMMA,
       TokenType.EQ, TokenType.NEQ, TokenType.GT, TokenType.LT,
       TokenType.GTE, TokenType.LTE, TokenType.NEWLINE, TokenType.INTO,
-      TokenType.PUT, TokenType.RETURN,
+      TokenType.PUT, TokenType.SET, TokenType.TO, TokenType.RETURN,
     ].includes(prev.type);
   }
 
@@ -255,6 +261,30 @@ export class Lexer {
       this.pos++;
     }
     // Don't skip the newline itself - let the main loop handle it
+  }
+
+  private readString(): void {
+    const start = this.pos;
+    this.pos++; // skip opening quote
+    let value = '';
+    while (this.pos < this.source.length && this.source[this.pos] !== '"') {
+      if (this.source[this.pos] === '\\' && this.pos + 1 < this.source.length) {
+        this.pos++;
+        switch (this.source[this.pos]) {
+          case 'n': value += '\n'; break;
+          case 't': value += '\t'; break;
+          case '"': value += '"'; break;
+          case '\\': value += '\\'; break;
+          default: value += this.source[this.pos];
+        }
+      } else {
+        value += this.source[this.pos];
+      }
+      this.pos++;
+    }
+    if (this.pos < this.source.length) this.pos++; // skip closing quote
+    this.addToken(TokenType.STRING, value);
+    this.column += (this.pos - start);
   }
 
   private readMultiLineComment(): void {

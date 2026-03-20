@@ -9,6 +9,7 @@ export enum TokenType {
 
   // Keywords - Core verbs
   PUT = 'PUT',
+  SET = 'SET',
   INTO = 'INTO',
   SHOW = 'SHOW',
   ASK = 'ASK',
@@ -64,6 +65,7 @@ export enum TokenType {
 
   // Keywords - Lists
   LIST = 'LIST',
+  MAP = 'MAP',
   SORT = 'SORT',
   REVERSE = 'REVERSE',
   SHUFFLE = 'SHUFFLE',
@@ -85,6 +87,16 @@ export enum TokenType {
 
   // Keywords - Misc
   EXPLAIN = 'EXPLAIN',
+  RANDOM = 'RANDOM',
+  PICK = 'PICK',
+  TEXT = 'TEXT',
+  NUMBER_TYPE = 'NUMBER_TYPE',
+  WHEN = 'WHEN',
+  ROUNDED = 'ROUNDED',
+  READ = 'READ',
+  WRITE = 'WRITE',
+  APPEND = 'APPEND',
+  AS = 'AS',
 
   // Operators
   PLUS = 'PLUS',
@@ -139,6 +151,7 @@ export interface Token {
 
 export const KEYWORDS: Record<string, TokenType> = {
   'put': TokenType.PUT,
+  'set': TokenType.SET,
   'into': TokenType.INTO,
   'show': TokenType.SHOW,
   'ask': TokenType.ASK,
@@ -185,6 +198,7 @@ export const KEYWORDS: Record<string, TokenType> = {
   'with': TokenType.WITH,
   'it': TokenType.IT,
   'list': TokenType.LIST,
+  'map': TokenType.MAP,
   'sort': TokenType.SORT,
   'reverse': TokenType.REVERSE,
   'shuffle': TokenType.SHUFFLE,
@@ -200,6 +214,16 @@ export const KEYWORDS: Record<string, TokenType> = {
   'less': TokenType.LESS,
   'than': TokenType.THAN,
   'explain': TokenType.EXPLAIN,
+  'random': TokenType.RANDOM,
+  'pick': TokenType.PICK,
+  'text': TokenType.TEXT,
+  'number': TokenType.NUMBER_TYPE,
+  'when': TokenType.WHEN,
+  'rounded': TokenType.ROUNDED,
+  'read': TokenType.READ,
+  'write': TokenType.WRITE,
+  'append': TokenType.APPEND,
+  'as': TokenType.AS,
   'clicked': TokenType.CLICKED,
   'pressed': TokenType.PRESSED,
   'changed': TokenType.CHANGED,

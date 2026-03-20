@@ -10,10 +10,34 @@ function parse(source: string) {
 }
 
 describe('Parser', () => {
-  it('parses put statement', () => {
-    const program = parse('put 42 into x');
+  it('parses put statement as literal text', () => {
+    const program = parse('put Hello World into x');
     expect(program.body).toHaveLength(1);
     expect(program.body[0].type).toBe('PutStatement');
+    const put = program.body[0] as any;
+    expect(put.value.type).toBe('StringLiteral');
+    expect(put.value.value).toBe('Hello World');
+  });
+
+  it('parses set statement', () => {
+    const program = parse('set x to 42');
+    expect(program.body).toHaveLength(1);
+    expect(program.body[0].type).toBe('SetStatement');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('NumberLiteral');
+  });
+
+  it('parses set with expression', () => {
+    const program = parse('set x to 2 + 3 * 4');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('BinaryExpression');
+  });
+
+  it('parses set with dot target', () => {
+    const program = parse('set player.health to 100');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.target.type).toBe('PropertyAccess');
+    expect(setStmt.target.property).toBe('health');
   });
 
   it('parses show statement with text', () => {
@@ -61,8 +85,15 @@ describe('Parser', () => {
     expect(repeat.variant).toBe('times');
   });
 
+  it('parses repeat N times with counter', () => {
+    const program = parse('repeat 5 times with i\nshow .i\nend');
+    const repeat = program.body[0] as any;
+    expect(repeat.variant).toBe('times');
+    expect(repeat.counterVariable).toBe('i');
+  });
+
   it('parses repeat while', () => {
-    const program = parse('repeat while x < 10\nput x + 1 into x\nend');
+    const program = parse('repeat while x < 10\nset x to x + 1\nend');
     const repeat = program.body[0] as any;
     expect(repeat.variant).toBe('while');
   });
@@ -174,17 +205,18 @@ describe('Parser', () => {
     expect(program.body[0].type).toBe('UseStatement');
   });
 
+  it('parses use with string path', () => {
+    const program = parse('use "helpers.say"');
+    const use = program.body[0] as any;
+    expect(use.type).toBe('UseStatement');
+    expect(use.module).toBe('helpers.say');
+  });
+
   it('parses sort/reverse/shuffle', () => {
     const program = parse('sort students\nreverse students\nshuffle students');
     expect(program.body[0].type).toBe('SortStatement');
     expect(program.body[1].type).toBe('ReverseStatement');
     expect(program.body[2].type).toBe('ShuffleStatement');
-  });
-
-  it('parses math expressions', () => {
-    const program = parse('put 2 + 3 * 4 into x');
-    const put = program.body[0] as any;
-    expect(put.value.type).toBe('BinaryExpression');
   });
 
   it('parses comparison operators', () => {
@@ -208,10 +240,10 @@ describe('Parser', () => {
   });
 
   it('parses inline list', () => {
-    const program = parse('put list 1, 2, 3 into nums');
-    const put = program.body[0] as any;
-    expect(put.value.type).toBe('ListLiteral');
-    expect(put.value.items).toHaveLength(3);
+    const program = parse('set nums to list 1, 2, 3');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('ListLiteral');
+    expect(setStmt.value.items).toHaveLength(3);
   });
 
   it('parses return statement', () => {
@@ -250,5 +282,89 @@ describe('Parser', () => {
   it('parses hide statement', () => {
     const program = parse('hide scoreLabel');
     expect(program.body[0].type).toBe('HideStatement');
+  });
+
+  it('parses map literal', () => {
+    const program = parse('set data to map');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('MapLiteral');
+  });
+
+  it('parses random expression with range', () => {
+    const program = parse('set roll to random 1 to 6');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('RandomExpression');
+    expect(setStmt.value.variant).toBe('range');
+  });
+
+  it('parses random pick from', () => {
+    const program = parse('set x to random pick from items');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('RandomExpression');
+    expect(setStmt.value.variant).toBe('pick');
+  });
+
+  it('parses type check expression', () => {
+    const program = parse('if x is a number\nshow yes\nend');
+    const ifStmt = program.body[0] as any;
+    expect(ifStmt.condition.type).toBe('TypeCheckExpression');
+    expect(ifStmt.condition.targetType).toBe('number');
+    expect(ifStmt.condition.negated).toBe(false);
+  });
+
+  it('parses negated type check', () => {
+    const program = parse('if x is not a text\nshow yes\nend');
+    const ifStmt = program.body[0] as any;
+    expect(ifStmt.condition.type).toBe('TypeCheckExpression');
+    expect(ifStmt.condition.targetType).toBe('text');
+    expect(ifStmt.condition.negated).toBe(true);
+  });
+
+  it('parses when block', () => {
+    const program = parse('when x\nis 1\nshow One\nis 2\nshow Two\nelse\nshow Other\nend');
+    const when = program.body[0] as any;
+    expect(when.type).toBe('WhenStatement');
+    expect(when.cases).toHaveLength(2);
+    expect(when.elseBody).toHaveLength(1);
+  });
+
+  it('parses rounded to', () => {
+    const program = parse('set x to 3.14159 rounded to 2');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('RoundedExpression');
+  });
+
+  it('parses string literal', () => {
+    const program = parse('set x to "Hello World"');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('StringLiteral');
+    expect(setStmt.value.value).toBe('Hello World');
+  });
+
+  it('parses write statement', () => {
+    const program = parse('write "out.txt" with "hello"');
+    const write = program.body[0] as any;
+    expect(write.type).toBe('WriteStatement');
+    expect(write.append).toBe(false);
+  });
+
+  it('parses append statement', () => {
+    const program = parse('append "out.txt" with "hello"');
+    const append = program.body[0] as any;
+    expect(append.type).toBe('WriteStatement');
+    expect(append.append).toBe(true);
+  });
+
+  it('parses read expression', () => {
+    const program = parse('set data to read "file.txt"');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('ReadExpression');
+  });
+
+  it('parses read as list', () => {
+    const program = parse('set lines to read "file.txt" as list');
+    const setStmt = program.body[0] as any;
+    expect(setStmt.value.type).toBe('ReadExpression');
+    expect(setStmt.value.asType).toBe('list');
   });
 });

@@ -1,12 +1,12 @@
 -- fibonacci.say — Generate the Fibonacci sequence
 put 0 into a
 put 1 into b
-put list a, b into fibs
+set fibs to list a, b
 
 repeat 13 times
-  put a + b into temp
-  put b into a
-  put temp into b
+  set temp to a + b
+  set a to b
+  set b to temp
   add b to fibs
 end
 

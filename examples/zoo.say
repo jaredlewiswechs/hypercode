@@ -19,7 +19,7 @@ kind Dog from Animal
   tricks is 0
 
   on learn
-    put me.tricks + 1 into me.tricks
+    set me.tricks to me.tricks + 1
     show .me.name learned trick number .me.tricks
   end
 end
@@ -33,7 +33,7 @@ make a Dog called rex with name Rex
 make a Dog called luna with name Luna, tricks 3
 make a Bird called tweety with name Tweety
 
-put list rex, luna, tweety into animals
+set animals to list rex, luna, tweety
 
 show Zoo Roll Call
 for each a in animals

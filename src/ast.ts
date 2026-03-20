@@ -31,7 +31,10 @@ export type ASTNode =
   | HideStatement
   | PlayStatement
   | ExpressionStatement
-  | ListLiteralMultiline;
+  | ListLiteralMultiline
+  | SetStatement
+  | WhenStatement
+  | WriteStatement;
 
 export interface Program {
   type: 'Program';
@@ -76,6 +79,7 @@ export interface RepeatStatement {
   variant: 'times' | 'while' | 'until' | 'forever';
   count?: Expression;
   condition?: Expression;
+  counterVariable?: string;
   body: ASTNode[];
   line: number;
 }
@@ -271,6 +275,29 @@ export interface ListLiteralMultiline {
   line: number;
 }
 
+export interface SetStatement {
+  type: 'SetStatement';
+  target: Expression;
+  value: Expression;
+  line: number;
+}
+
+export interface WhenStatement {
+  type: 'WhenStatement';
+  target: Expression;
+  cases: { value: Expression; body: ASTNode[] }[];
+  elseBody: ASTNode[];
+  line: number;
+}
+
+export interface WriteStatement {
+  type: 'WriteStatement';
+  path: Expression;
+  value: Expression;
+  append: boolean;
+  line: number;
+}
+
 // Expressions
 export type Expression =
   | NumberLiteral
@@ -295,7 +322,12 @@ export type Expression =
   | EachMapExpression
   | ContainsExpression
   | RangeExpression
-  | ParenExpression;
+  | ParenExpression
+  | MapLiteral
+  | RandomExpression
+  | TypeCheckExpression
+  | RoundedExpression
+  | ReadExpression;
 
 export interface NumberLiteral {
   type: 'NumberLiteral';
@@ -418,4 +450,36 @@ export interface RangeExpression {
 export interface ParenExpression {
   type: 'ParenExpression';
   expr: Expression;
+}
+
+export interface MapLiteral {
+  type: 'MapLiteral';
+}
+
+export interface RandomExpression {
+  type: 'RandomExpression';
+  variant: 'range' | 'pick' | 'float';
+  start?: Expression;
+  end?: Expression;
+  source?: Expression;
+}
+
+export interface TypeCheckExpression {
+  type: 'TypeCheckExpression';
+  value: Expression;
+  targetType: string;
+  negated: boolean;
+}
+
+export interface RoundedExpression {
+  type: 'RoundedExpression';
+  value: Expression;
+  decimals: Expression;
+}
+
+export interface ReadExpression {
+  type: 'ReadExpression';
+  path: Expression;
+  asType?: 'list';
+  line: number;
 }

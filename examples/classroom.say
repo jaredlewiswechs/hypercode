@@ -20,12 +20,12 @@ make a Student called alice with name Alice, grade 95
 make a Student called bob with name Bob, grade 60
 make a Student called charlie with name Charlie, grade 82
 
-put list alice, bob, charlie into students
+set students to list alice, bob, charlie
 
 show Class Report
 for each s in students
   send report to s
 end
 
-put students where send passing to it into passing
+set passing to students where send passing to it
 show (.passing.count) out of (.students.count) students passing

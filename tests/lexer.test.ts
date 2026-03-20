@@ -115,6 +115,30 @@ describe('Lexer', () => {
     ]);
   });
 
+  it('tokenizes string literals', () => {
+    const lexer = new Lexer('"Hello World" "with \\"quotes\\""');
+    const tokens = lexer.tokenize();
+    expect(tokens[0]).toMatchObject({ type: TokenType.STRING, value: 'Hello World' });
+    expect(tokens[1]).toMatchObject({ type: TokenType.STRING, value: 'with "quotes"' });
+  });
+
+  it('tokenizes set keyword', () => {
+    const lexer = new Lexer('set x to 5');
+    const tokens = lexer.tokenize();
+    expect(tokens[0].type).toBe(TokenType.SET);
+    expect(tokens[2].type).toBe(TokenType.TO);
+  });
+
+  it('tokenizes new keywords', () => {
+    const lexer = new Lexer('map random when rounded read write append');
+    const tokens = lexer.tokenize();
+    const types = tokens.map(t => t.type).filter(t => t !== TokenType.EOF);
+    expect(types).toEqual([
+      TokenType.MAP, TokenType.RANDOM, TokenType.WHEN, TokenType.ROUNDED,
+      TokenType.READ, TokenType.WRITE, TokenType.APPEND,
+    ]);
+  });
+
   it('tokenizes object keywords', () => {
     const lexer = new Lexer('kind from on me make a called with send');
     const tokens = lexer.tokenize();

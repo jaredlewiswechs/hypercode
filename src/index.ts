@@ -1,6 +1,6 @@
 export { Lexer } from './lexer';
 export { Parser } from './parser';
-export { Interpreter, InterpreterOptions, SayValue, SayList, SayInstance, SayKind, SayUIElement, toString, toNumber, isTruthy, valuesEqual } from './interpreter';
+export { Interpreter, InterpreterOptions, SayValue, SayList, SayMap, SayInstance, SayKind, SayUIElement, toString, toNumber, isTruthy, valuesEqual } from './interpreter';
 export { Token, TokenType } from './tokens';
 export * as AST from './ast';
 

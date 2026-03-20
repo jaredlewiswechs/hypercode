@@ -6,7 +6,7 @@ put 0 into attempts
 show I'm thinking of a number between 1 and 10...
 
 repeat 5 times
-  put attempts + 1 into attempts
+  set attempts to attempts + 1
   put ask Guess the number into guess
 
   if guess == secret

@@ -11,7 +11,7 @@ end
 command power base and exp
   put 1 into result
   repeat exp times
-    put result * base into result
+    set result to result * base
   end
   return result
 end
@@ -26,25 +26,25 @@ command clamp value and low and high
   return value
 end
 
-put add 10 and 25 into sum
+set sum to add 10 and 25
 show 10 + 25 = .sum
 
-put multiply 6 and 7 into product
+set product to multiply 6 and 7
 show 6 x 7 = .product
 
-put power 2 and 10 into big
+set big to power 2 and 10
 show 2^10 = .big
 
-put clamp 150 and 0 and 100 into c1
+set c1 to clamp 150 and 0 and 100
 show Clamp 150 to 0-100: .c1
 
 put -20 into neg
-put clamp neg and 0 and 100 into c2
+set c2 to clamp neg and 0 and 100
 show Clamp -20 to 0-100: .c2
 
 -- Math with expressions
-put 17 % 5 into remainder
+set remainder to 17 % 5
 show 17 mod 5 = .remainder
 
-put (3 + 4) * 2 into grouped
+set grouped to (3 + 4) * 2
 show Grouped math = .grouped

@@ -14,8 +14,8 @@ kind Question
   end
 end
 
-put 0 into score
-put 0 into total
+set score to 0
+set total to 0
 
 put list into questions
   make a Question with text What planet is closest to the sun, answer Mercury

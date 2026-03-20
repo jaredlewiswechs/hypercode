@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HyperCode IDE</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,5 95,50 50,95 5,50' fill='%2358a6ff'/></svg>">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -92,34 +91,8 @@
     }
     .pane-header .file-ext { color: var(--text-dimmer); font-weight: 400; }
 
-    /* ── CodeMirror Theme ── */
+    /* ── Editor ── */
     .editor-wrap { flex: 1; overflow: hidden; }
-    .CodeMirror {
-      height: 100% !important;
-      font-family: var(--font-mono) !important;
-      font-size: 14px; line-height: 1.65;
-    }
-    .cm-s-say.CodeMirror { background: var(--bg); color: var(--text); }
-    .cm-s-say .CodeMirror-gutters { background: var(--bg); border-right: 1px solid var(--border); }
-    .cm-s-say .CodeMirror-linenumber { color: var(--text-dimmer); padding: 0 12px 0 8px; }
-    .cm-s-say .CodeMirror-cursor { border-left: 2px solid var(--accent); }
-    .cm-s-say .CodeMirror-selected { background: rgba(88,166,255,0.15) !important; }
-    .cm-s-say .CodeMirror-activeline-background { background: rgba(255,255,255,0.03); }
-    .cm-s-say .CodeMirror-matchingbracket { color: var(--text) !important; background: rgba(88,166,255,0.25); border-radius: 2px; }
-    .cm-s-say .cm-keyword { color: #ff7b72; font-weight: 500; }
-    .cm-s-say .cm-atom { color: var(--cyan); }
-    .cm-s-say .cm-number { color: var(--purple); }
-    .cm-s-say .cm-variable { color: var(--text); }
-    .cm-s-say .cm-variable-2 { color: #ffa657; }
-    .cm-s-say .cm-comment { color: var(--text-dimmer); font-style: italic; }
-    .cm-s-say .cm-operator { color: #ff7b72; }
-    .cm-s-say .cm-bracket { color: var(--text-dim); }
-    .cm-s-say .cm-def { color: #d2a8ff; }
-    .cm-s-say .cm-string { color: #a5d6ff; }
-    .cm-s-say .cm-string-2 { color: #a5d6ff; font-style: italic; }
-    .cm-s-say .cm-property { color: #ffa657; }
-    .cm-s-say .cm-builtin { color: #79c0ff; }
-    .cm-s-say .cm-error-line { background: rgba(248,81,73,0.1) !important; }
 
     /* ── Output ── */
     .output-content {
@@ -239,11 +212,8 @@
     <span id="position">Ln 1, Col 1</span>
   </footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/selection/active-line.min.js"></script>
   <script src="say.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
   <script>
     // ── Examples ──
     const EXAMPLES = {
@@ -289,7 +259,7 @@ show Sum (.numbers.sum)
 show Min (.numbers.min)
 show Max (.numbers.max)
 
-put numbers where it > 4 into big
+set big to numbers where it > 4
 show
 show Bigger than 4 .big
 show That is (.big.count) numbers`,
@@ -326,7 +296,7 @@ for each s in students
   send report to s
 end
 
-put students where send passing to it into passing
+set passing to students where send passing to it
 show
 show (.passing.count) out of (.students.count) students passing`,
 
@@ -349,8 +319,8 @@ kind Question
   end
 end
 
-put 0 into score
-put 0 into total
+set score to 0
+set total to 0
 
 put list into questions
   make a Question with text What planet is closest to the sun, answer Mercury
@@ -360,10 +330,10 @@ end
 
 for each q in questions
   ask .q.text
-  put it into guess
-  put total + 1 into total
+  set guess to it
+  set total to total + 1
   if send check guess to q
-    put score + 1 into score
+    set score to score + 1
   end
 end
 
@@ -382,375 +352,407 @@ show Hello, World!
     document.getElementById('shortcutHint').textContent = isMac ? '\u2318\u21B5' : 'Ctrl+\u21B5';
     document.getElementById('emptyHint').textContent = `Press ${isMac ? '\u2318' : 'Ctrl+'}Enter or click Run`;
 
-    // ── Define CodeMirror mode ──
-    CodeMirror.defineMode('say', function() {
-      // Core action keywords
-      var actions = 'put,into,set,show,ask,make,send,add,remove,go,open,hide,' +
-        'draw,wait,play,clear,stop,return,use,grab';
-      // Control flow
-      var control = 'if,else,repeat,times,while,until,forever,for,each,in,to,at,' +
-        'by,as,when,is,try,or,catch,do,together';
-      // Definition / structure
-      var defs = 'kind,from,on,me,end,command,template,contract,implements,secret,static,' +
-        'test,check,mock,before,after,benchmark,snapshot,enum';
-      // Articles / connectors
-      var connectors = 'a,called,with,it,not,and,greater,less,than,new,where,contains';
-      // Collections
-      var collections = 'list,map,pair,unique,sort,reverse,shuffle';
-      // I/O & system
-      var system = 'read,write,append,fetch,serve,respond,route,status,request,' +
-        'remember,recall,forget,think,explain,listen,every,second,seconds,' +
-        'emit,connect,stream,cookie,allow,env,current,today,arguments,files,folder';
-      // Graphics & UI
-      var graphics = 'canvas,circle,rectangle,line,color,size,fill,stroke,width,height,' +
-        'animate,moving,over,sprite,load,touches,scene,switch,layer,' +
-        'forward,backward,turn,left,right,pen,up,down,note,sound';
-      // Types
-      var types = 'text,number,boolean,date,time';
-      // Functional
-      var functional = 'apply,curry,compose';
-      // Education
-      var education = 'classroom,submit,collect,visualize,challenge,grade,rubric';
-      // Debug
-      var debug = 'debug,step,breakpoint,watch,profile,lint,save,history';
+    // ── Load Monaco ──
+    require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs' } });
 
-      var allKw = (actions + ',' + control + ',' + defs + ',' + connectors + ',' +
-        collections + ',' + system + ',' + graphics + ',' + types + ',' +
-        functional + ',' + education + ',' + debug).split(',');
-      var kwSet = {};
-      for (var i = 0; i < allKw.length; i++) kwSet[allKw[i]] = true;
+    require(['vs/editor/editor.main'], function () {
+      // ── Register HyperCode language ──
+      monaco.languages.register({ id: 'hypercode', extensions: ['.say'] });
 
-      var atomSet = { 'true': true, 'false': true, 'nothing': true };
-      var typeSet = { 'text': true, 'number': true, 'boolean': true, 'date': true, 'time': true };
+      monaco.languages.setMonarchTokensProvider('hypercode', {
+        defaultToken: '',
+        ignoreCase: true,
 
-      // Keywords that start a text/template line (rest of line is plain text
-      // except for .dotInterpolation and (expressions))
-      var textLineKw = { 'show': true, 'ask': true };
+        // Keywords grouped by role
+        actions: [
+          'put', 'into', 'set', 'show', 'ask', 'make', 'send', 'add', 'remove',
+          'go', 'open', 'hide', 'draw', 'wait', 'play', 'clear', 'stop', 'return',
+          'use', 'grab', 'sort', 'reverse', 'shuffle', 'read', 'write', 'append',
+          'fetch', 'serve', 'respond', 'route', 'remember', 'recall', 'forget',
+          'think', 'explain', 'listen', 'emit', 'connect', 'stream',
+        ],
+        control: [
+          'if', 'else', 'repeat', 'times', 'while', 'until', 'forever',
+          'for', 'each', 'in', 'to', 'at', 'by', 'as', 'when', 'is',
+          'try', 'or', 'catch', 'do', 'together',
+        ],
+        structure: [
+          'kind', 'from', 'on', 'me', 'end', 'command', 'template', 'contract',
+          'implements', 'secret', 'static', 'test', 'check', 'mock', 'before',
+          'after', 'benchmark', 'enum',
+        ],
+        connectors: [
+          'a', 'called', 'with', 'it', 'not', 'and', 'greater', 'less', 'than',
+          'new', 'where', 'contains',
+        ],
+        typeKeywords: ['text', 'number', 'boolean', 'date', 'time'],
+        atoms: ['true', 'false', 'nothing'],
 
-      return {
-        startState: function() { return { inMultiComment: false, inTripleString: false, inTextLine: false, parenDepth: 0 }; },
-        token: function(stream, state) {
-          // Reset text-line mode at the start of each line
-          if (stream.sol()) { state.inTextLine = false; state.parenDepth = 0; }
+        operators: [
+          '+', '-', '*', '/', '%', '^', '==', '!=', '>', '<', '>=', '<=', '|>', '|', '->'
+        ],
 
-          // Multi-line comment
-          if (state.inMultiComment) {
-            if (stream.match('---')) { state.inMultiComment = false; return 'comment'; }
-            stream.skipToEnd();
-            return 'comment';
-          }
-          // Triple-quoted string
-          if (state.inTripleString) {
-            if (stream.match('"""')) { state.inTripleString = false; return 'string'; }
-            // Interpolation inside triple string
-            if (stream.match(/^\{[^}]*\}/)) return 'string-2';
-            stream.next();
-            return 'string';
-          }
-          // Start of triple comment
-          if (stream.match('---')) { state.inMultiComment = true; return 'comment'; }
-          // Single-line comment
-          if (stream.match('--')) { stream.skipToEnd(); return 'comment'; }
-          // Whitespace
-          if (stream.eatSpace()) return null;
-          // Triple-quoted string start
-          if (stream.match('"""')) { state.inTripleString = true; return 'string'; }
-          // Double-quoted string
-          if (stream.peek() === '"') {
-            stream.next();
-            while (!stream.eol()) {
-              var ch = stream.next();
-              if (ch === '\\') { stream.next(); continue; }
-              if (ch === '{') {
-                // Read interpolation
-                while (!stream.eol() && stream.peek() !== '}') stream.next();
-                if (stream.peek() === '}') stream.next();
-                continue;
+        tokenizer: {
+          root: [
+            // Multi-line comments ---
+            [/---/, 'comment', '@multiComment'],
+            // Single-line comments --
+            [/--.*$/, 'comment'],
+
+            // Triple-quoted strings
+            [/"""/, 'string', '@tripleString'],
+            // Double-quoted strings (with interpolation)
+            [/"/, 'string', '@string'],
+
+            // Dot-interpolation (.varName.path)
+            [/\.[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/, 'variable.interpolation'],
+
+            // Numbers
+            [/-?\d+(\.\d+)?/, 'number'],
+
+            // Identifiers & keywords
+            [/[a-zA-Z_]\w*/, {
+              cases: {
+                '@atoms': 'constant',
+                '@typeKeywords': 'type',
+                '@actions': 'keyword',
+                '@control': 'keyword.control',
+                '@structure': 'keyword.structure',
+                '@connectors': 'keyword.connector',
+                '@default': { cases: { '[A-Z].*': 'type.identifier', '@default': 'identifier' } }
               }
-              if (ch === '"') return 'string';
-            }
-            return 'string';
-          }
-          // Dot-interpolation (.varName) — always highlighted, even in text lines
-          if (stream.match(/^\.[a-zA-Z_]\w*(\.[a-zA-Z_]\w*)*/)) return 'variable-2';
+            }],
 
-          // Inside a text-line (show/ask): treat most tokens as plain text
-          if (state.inTextLine && state.parenDepth === 0) {
-            // Opening paren starts an expression
-            if (stream.peek() === '(') {
-              stream.next();
-              state.parenDepth = 1;
-              return 'bracket';
-            }
-            // Everything else on the line is plain text
-            if (stream.match(/^[^\s.(]+/)) return 'variable';
-            stream.next();
-            return 'variable';
-          }
+            // Operators
+            [/[|][>]/, 'operator'],
+            [/->/, 'operator'],
+            [/[+\-*\/%\^]/, 'operator'],
+            [/[><=!]=?/, 'operator'],
 
-          // Inside parenthesized expression within a text-line — highlight normally
-          if (state.inTextLine && state.parenDepth > 0) {
-            if (stream.peek() === '(') { stream.next(); state.parenDepth++; return 'bracket'; }
-            if (stream.peek() === ')') { stream.next(); state.parenDepth--; return 'bracket'; }
-          }
+            // Brackets
+            [/[(){}[\]]/, '@brackets'],
+            // Delimiters
+            [/[,.:;?]/, 'delimiter'],
 
-          // Pipeline operator
-          if (stream.match('|>') || stream.match('|')) return 'operator';
-          // Arrow
-          if (stream.match('->')) return 'operator';
-          // Numbers
-          if (stream.match(/^-?\d+(\.\d+)?/)) return 'number';
-          // Identifiers and keywords
-          if (stream.match(/^[a-zA-Z_]\w*/)) {
-            var w = stream.current().toLowerCase();
-            if (atomSet[w]) return 'atom';
-            if (typeSet[w]) return 'builtin';
-            if (kwSet[w]) {
-              // If this keyword starts a text line, flag the state
-              if (textLineKw[w]) state.inTextLine = true;
-              return 'keyword';
-            }
-            // Capitalized = type/class name
-            var first = stream.current()[0];
-            if (first === first.toUpperCase() && first !== first.toLowerCase()) return 'def';
-            return 'variable';
-          }
-          // Operators
-          if (stream.match(/^[+\-*\/%\^]/)) return 'operator';
-          if (stream.match(/^[><=!]=?/)) return 'operator';
-          // Brackets/delimiters
-          if (stream.match(/^[(){}\[\],?:]/)) return 'bracket';
-          stream.next();
-          return null;
-        }
-      };
-    });
+            // Whitespace
+            [/\s+/, 'white'],
+          ],
 
-    // ── Initialize Editor ──
-    const editor = CodeMirror(document.getElementById('editorWrap'), {
-      value: DEFAULT_CODE,
-      mode: 'say',
-      theme: 'say',
-      lineNumbers: true,
-      matchBrackets: true,
-      autoCloseBrackets: true,
-      styleActiveLine: true,
-      tabSize: 2,
-      indentWithTabs: false,
-      lineWrapping: false,
-      extraKeys: {
-        'Cmd-Enter': function() { runCode(); },
-        'Ctrl-Enter': function() { runCode(); },
+          multiComment: [
+            [/---/, 'comment', '@pop'],
+            [/./, 'comment'],
+            [/$/, 'comment'],
+          ],
+
+          tripleString: [
+            [/"""/, 'string', '@pop'],
+            [/\{[^}]*\}/, 'string.interpolation'],
+            [/./, 'string'],
+            [/$/, 'string'],
+          ],
+
+          string: [
+            [/\\./, 'string.escape'],
+            [/\{[^}]*\}/, 'string.interpolation'],
+            [/"/, 'string', '@pop'],
+            [/./, 'string'],
+          ],
+        },
+      });
+
+      // ── Define theme ──
+      monaco.editor.defineTheme('hypercode-dark', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [
+          { token: 'comment', foreground: '484f58', fontStyle: 'italic' },
+          { token: 'keyword', foreground: 'ff7b72', fontStyle: 'bold' },
+          { token: 'keyword.control', foreground: 'ff7b72' },
+          { token: 'keyword.structure', foreground: 'ff7b72' },
+          { token: 'keyword.connector', foreground: 'ff7b72' },
+          { token: 'constant', foreground: '79c0ff' },
+          { token: 'type', foreground: '79c0ff' },
+          { token: 'type.identifier', foreground: 'd2a8ff' },
+          { token: 'number', foreground: 'bc8cff' },
+          { token: 'string', foreground: 'a5d6ff' },
+          { token: 'string.escape', foreground: '79c0ff' },
+          { token: 'string.interpolation', foreground: '79c0ff', fontStyle: 'italic' },
+          { token: 'variable.interpolation', foreground: 'ffa657' },
+          { token: 'operator', foreground: 'ff7b72' },
+          { token: 'delimiter', foreground: '8b949e' },
+          { token: 'identifier', foreground: 'e6edf3' },
+        ],
+        colors: {
+          'editor.background': '#0d1117',
+          'editor.foreground': '#e6edf3',
+          'editor.lineHighlightBackground': '#161b2280',
+          'editor.selectionBackground': '#58a6ff30',
+          'editorCursor.foreground': '#58a6ff',
+          'editorLineNumber.foreground': '#484f58',
+          'editorLineNumber.activeForeground': '#8b949e',
+          'editorGutter.background': '#0d1117',
+          'editor.selectionHighlightBackground': '#58a6ff20',
+          'editorBracketMatch.background': '#58a6ff40',
+          'editorBracketMatch.border': '#58a6ff60',
+          'scrollbarSlider.background': '#30363d80',
+          'scrollbarSlider.hoverBackground': '#484f58',
+          'scrollbarSlider.activeBackground': '#8b949e',
+        },
+      });
+
+      // ── Create editor ──
+      const editor = monaco.editor.create(document.getElementById('editorWrap'), {
+        value: DEFAULT_CODE,
+        language: 'hypercode',
+        theme: 'hypercode-dark',
+        fontSize: 14,
+        lineHeight: 24,
+        fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Menlo', 'Consolas', monospace",
+        minimap: { enabled: false },
+        scrollBeyondLastLine: false,
+        automaticLayout: false,
+        tabSize: 2,
+        insertSpaces: true,
+        renderLineHighlight: 'line',
+        matchBrackets: 'always',
+        autoClosingBrackets: 'always',
+        padding: { top: 12 },
+        overviewRulerLanes: 0,
+        hideCursorInOverviewRuler: true,
+        overviewRulerBorder: false,
+        scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+      });
+
+      // ── Run keybinding ──
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, function () {
+        runCode();
+      });
+
+      // ── Cursor position ──
+      editor.onDidChangeCursorPosition(function (e) {
+        document.getElementById('position').textContent =
+          'Ln ' + e.position.lineNumber + ', Col ' + e.position.column;
+      });
+
+      // ── Error decoration support ──
+      let errorDecorations = [];
+
+      // ── DOM refs ──
+      const outputEl = document.getElementById('output');
+      const emptyState = document.getElementById('emptyState');
+      const runBtn = document.getElementById('runBtn');
+      const runIcon = document.getElementById('runIcon');
+      const runLabel = document.getElementById('runLabel');
+      const clearBtn = document.getElementById('clearBtn');
+      const examplesSelect = document.getElementById('examples');
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+
+      // ── State ──
+      let isRunning = false;
+      let currentReject = null;
+
+      // ── Output helpers ──
+      function clearOutput() {
+        outputEl.innerHTML = '';
+        emptyState.style.display = '';
+        outputEl.appendChild(emptyState);
       }
-    });
 
-    // ── Cursor position ──
-    editor.on('cursorActivity', function() {
-      var pos = editor.getCursor();
-      document.getElementById('position').textContent = 'Ln ' + (pos.line + 1) + ', Col ' + (pos.ch + 1);
-    });
+      function hideEmpty() {
+        if (emptyState.parentNode) emptyState.remove();
+      }
 
-    // ── DOM refs ──
-    const outputEl = document.getElementById('output');
-    const emptyState = document.getElementById('emptyState');
-    const runBtn = document.getElementById('runBtn');
-    const runIcon = document.getElementById('runIcon');
-    const runLabel = document.getElementById('runLabel');
-    const clearBtn = document.getElementById('clearBtn');
-    const examplesSelect = document.getElementById('examples');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
+      function appendLine(text, cls) {
+        hideEmpty();
+        const div = document.createElement('div');
+        div.className = 'output-line' + (cls ? ' ' + cls : '');
+        div.textContent = text;
+        outputEl.appendChild(div);
+        outputEl.scrollTop = outputEl.scrollHeight;
+        return div;
+      }
 
-    // ── State ──
-    let isRunning = false;
-    let currentReject = null;
+      // ── Run ──
+      async function runCode() {
+        if (isRunning) return;
+        isRunning = true;
+        runBtn.disabled = true;
+        runIcon.textContent = '\u23F3';
+        runLabel.textContent = 'Running';
+        statusDot.className = 'status-dot running';
+        statusText.textContent = 'Running...';
 
-    // ── Output helpers ──
-    function clearOutput() {
-      outputEl.innerHTML = '';
-      emptyState.style.display = '';
-      outputEl.appendChild(emptyState);
-    }
+        // Clear error decorations
+        errorDecorations = editor.deltaDecorations(errorDecorations, []);
 
-    function hideEmpty() {
-      if (emptyState.parentNode) emptyState.remove();
-    }
+        // Clear output
+        outputEl.innerHTML = '';
+        hideEmpty();
 
-    function appendLine(text, cls) {
-      hideEmpty();
-      const div = document.createElement('div');
-      div.className = 'output-line' + (cls ? ' ' + cls : '');
-      div.textContent = text;
-      outputEl.appendChild(div);
-      outputEl.scrollTop = outputEl.scrollHeight;
-      return div;
-    }
+        const source = editor.getValue();
+        const startTime = performance.now();
 
-    // ── Run ──
-    async function runCode() {
-      if (isRunning) return;
-      isRunning = true;
-      runBtn.disabled = true;
-      runIcon.textContent = '\u23F3';
-      runLabel.textContent = 'Running';
-      statusDot.className = 'status-dot running';
-      statusText.textContent = 'Running...';
+        try {
+          const { Lexer, Parser, Interpreter } = HyperCode;
+          const lexer = new Lexer(source);
+          const tokens = lexer.tokenize();
+          const parser = new Parser();
+          const program = parser.parse(tokens);
 
-      // Clear output
-      outputEl.innerHTML = '';
-      hideEmpty();
+          const interpreter = new Interpreter({
+            output: function(text) {
+              appendLine(text);
+            },
+            input: function(prompt) {
+              return new Promise(function(resolve, reject) {
+                currentReject = reject;
+                appendLine('? ' + prompt, 'prompt');
 
-      const source = editor.getValue();
-      const startTime = performance.now();
+                const container = document.createElement('div');
+                container.className = 'ask-container';
 
-      try {
-        const { Lexer, Parser, Interpreter } = HyperCode;
-        const lexer = new Lexer(source);
-        const tokens = lexer.tokenize();
-        const parser = new Parser();
-        const program = parser.parse(tokens);
+                const marker = document.createElement('span');
+                marker.className = 'ask-marker';
+                marker.textContent = '\u276F';
 
-        const interpreter = new Interpreter({
-          output: function(text) {
-            appendLine(text);
-          },
-          input: function(prompt) {
-            return new Promise(function(resolve, reject) {
-              currentReject = reject;
-              appendLine('? ' + prompt, 'prompt');
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'ask-input';
+                input.placeholder = 'Type your answer...';
+                input.autocomplete = 'off';
 
-              const container = document.createElement('div');
-              container.className = 'ask-container';
+                input.addEventListener('keydown', function(e) {
+                  if (e.key === 'Enter') {
+                    var val = input.value;
+                    container.remove();
+                    appendLine('\u276F ' + val, 'user-input');
+                    currentReject = null;
+                    resolve(val);
+                  }
+                });
 
-              const marker = document.createElement('span');
-              marker.className = 'ask-marker';
-              marker.textContent = '\u276F';
-
-              const input = document.createElement('input');
-              input.type = 'text';
-              input.className = 'ask-input';
-              input.placeholder = 'Type your answer...';
-              input.autocomplete = 'off';
-
-              input.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                  var val = input.value;
-                  container.remove();
-                  appendLine('\u276F ' + val, 'user-input');
-                  currentReject = null;
-                  resolve(val);
-                }
+                container.appendChild(marker);
+                container.appendChild(input);
+                outputEl.appendChild(container);
+                outputEl.scrollTop = outputEl.scrollHeight;
+                input.focus();
               });
+            },
+            maxIterations: 100000
+          });
 
-              container.appendChild(marker);
-              container.appendChild(input);
-              outputEl.appendChild(container);
-              outputEl.scrollTop = outputEl.scrollHeight;
-              input.focus();
-            });
-          },
-          maxIterations: 100000
-        });
+          await interpreter.run(program);
 
-        await interpreter.run(program);
-
-        const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
-        appendLine('', 'info');
-        appendLine('\u2713 Finished in ' + elapsed + 's', 'success');
-        statusDot.className = 'status-dot';
-        statusText.textContent = 'Done in ' + elapsed + 's';
-
-      } catch (err) {
-        if (err && err.message === 'Aborted') {
-          appendLine('\u2717 Stopped', 'info');
-          statusDot.className = 'status-dot';
-          statusText.textContent = 'Stopped';
-        } else {
+          const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
           appendLine('', 'info');
-          appendLine('\u2717 Error: ' + (err.message || err), 'error');
-          statusDot.className = 'status-dot error';
-          statusText.textContent = 'Error';
+          appendLine('\u2713 Finished in ' + elapsed + 's', 'success');
+          statusDot.className = 'status-dot';
+          statusText.textContent = 'Done in ' + elapsed + 's';
 
-          // Highlight error line if available
-          if (err.line) {
-            editor.addLineClass(err.line - 1, 'background', 'cm-error-line');
-            setTimeout(function() { editor.removeLineClass(err.line - 1, 'background', 'cm-error-line'); }, 3000);
+        } catch (err) {
+          if (err && err.message === 'Aborted') {
+            appendLine('\u2717 Stopped', 'info');
+            statusDot.className = 'status-dot';
+            statusText.textContent = 'Stopped';
+          } else {
+            appendLine('', 'info');
+            appendLine('\u2717 Error: ' + (err.message || err), 'error');
+            statusDot.className = 'status-dot error';
+            statusText.textContent = 'Error';
+
+            // Highlight error line
+            if (err.line) {
+              errorDecorations = editor.deltaDecorations([], [{
+                range: new monaco.Range(err.line, 1, err.line, 1),
+                options: {
+                  isWholeLine: true,
+                  className: 'error-line-decoration',
+                  glyphMarginClassName: 'error-glyph',
+                }
+              }]);
+              setTimeout(function () {
+                errorDecorations = editor.deltaDecorations(errorDecorations, []);
+              }, 3000);
+            }
           }
         }
-      }
 
-      isRunning = false;
-      currentReject = null;
-      runBtn.disabled = false;
-      runIcon.textContent = '\u25B6';
-      runLabel.textContent = 'Run';
-    }
-
-    // ── Event handlers ──
-    runBtn.addEventListener('click', runCode);
-
-    clearBtn.addEventListener('click', function() {
-      if (isRunning && currentReject) {
-        currentReject(new Error('Aborted'));
+        isRunning = false;
         currentReject = null;
+        runBtn.disabled = false;
+        runIcon.textContent = '\u25B6';
+        runLabel.textContent = 'Run';
       }
-      clearOutput();
-      statusDot.className = 'status-dot';
-      statusText.textContent = 'Ready';
-    });
 
-    examplesSelect.addEventListener('change', function() {
-      var key = examplesSelect.value;
-      if (key && EXAMPLES[key]) {
-        editor.setValue(EXAMPLES[key]);
-        editor.clearHistory();
-        editor.focus();
+      // ── Event handlers ──
+      runBtn.addEventListener('click', runCode);
+
+      clearBtn.addEventListener('click', function() {
+        if (isRunning && currentReject) {
+          currentReject(new Error('Aborted'));
+          currentReject = null;
+        }
         clearOutput();
         statusDot.className = 'status-dot';
         statusText.textContent = 'Ready';
-      }
-      examplesSelect.selectedIndex = 0;
-    });
-
-    // ── Resizer ──
-    (function() {
-      const resizer = document.getElementById('resizer');
-      const editorPane = document.querySelector('.editor-pane');
-      const outputPane = document.getElementById('outputPane');
-      let startX, startEditorWidth;
-
-      resizer.addEventListener('mousedown', function(e) {
-        startX = e.clientX;
-        startEditorWidth = editorPane.getBoundingClientRect().width;
-        resizer.classList.add('active');
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-
-        function onMove(e) {
-          const dx = e.clientX - startX;
-          const mainWidth = editorPane.parentElement.getBoundingClientRect().width;
-          const newWidth = Math.max(300, Math.min(mainWidth - 300, startEditorWidth + dx));
-          editorPane.style.flex = 'none';
-          editorPane.style.width = newWidth + 'px';
-          outputPane.style.width = (mainWidth - newWidth - 4) + 'px';
-          editor.refresh();
-        }
-
-        function onUp() {
-          resizer.classList.remove('active');
-          document.body.style.cursor = '';
-          document.body.style.userSelect = '';
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-        }
-
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
       });
-    })();
 
-    // ── Focus editor on load ──
-    editor.focus();
+      examplesSelect.addEventListener('change', function() {
+        var key = examplesSelect.value;
+        if (key && EXAMPLES[key]) {
+          editor.setValue(EXAMPLES[key]);
+          editor.focus();
+          clearOutput();
+          statusDot.className = 'status-dot';
+          statusText.textContent = 'Ready';
+        }
+        examplesSelect.selectedIndex = 0;
+      });
+
+      // ── Resizer ──
+      (function() {
+        const resizerEl = document.getElementById('resizer');
+        const editorPane = document.querySelector('.editor-pane');
+        const outputPane = document.getElementById('outputPane');
+        let startX, startEditorWidth;
+
+        resizerEl.addEventListener('mousedown', function(e) {
+          startX = e.clientX;
+          startEditorWidth = editorPane.getBoundingClientRect().width;
+          resizerEl.classList.add('active');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+
+          function onMove(e) {
+            const dx = e.clientX - startX;
+            const mainWidth = editorPane.parentElement.getBoundingClientRect().width;
+            const newWidth = Math.max(300, Math.min(mainWidth - 300, startEditorWidth + dx));
+            editorPane.style.flex = 'none';
+            editorPane.style.width = newWidth + 'px';
+            outputPane.style.width = (mainWidth - newWidth - 4) + 'px';
+            editor.layout();
+          }
+
+          function onUp() {
+            resizerEl.classList.remove('active');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          }
+
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      })();
+
+      // ── Handle window resize ──
+      window.addEventListener('resize', function () { editor.layout(); });
+
+      // ── Focus editor on load ──
+      editor.focus();
+    });
   </script>
 </body>
 </html>

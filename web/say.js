@@ -1,18 +1,13 @@
 "use strict";
 var HyperCode = (() => {
-  var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-  var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-    get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-  }) : x)(function(x) {
-    if (typeof require !== "undefined") return require.apply(this, arguments);
-    throw Error('Dynamic require of "' + x + '" is not supported');
-  });
+  var __esm = (fn, res) => function __init() {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  };
   var __export = (target, all) => {
     for (var name in all)
       __defProp(target, name, { get: all[name], enumerable: true });
@@ -25,23 +20,26 @@ var HyperCode = (() => {
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-    // If the importer is in node compatibility mode or this is not an ESM
-    // file that has been converted to a CommonJS file using a Babel-
-    // compatible transform (i.e. "__esModule" has not been set), then set
-    // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-    mod
-  ));
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
   var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
-  // src/index.ts
-  var index_exports = {};
-  __export(index_exports, {
-    AIEngine: () => AIEngine,
+  // src/node-shim.ts
+  var node_shim_exports = {};
+  __export(node_shim_exports, {
+    default: () => node_shim_default
+  });
+  var node_shim_default;
+  var init_node_shim = __esm({
+    "src/node-shim.ts"() {
+      "use strict";
+      node_shim_default = {};
+    }
+  });
+
+  // src/web.ts
+  var web_exports = {};
+  __export(web_exports, {
     AST: () => ast_exports,
-    Debugger: () => Debugger,
     Interpreter: () => Interpreter,
     Lexer: () => Lexer,
     Parser: () => Parser,
@@ -52,10 +50,8 @@ var HyperCode = (() => {
     SayList: () => SayList,
     SayMap: () => SayMap,
     SayPair: () => SayPair,
-    SayServer: () => SayServer,
     SaySet: () => SaySet,
     SayUIElement: () => SayUIElement,
-    Storage: () => Storage,
     TokenType: () => TokenType,
     canvasToSVG: () => canvasToSVG,
     canvasToText: () => canvasToText,
@@ -63,9 +59,6 @@ var HyperCode = (() => {
     isTruthy: () => isTruthy,
     run: () => run,
     runTests: () => runTests,
-    shareFile: () => shareFile,
-    startClassroom: () => startClassroom,
-    startPlayground: () => startPlayground,
     toNumber: () => toNumber,
     toString: () => toString,
     valuesEqual: () => valuesEqual
@@ -1215,24 +1208,24 @@ var HyperCode = (() => {
         return { type: "DestructureStatement", variables, source, line };
       }
       if (this.check("DOT" /* DOT */)) {
-        const path4 = [name];
+        const path = [name];
         while (this.check("DOT" /* DOT */)) {
           this.advance();
-          path4.push(this.expectIdentifierName());
+          path.push(this.expectIdentifierName());
         }
-        if (path4.length === 2) {
-          target = { type: "PropertyAccess", object: { type: "Identifier", name: path4[0] }, property: path4[1] };
+        if (path.length === 2) {
+          target = { type: "PropertyAccess", object: { type: "Identifier", name: path[0] }, property: path[1] };
         } else {
-          target = { type: "DotExpression", path: path4 };
+          target = { type: "DotExpression", path };
         }
       } else if (this.check("DOT_IDENTIFIER" /* DOT_IDENTIFIER */)) {
         const dotPath = this.current().value.slice(1).split(".");
         this.advance();
-        const path4 = [name, ...dotPath];
-        if (path4.length === 2) {
-          target = { type: "PropertyAccess", object: { type: "Identifier", name: path4[0] }, property: path4[1] };
+        const path = [name, ...dotPath];
+        if (path.length === 2) {
+          target = { type: "PropertyAccess", object: { type: "Identifier", name: path[0] }, property: path[1] };
         } else {
-          target = { type: "DotExpression", path: path4 };
+          target = { type: "DotExpression", path };
         }
       } else {
         target = { type: "Identifier", name };
@@ -1331,9 +1324,9 @@ var HyperCode = (() => {
       const parts = [];
       while (!this.isAtEnd() && !this.check("NEWLINE" /* NEWLINE */) && !this.check("EOF" /* EOF */)) {
         if (this.check("DOT_IDENTIFIER" /* DOT_IDENTIFIER */)) {
-          const path4 = this.current().value;
+          const path = this.current().value;
           this.advance();
-          parts.push({ type: "interpolation", path: path4.slice(1) });
+          parts.push({ type: "interpolation", path: path.slice(1) });
         } else if (this.check("LPAREN" /* LPAREN */)) {
           this.advance();
           const savedPos = this.pos;
@@ -1953,18 +1946,18 @@ var HyperCode = (() => {
     parseWrite() {
       const line = this.current().line;
       this.advance();
-      const path4 = this.parsePrimary();
+      const path = this.parsePrimary();
       this.expect("WITH" /* WITH */);
       const value = this.parseExpression();
-      return { type: "WriteStatement", path: path4, value, append: false, line };
+      return { type: "WriteStatement", path, value, append: false, line };
     }
     parseAppend() {
       const line = this.current().line;
       this.advance();
-      const path4 = this.parsePrimary();
+      const path = this.parsePrimary();
       this.expect("WITH" /* WITH */);
       const value = this.parseExpression();
-      return { type: "WriteStatement", path: path4, value, append: true, line };
+      return { type: "WriteStatement", path, value, append: true, line };
     }
     // --- Remember/Recall/Forget ---
     parseRemember() {
@@ -2013,11 +2006,11 @@ var HyperCode = (() => {
           this.advance();
         }
       }
-      const path4 = this.parseExpression();
+      const path = this.parseExpression();
       this.skipNewlines();
       const body = this.parseBlock(["END"]);
       this.expect("END" /* END */);
-      return { type: "RouteStatement", method, path: path4, body, line };
+      return { type: "RouteStatement", method, path, body, line };
     }
     // --- Packages ---
     parseGrab() {
@@ -2321,12 +2314,12 @@ var HyperCode = (() => {
           continue;
         }
         if (this.check("DOT_IDENTIFIER" /* DOT_IDENTIFIER */)) {
-          const path4 = this.current().value.slice(1).split(".");
+          const path = this.current().value.slice(1).split(".");
           this.advance();
-          for (let pi = 0; pi < path4.length - 1; pi++) {
-            expr = { type: "PropertyAccess", object: expr, property: path4[pi] };
+          for (let pi = 0; pi < path.length - 1; pi++) {
+            expr = { type: "PropertyAccess", object: expr, property: path[pi] };
           }
-          const lastProp = path4[path4.length - 1];
+          const lastProp = path[path.length - 1];
           if (lastProp === "from") {
             if (!this.check("NEWLINE" /* NEWLINE */) && !this.check("EOF" /* EOF */) && !this.isAtEnd() && this.looksLikeMethodArg()) {
               const args = [];
@@ -2382,12 +2375,12 @@ var HyperCode = (() => {
         return { type: "ItExpression" };
       }
       if (this.check("DOT_IDENTIFIER" /* DOT_IDENTIFIER */)) {
-        const path4 = token.value.slice(1).split(".");
+        const path = token.value.slice(1).split(".");
         this.advance();
-        if (path4.length === 1) {
-          return { type: "Identifier", name: path4[0] };
+        if (path.length === 1) {
+          return { type: "Identifier", name: path[0] };
         }
-        return { type: "DotExpression", path: path4 };
+        return { type: "DotExpression", path };
       }
       if (this.check("LPAREN" /* LPAREN */)) {
         this.advance();
@@ -2540,8 +2533,8 @@ var HyperCode = (() => {
         const filesLine = this.current().line;
         this.advance();
         if (this.check("IN" /* IN */)) this.advance();
-        const path4 = this.parsePrimary();
-        return { type: "FilesExpression", path: path4, line: filesLine };
+        const path = this.parsePrimary();
+        return { type: "FilesExpression", path, line: filesLine };
       }
       if (this.check("SHELL" /* SHELL */) || this.check("EXECUTE" /* EXECUTE */)) {
         const shellLine = this.current().line;
@@ -2562,14 +2555,14 @@ var HyperCode = (() => {
       if (this.check("READ" /* READ */)) {
         const readLine = this.current().line;
         this.advance();
-        const path4 = this.parsePrimary();
+        const path = this.parsePrimary();
         let asType;
         if (this.check("AS" /* AS */)) {
           this.advance();
           this.expect("LIST" /* LIST */);
           asType = "list";
         }
-        return { type: "ReadExpression", path: path4, asType, line: readLine };
+        return { type: "ReadExpression", path, asType, line: readLine };
       }
       if (this.check("LIST" /* LIST */)) {
         this.advance();
@@ -3429,27 +3422,27 @@ var HyperCode = (() => {
   }
 
   // src/storage.ts
-  var fs = __toESM(__require("fs"));
-  var path = __toESM(__require("path"));
+  init_node_shim();
+  init_node_shim();
   var STORE_FILE = ".hypercode-store.json";
   var Storage = class {
     constructor(basePath = process.cwd()) {
       __publicField(this, "data");
       __publicField(this, "storePath");
-      this.storePath = path.join(basePath, STORE_FILE);
+      this.storePath = (void 0)(basePath, STORE_FILE);
       this.data = this.load();
     }
     load() {
       try {
-        if (fs.existsSync(this.storePath)) {
-          return JSON.parse(fs.readFileSync(this.storePath, "utf-8"));
+        if ((void 0)(this.storePath)) {
+          return JSON.parse((void 0)(this.storePath, "utf-8"));
         }
       } catch {
       }
       return {};
     }
     save() {
-      fs.writeFileSync(this.storePath, JSON.stringify(this.data, null, 2), "utf-8");
+      (void 0)(this.storePath, JSON.stringify(this.data, null, 2), "utf-8");
     }
     remember(key, value) {
       this.data[key] = value;
@@ -3478,7 +3471,7 @@ var HyperCode = (() => {
       __publicField(this, "model");
       __publicField(this, "maxTokens");
       __publicField(this, "available");
-      this.apiKey = options.apiKey || process.env.ANTHROPIC_API_KEY || "";
+      this.apiKey = options.apiKey || typeof process !== "undefined" && process.env?.ANTHROPIC_API_KEY || "";
       this.model = options.model || "claude-sonnet-4-20250514";
       this.maxTokens = options.maxTokens || 1024;
       this.available = this.apiKey.length > 0;
@@ -3561,7 +3554,7 @@ Output ONLY the HyperCode code, no explanation.`;
   };
 
   // src/server.ts
-  var http = __toESM(__require("http"));
+  init_node_shim();
   var SayServer = class {
     constructor(output = console.log) {
       __publicField(this, "server", null);
@@ -3570,15 +3563,15 @@ Output ONLY the HyperCode code, no explanation.`;
       __publicField(this, "output");
       this.output = output;
     }
-    addRoute(method, path4, handler) {
-      this.routes.push({ method: method.toUpperCase(), path: path4, handler });
+    addRoute(method, path, handler) {
+      this.routes.push({ method: method.toUpperCase(), path, handler });
     }
     setDefaultHandler(handler) {
       this.defaultHandler = handler;
     }
     async start(port) {
       return new Promise((resolve) => {
-        this.server = http.createServer(async (req, res) => {
+        this.server = (void 0)(async (req, res) => {
           const url = new URL(req.url || "/", `http://localhost:${port}`);
           const query = {};
           url.searchParams.forEach((v, k) => {
@@ -5202,8 +5195,8 @@ Output ONLY the HyperCode code, no explanation.`;
           return Math.round(val * factor) / factor;
         }
         case "ReadExpression": {
-          const path4 = toString(await this.evaluate(node.path));
-          const content = await this.readFile(path4);
+          const path = toString(await this.evaluate(node.path));
+          const content = await this.readFile(path);
           if (node.asType === "list") {
             return new SayList(content.split("\n"));
           }
@@ -5409,8 +5402,8 @@ Output ONLY the HyperCode code, no explanation.`;
         case "FilesExpression": {
           const dirPath = toString(await this.evaluate(node.path));
           try {
-            const fs4 = __require("fs");
-            const entries = fs4.readdirSync(dirPath);
+            const fs = (init_node_shim(), __toCommonJS(node_shim_exports));
+            const entries = fs.readdirSync(dirPath);
             return new SayList(entries);
           } catch {
             return new SayList([]);
@@ -5419,7 +5412,7 @@ Output ONLY the HyperCode code, no explanation.`;
         case "ShellExpression": {
           const cmd = toString(await this.evaluate(node.command));
           try {
-            const { execSync } = __require("child_process");
+            const { execSync } = (init_node_shim(), __toCommonJS(node_shim_exports));
             const result = execSync(cmd, { encoding: "utf-8", timeout: 1e4 });
             return result.trim();
           } catch (e) {
@@ -5518,20 +5511,20 @@ Output ONLY the HyperCode code, no explanation.`;
       }
       return null;
     }
-    resolvePath(path4) {
-      const parts = path4.split(".");
+    resolvePath(path) {
+      const parts = path.split(".");
       let current = this.env.get(parts[0]);
-      if (current === void 0) return path4;
+      if (current === void 0) return path;
       for (let i = 1; i < parts.length; i++) {
         current = this.getProperty(current, parts[i]);
       }
       return current;
     }
-    resolveDotExpression(path4) {
-      let current = this.env.get(path4[0]);
+    resolveDotExpression(path) {
+      let current = this.env.get(path[0]);
       if (current === void 0) return null;
-      for (let i = 1; i < path4.length; i++) {
-        current = this.getProperty(current, path4[i]);
+      for (let i = 1; i < path.length; i++) {
+        current = this.getProperty(current, path[i]);
       }
       return current;
     }
@@ -5557,38 +5550,38 @@ Output ONLY the HyperCode code, no explanation.`;
         return;
       }
       if (target.type === "DotExpression") {
-        const path4 = target.path;
-        if (path4.length === 1) {
-          this.env.set(path4[0], value);
+        const path = target.path;
+        if (path.length === 1) {
+          this.env.set(path[0], value);
           return;
         }
-        let current = this.env.get(path4[0]);
+        let current = this.env.get(path[0]);
         if (current === void 0 || current === null) {
           const autoObj = new SayInstance(new SayKind("Object"));
-          this.env.set(path4[0], autoObj);
+          this.env.set(path[0], autoObj);
           current = autoObj;
         }
-        for (let i = 1; i < path4.length - 1; i++) {
+        for (let i = 1; i < path.length - 1; i++) {
           if (current instanceof SayInstance) {
-            let next = current.get(path4[i]);
+            let next = current.get(path[i]);
             if (next === null || next === void 0) {
               next = new SayInstance(new SayKind("Object"));
-              current.set(path4[i], next);
+              current.set(path[i], next);
             }
             current = next;
           } else if (current instanceof SayMap) {
-            let next = current.get(path4[i]);
+            let next = current.get(path[i]);
             if (next === null || next === void 0) {
               next = new SayMap();
-              current.set(path4[i], next);
+              current.set(path[i], next);
             }
             current = next;
           }
         }
         if (current instanceof SayInstance) {
-          current.set(path4[path4.length - 1], value);
+          current.set(path[path.length - 1], value);
         } else if (current instanceof SayMap) {
-          current.set(path4[path4.length - 1], value);
+          current.set(path[path.length - 1], value);
         }
         return;
       }
@@ -5907,379 +5900,7 @@ Output ONLY the HyperCode code, no explanation.`;
   // src/ast.ts
   var ast_exports = {};
 
-  // src/playground.ts
-  var http2 = __toESM(__require("http"));
-  var fs2 = __toESM(__require("fs"));
-  var path2 = __toESM(__require("path"));
-  var PLAYGROUND_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HyperCode Playground</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
-    header { background: #16213e; padding: 12px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #0f3460; }
-    header h1 { font-size: 20px; color: #e94560; }
-    header .subtitle { color: #888; font-size: 14px; }
-    .toolbar { display: flex; gap: 8px; margin-left: auto; }
-    .toolbar button { background: #0f3460; color: #e0e0e0; border: 1px solid #1a4080; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    .toolbar button:hover { background: #1a4080; }
-    .toolbar button.run { background: #e94560; border-color: #e94560; color: white; font-weight: bold; }
-    .toolbar button.run:hover { background: #d63050; }
-    .main { display: flex; flex: 1; overflow: hidden; }
-    .editor-pane { flex: 1; display: flex; flex-direction: column; border-right: 2px solid #0f3460; }
-    .output-pane { flex: 1; display: flex; flex-direction: column; }
-    .pane-header { background: #16213e; padding: 8px 16px; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-    #editor { flex: 1; background: #0a0a1a; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 15px; padding: 16px; border: none; outline: none; resize: none; tab-size: 2; line-height: 1.6; }
-    #output { flex: 1; background: #0a0a1a; padding: 16px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6; }
-    .output-line { color: #a0e0a0; }
-    .error-line { color: #e94560; }
-    .input-prompt { color: #60a0e0; }
-    .canvas-output { margin: 8px 0; }
-    #examples { background: #0f3460; color: #e0e0e0; border: 1px solid #1a4080; padding: 6px 12px; border-radius: 4px; font-size: 14px; }
-    .footer { background: #16213e; padding: 8px 24px; font-size: 12px; color: #666; border-top: 1px solid #0f3460; }
-    @media (max-width: 768px) {
-      .main { flex-direction: column; }
-      .editor-pane { border-right: none; border-bottom: 2px solid #0f3460; }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>HyperCode</h1>
-    <span class="subtitle">Playground</span>
-    <div class="toolbar">
-      <select id="examples">
-        <option value="">Load example...</option>
-        <option value="hello">Hello World</option>
-        <option value="grades">Grade Report</option>
-        <option value="fibonacci">Fibonacci</option>
-        <option value="guessing">Guessing Game</option>
-        <option value="zoo">Zoo (Kinds)</option>
-        <option value="todo">To-Do List</option>
-        <option value="drawing">Drawing</option>
-      </select>
-      <button onclick="clearOutput()">Clear</button>
-      <button class="run" onclick="runCode()">&#9654; Run</button>
-    </div>
-  </header>
-  <div class="main">
-    <div class="editor-pane">
-      <div class="pane-header">Code</div>
-      <textarea id="editor" spellcheck="false" placeholder="-- Write your HyperCode here...
-put ask What is your name into name
-show Hello .name, welcome to HyperCode!">-- Welcome to HyperCode!
-put ask What is your name into name
-show Hello .name, welcome to HyperCode!
-</textarea>
-    </div>
-    <div class="output-pane">
-      <div class="pane-header">Output</div>
-      <div id="output"></div>
-    </div>
-  </div>
-  <div class="footer">
-    HyperCode Playground &mdash; Press Ctrl+Enter to run
-  </div>
-
-  <script src="/say.js"><\/script>
-  <script>
-    const editor = document.getElementById('editor');
-    const output = document.getElementById('output');
-
-    const examples = {
-      hello: '-- Hello World\\nput ask What is your name into name\\nshow Hello .name, welcome to HyperCode!',
-      grades: '-- Grade Report\\nput list 92, 87, 45, 78, 95, 63, 88 into scores\\nshow All scores: .scores\\nshow Average: (.scores.average)\\nshow Highest: (.scores.max)\\nset passing to scores where it >= 70\\nshow Passing: .passing\\nshow Pass rate: (.passing.count) out of (.scores.count)',
-      fibonacci: '-- Fibonacci Sequence\\nput 0 into a\\nput 1 into b\\nset fibs to list a, b\\nrepeat 13 times\\n  set temp to a + b\\n  set a to b\\n  set b to temp\\n  add b to fibs\\nend\\nshow Fibonacci: .fibs\\nshow Sum: (.fibs.sum)',
-      guessing: '-- Guessing Game\\nset secret to random 1 to 10\\nshow I picked a number between 1 and 10!\\nrepeat 5 times with i\\n  put ask Guess the number into guess\\n  if guess == secret\\n    show You got it in .i tries!\\n    stop\\n  end\\n  if guess < secret\\n    show Too low!\\n  else\\n    show Too high!\\n  end\\nend\\nshow The number was .secret',
-      zoo: '-- Zoo with Kinds\\nkind Animal\\n  name is Unknown\\n  sound is ...\\n  on speak\\n    show .me.name says .me.sound\\n  end\\nend\\nkind Dog from Animal\\n  sound is Woof\\nend\\nkind Cat from Animal\\n  sound is Meow\\nend\\nmake a Dog called rex with name Rex\\nmake a Cat called luna with name Luna\\nsend speak to rex\\nsend speak to luna',
-      todo: '-- To-Do List\\nkind Task\\n  title is Untitled\\n  done is false\\n  on finish\\n    set me.done to true\\n  end\\n  on status\\n    if me.done\\n      show DONE .me.title\\n    else\\n      show TODO .me.title\\n    end\\n  end\\nend\\nmake a Task called t1 with title Learn HyperCode\\nmake a Task called t2 with title Build a project\\nsend finish to t1\\nshow Task List:\\nsend status to t1\\nsend status to t2',
-      drawing: '-- Drawing Example\\nset canvas to 400 by 400\\nset color to Blue\\ndraw circle at 200, 200 with size 80\\nset color to Red\\ndraw rectangle at 50, 50 with width 100 and height 60\\nset color to Green\\ndraw line from 0, 400 to 400, 0',
-    };
-
-    document.getElementById('examples').addEventListener('change', function() {
-      if (this.value && examples[this.value]) {
-        editor.value = examples[this.value];
-        this.value = '';
-      }
-    });
-
-    editor.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        runCode();
-      }
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = this.selectionStart;
-        this.value = this.value.substring(0, start) + '  ' + this.value.substring(this.selectionEnd);
-        this.selectionStart = this.selectionEnd = start + 2;
-      }
-    });
-
-    function clearOutput() {
-      output.innerHTML = '';
-    }
-
-    function addLine(text, className) {
-      const div = document.createElement('div');
-      div.className = className || 'output-line';
-      div.textContent = text;
-      output.appendChild(div);
-      output.scrollTop = output.scrollHeight;
-    }
-
-    async function runCode() {
-      clearOutput();
-      const source = editor.value;
-      try {
-        await HyperCode.run(source, {
-          output: function(text) { addLine(text, 'output-line'); },
-          input: function(prompt) {
-            return window.prompt(prompt) || '';
-          },
-        });
-      } catch(e) {
-        addLine('Error: ' + e.message, 'error-line');
-      }
-    }
-  <\/script>
-</body>
-</html>`;
-  function startPlayground(port = 3e3) {
-    const webDir = path2.join(__dirname, "..", "web");
-    const sayJsPath = path2.join(webDir, "say.js");
-    const server = http2.createServer((req, res) => {
-      if (req.url === "/say.js") {
-        if (fs2.existsSync(sayJsPath)) {
-          res.writeHead(200, { "Content-Type": "application/javascript" });
-          res.end(fs2.readFileSync(sayJsPath, "utf-8"));
-        } else {
-          res.writeHead(200, { "Content-Type": "application/javascript" });
-          res.end('// say.js not built yet. Run: npm run build:web\nvar HyperCode = { run: function() { alert("Run npm run build:web first"); } };');
-        }
-      } else {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(PLAYGROUND_HTML);
-      }
-    });
-    server.listen(port, () => {
-      console.log(`HyperCode Playground running at http://localhost:${port}`);
-      console.log("Open this URL in your browser to start coding!");
-      console.log("Press Ctrl+C to stop.");
-    });
-  }
-
-  // src/share.ts
-  var http3 = __toESM(__require("http"));
-  var fs3 = __toESM(__require("fs"));
-  var path3 = __toESM(__require("path"));
-  var crypto = __toESM(__require("crypto"));
-  function generateId() {
-    return crypto.randomBytes(3).toString("hex");
-  }
-  function shareFile(filePath, port = 4e3) {
-    const id = generateId();
-    const source = fs3.readFileSync(filePath, "utf-8");
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <title>HyperCode Share: ${id}</title>
-  <style>
-    body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 24px; }
-    h1 { color: #e94560; }
-    pre { background: #0a0a1a; padding: 16px; border-radius: 8px; overflow-x: auto; line-height: 1.6; }
-    .id { color: #60a0e0; }
-    button { background: #e94560; color: white; border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px; margin: 8px 4px 8px 0; }
-    button:hover { background: #d63050; }
-  </style>
-</head>
-<body>
-  <h1>HyperCode <span class="id">#${id}</span></h1>
-  <button onclick="navigator.clipboard.writeText(document.getElementById('code').textContent)">Copy Code</button>
-  <button onclick="window.open('/run')">Run in Playground</button>
-  <pre id="code">${escapeHtml(source)}</pre>
-</body>
-</html>`;
-    const server = http3.createServer((req, res) => {
-      if (req.url === "/raw") {
-        res.writeHead(200, { "Content-Type": "text/plain" });
-        res.end(source);
-      } else if (req.url === "/run") {
-        res.writeHead(302, { "Location": `/?code=${encodeURIComponent(source)}` });
-        res.end();
-      } else {
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(html);
-      }
-    });
-    server.listen(port, () => {
-      console.log(`Sharing "${path3.basename(filePath)}" at:`);
-      console.log(`  http://localhost:${port}`);
-      console.log(`  Share ID: ${id}`);
-      console.log("\nPress Ctrl+C to stop sharing.");
-    });
-    return id;
-  }
-  function startClassroom(port = 5e3) {
-    const submissions = /* @__PURE__ */ new Map();
-    const dashboardHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <title>HyperCode Classroom</title>
-  <meta http-equiv="refresh" content="5">
-  <style>
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 24px; max-width: 960px; margin: 0 auto; }
-    h1 { color: #e94560; margin-bottom: 8px; }
-    .subtitle { color: #888; margin-bottom: 24px; }
-    .student { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 16px; margin: 8px 0; }
-    .student h3 { color: #60a0e0; margin-bottom: 8px; }
-    .student pre { background: #0a0a1a; padding: 12px; border-radius: 4px; font-size: 13px; overflow-x: auto; }
-    .time { color: #666; font-size: 12px; }
-    .count { background: #e94560; color: white; border-radius: 12px; padding: 2px 10px; font-size: 14px; }
-    .empty { color: #666; font-style: italic; padding: 40px; text-align: center; }
-  </style>
-</head>
-<body>
-  <h1>HyperCode Classroom</h1>
-  <p class="subtitle">Submissions <span class="count">SUBMISSIONS_COUNT</span> \u2014 Auto-refreshes every 5 seconds</p>
-  <div id="students">SUBMISSIONS_HTML</div>
-</body>
-</html>`;
-    const server = http3.createServer(async (req, res) => {
-      if (req.method === "POST" && req.url === "/submit") {
-        let body = "";
-        for await (const chunk of req) body += chunk;
-        try {
-          const data = JSON.parse(body);
-          submissions.set(data.name || "Anonymous", {
-            name: data.name || "Anonymous",
-            code: data.code || "",
-            time: /* @__PURE__ */ new Date()
-          });
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ ok: true }));
-        } catch {
-          res.writeHead(400);
-          res.end("Invalid submission");
-        }
-      } else if (req.url === "/submissions") {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(Array.from(submissions.values())));
-      } else {
-        let studentsHtml = "";
-        if (submissions.size === 0) {
-          studentsHtml = '<div class="empty">No submissions yet. Students can submit with:<br><code>say submit myfile.say --name "Student Name" --to localhost:' + port + "</code></div>";
-        } else {
-          for (const [name, sub] of submissions) {
-            studentsHtml += `<div class="student"><h3>${escapeHtml(sub.name)}</h3><span class="time">${sub.time.toLocaleTimeString()}</span><pre>${escapeHtml(sub.code)}</pre></div>`;
-          }
-        }
-        const html = dashboardHtml.replace("SUBMISSIONS_COUNT", String(submissions.size)).replace("SUBMISSIONS_HTML", studentsHtml);
-        res.writeHead(200, { "Content-Type": "text/html" });
-        res.end(html);
-      }
-    });
-    server.listen(port, () => {
-      console.log(`HyperCode Classroom running at http://localhost:${port}`);
-      console.log("Students can submit with:");
-      console.log(`  say submit myfile.say --name "Name" --to localhost:${port}`);
-      console.log("\nPress Ctrl+C to stop.");
-    });
-  }
-  function escapeHtml(text) {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-
-  // src/debugger.ts
-  var readline = __toESM(__require("readline"));
-  var Debugger = class {
-    constructor() {
-      __publicField(this, "breakpoints", /* @__PURE__ */ new Set());
-      __publicField(this, "paused", false);
-      __publicField(this, "stepMode", true);
-      __publicField(this, "rl", null);
-    }
-    async debug(source) {
-      const lines = source.split("\n");
-      const lexer = new Lexer(source);
-      const tokens = lexer.tokenize();
-      const parser = new Parser();
-      const program = parser.parse(tokens);
-      console.log("HyperCode Debugger");
-      console.log("Commands: (s)tep, (c)ontinue, (v)ariables, (b N) breakpoint, (q)uit");
-      console.log("---");
-      const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-      this.rl = rl;
-      this.stepMode = true;
-      const variables = {};
-      const interpreter = new Interpreter({
-        output: (text) => {
-          console.log(`  \u2192 ${text}`);
-        },
-        input: (prompt) => {
-          return new Promise((resolve) => {
-            rl.question(`  ${prompt} `, resolve);
-          });
-        }
-      });
-      try {
-        for (const node of program.body) {
-          const line = node.line ?? 0;
-          const lineText = line > 0 && line <= lines.length ? lines[line - 1].trim() : "";
-          if (this.stepMode || this.breakpoints.has(line)) {
-            console.log(`
-[Line ${line}] ${lineText}`);
-            await this.waitForCommand(rl);
-          }
-          await interpreter.execute(node);
-        }
-      } catch (e) {
-        if (e instanceof Error) {
-          console.log(`
-Error: ${e.message}`);
-        }
-      }
-      console.log("\nProgram finished.");
-      rl.close();
-    }
-    async waitForCommand(rl) {
-      return new Promise((resolve) => {
-        const ask = () => {
-          rl.question("debug> ", (input) => {
-            const cmd = input.trim().toLowerCase();
-            if (cmd === "s" || cmd === "step" || cmd === "") {
-              this.stepMode = true;
-              resolve();
-            } else if (cmd === "c" || cmd === "continue") {
-              this.stepMode = false;
-              resolve();
-            } else if (cmd === "q" || cmd === "quit") {
-              process.exit(0);
-            } else if (cmd.startsWith("b ")) {
-              const lineNum = parseInt(cmd.slice(2));
-              if (!isNaN(lineNum)) {
-                this.breakpoints.add(lineNum);
-                console.log(`Breakpoint set at line ${lineNum}`);
-              }
-              ask();
-            } else if (cmd === "v" || cmd === "variables") {
-              console.log("(Variable inspection available in step mode)");
-              ask();
-            } else {
-              console.log("Unknown command. Use s(tep), c(ontinue), b N, v(ariables), q(uit)");
-              ask();
-            }
-          });
-        };
-        ask();
-      });
-    }
-  };
-
-  // src/index.ts
+  // src/web.ts
   async function run(source, options = {}) {
     const lexer = new Lexer(source);
     const tokens = lexer.tokenize();
@@ -6296,5 +5917,5 @@ Error: ${e.message}`);
     const interpreter = new Interpreter(options);
     return interpreter.runTests(program);
   }
-  return __toCommonJS(index_exports);
+  return __toCommonJS(web_exports);
 })();

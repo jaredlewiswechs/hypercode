@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "build:web": "esbuild src/index.ts --bundle --format=iife --global-name=HyperCode --outfile=web/say.js --target=es2020 --external:fs --external:path --external:http --external:readline --external:net --external:child_process --external:crypto",
+    "build:web": "esbuild src/web.ts --bundle --format=iife --global-name=HyperCode --outfile=web/say.js --target=es2020 --alias:fs=./src/node-shim.ts --alias:path=./src/node-shim.ts --alias:http=./src/node-shim.ts --alias:readline=./src/node-shim.ts --alias:net=./src/node-shim.ts --alias:child_process=./src/node-shim.ts --alias:crypto=./src/node-shim.ts",
     "serve": "node web/serve.js",
     "ide": "npm run build:web && npm run serve",
     "test": "vitest run",

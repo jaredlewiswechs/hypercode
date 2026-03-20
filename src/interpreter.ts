@@ -342,6 +342,7 @@ export interface InterpreterOptions {
   aiOptions?: AIOptions;
   storagePath?: string;
   httpFetch?: (url: string, options?: any) => Promise<any>;
+  strict?: boolean;
 }
 
 export class Interpreter {
@@ -362,6 +363,7 @@ export class Interpreter {
   private storage: Storage | null = null;
   private storagePath: string | undefined;
   private httpFetch: (url: string, options?: any) => Promise<any>;
+  private strict: boolean;
   private canvases: Map<string, CanvasState> = new Map();
   private server: SayServer | null = null;
   private eventListeners: Map<string, { variable?: string; body: AST.ASTNode[] }[]> = new Map();
@@ -389,6 +391,7 @@ export class Interpreter {
     this.aiEngine = new AIEngine(options.aiOptions);
     this.storagePath = options.storagePath;
     this.httpFetch = options.httpFetch || (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : async () => { throw new Error('HTTP fetch not available'); });
+    this.strict = options.strict || false;
     this.registerBuiltins();
   }
 
@@ -1366,7 +1369,12 @@ export class Interpreter {
           return this.callCommand(cmd, []);
         }
         const val = this.env.get(node.name);
-        if (val === undefined) return node.name; // Treat unknown identifiers as string values
+        if (val === undefined) {
+          if (this.strict) {
+            throw new Error(`Undefined variable "${node.name}" on line ${(node as any).line || '?'}. Did you mean to use "put" to store text?`);
+          }
+          return node.name; // Treat unknown identifiers as string values
+        }
         return val;
       }
 

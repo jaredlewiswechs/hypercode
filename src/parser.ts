@@ -183,6 +183,56 @@ export class Parser {
       return { type: 'PutStatement', value: askExpr, target, line };
     }
 
+    // "put map into X" — create an empty map (matches "put list into X" behavior)
+    if (this.check(TokenType.MAP)) {
+      this.advance(); // skip 'map'
+      if (this.check(TokenType.INTO)) {
+        this.expect(TokenType.INTO);
+        const target = this.parseExpression();
+        return { type: 'PutStatement', value: { type: 'MapLiteral' }, target, line };
+      }
+      // Not followed by INTO — fall through to literal text, but put 'map' back
+      this.pos--;
+    }
+
+    // "put pair X and Y into Z" — create a pair
+    if (this.check(TokenType.PAIR)) {
+      const saved = this.pos;
+      this.advance(); // skip 'pair'
+      if (!this.check(TokenType.INTO) && !this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+        const first = this.parseAddition();
+        if (this.check(TokenType.AND) || this.check(TokenType.COMMA)) {
+          this.advance();
+          const second = this.parseAddition();
+          this.expect(TokenType.INTO);
+          const target = this.parseExpression();
+          return { type: 'PutStatement', value: { type: 'PairLiteral', first, second }, target, line };
+        }
+      }
+      // Not a valid pair expression — fall through to literal text
+      this.pos = saved;
+    }
+
+    // "put unique list X, Y into Z" — create a set (matches "put list" behavior)
+    if (this.check(TokenType.UNIQUE)) {
+      const saved = this.pos;
+      this.advance(); // skip 'unique'
+      if (this.check(TokenType.LIST)) this.advance(); // optional 'list'
+      if (this.check(TokenType.INTO)) {
+        this.expect(TokenType.INTO);
+        const target = this.parseExpression();
+        return { type: 'PutStatement', value: { type: 'SetLiteral', items: [] }, target, line };
+      }
+      if (!this.check(TokenType.NEWLINE) && !this.isAtEnd()) {
+        const items = this.parseListItems();
+        this.expect(TokenType.INTO);
+        const target = this.parseExpression();
+        return { type: 'PutStatement', value: { type: 'SetLiteral', items }, target, line };
+      }
+      // Not a valid unique expression — fall through to literal text
+      this.pos = saved;
+    }
+
     // put is ALWAYS literal text — collect all tokens between put and into as raw text
     const parts: string[] = [];
     while (!this.isAtEnd() && !this.check(TokenType.INTO) && !this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF)) {

@@ -1026,3 +1026,50 @@ show .result
     expect(output).toEqual(['10']);
   });
 });
+
+describe('Strict mode', () => {
+  function collectStrict(source: string): Promise<string[]> {
+    const output: string[] = [];
+    return run(source, { output: (text) => output.push(text), strict: true }).then(() => output);
+  }
+
+  it('throws on undefined variable in set expression', async () => {
+    await expect(collectStrict('set result to unknownVar + 1')).rejects.toThrow('Undefined variable "unknownVar"');
+  });
+
+  it('throws on undefined variable in if condition', async () => {
+    await expect(collectStrict('if missingVar is 5\nshow yes\nend')).rejects.toThrow('Undefined variable "missingVar"');
+  });
+
+  it('allows defined variables in strict mode', async () => {
+    const output = await collectStrict('put Maya into name\nset backup to name\nshow .backup');
+    expect(output).toEqual(['Maya']);
+  });
+
+  it('non-strict mode preserves identifier-as-string fallback', async () => {
+    const output = await collect('put Jared into name\nif name is Jared\nshow found\nend');
+    expect(output).toEqual(['found']);
+  });
+});
+
+describe('put with data structure keywords', () => {
+  it('put map into creates empty map', async () => {
+    const output = await collect('put map into data\nset data.name to Maya\nshow .data.name');
+    expect(output).toEqual(['Maya']);
+  });
+
+  it('put pair creates a pair', async () => {
+    const output = await collect('put pair 1 and 2 into p\nshow (.p.first)');
+    expect(output).toEqual(['1']);
+  });
+
+  it('put unique into creates empty set', async () => {
+    const output = await collect('put unique into s\nshow (.s.count)');
+    expect(output).toEqual(['0']);
+  });
+
+  it('put unique list with items creates set', async () => {
+    const output = await collect('put unique list 1, 2, 3 into s\nshow (.s.count)');
+    expect(output).toEqual(['3']);
+  });
+});

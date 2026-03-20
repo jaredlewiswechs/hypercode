@@ -1,5 +1,6 @@
 import { Token, TokenType } from './tokens';
 import * as AST from './ast';
+import { Lexer } from './lexer';
 
 export class ParseError extends Error {
   constructor(message: string, public line: number, public column: number) {
@@ -77,6 +78,26 @@ export class Parser {
       case TokenType.DO: return this.parseDoTogether();
       case TokenType.LISTEN: return this.parseListen();
       case TokenType.EVERY: return this.parseEvery();
+      case TokenType.CONTRACT: return this.parseContract();
+      case TokenType.ENUM: return this.parseEnum();
+      case TokenType.MOCK: return this.parseMock();
+      case TokenType.BEFORE: return this.parseBefore();
+      case TokenType.AFTER: return this.parseAfter();
+      case TokenType.BENCHMARK: return this.parseBenchmark();
+      case TokenType.ANIMATE: return this.parseAnimate();
+      case TokenType.FORWARD: return this.parseTurtle('forward');
+      case TokenType.BACKWARD: return this.parseTurtle('backward');
+      case TokenType.TURN: return this.parseTurnStatement();
+      case TokenType.PEN: return this.parsePen();
+      case TokenType.SWITCH: return this.parseSwitchScene();
+      case TokenType.CONNECT: return this.parseConnect();
+      case TokenType.EMIT: return this.parseEmit();
+      case TokenType.COOKIE: return this.parseCookie();
+      case TokenType.ALLOW: return this.parseAllow();
+      case TokenType.STREAM: return this.parseStream();
+      case TokenType.TEMPLATE: return this.parseTemplate();
+      case TokenType.FORMAT: return this.parseFormat();
+      case TokenType.APPLY: return this.parseApply();
       default:
         return this.parseExpressionStatement();
     }
@@ -187,7 +208,7 @@ export class Parser {
     return { type: 'PutStatement', value, target, line };
   }
 
-  private parseSet(): AST.SetStatement {
+  private parseSet(): AST.SetStatement | AST.DestructureStatement {
     const line = this.current().line;
     this.advance(); // skip 'set'
 
@@ -199,6 +220,18 @@ export class Parser {
       this.advance();
     } else {
       name = this.expectIdentifierName();
+    }
+
+    // Check for destructuring: set a, b, c from expr
+    if (this.check(TokenType.COMMA)) {
+      const variables = [name];
+      while (this.check(TokenType.COMMA)) {
+        this.advance();
+        variables.push(this.expectIdentifierName());
+      }
+      this.expect(TokenType.FROM);
+      const source = this.parseExpression();
+      return { type: 'DestructureStatement', variables, source, line };
     }
 
     if (this.check(TokenType.DOT)) {
@@ -232,6 +265,14 @@ export class Parser {
   }
 
   private parseSetValue(): AST.Expression {
+    // Special keyword expressions that should not be parsed as command calls
+    if (this.check(TokenType.PAIR) || this.check(TokenType.UNIQUE) ||
+        this.check(TokenType.CURRY) || this.check(TokenType.COMPOSE) ||
+        this.check(TokenType.JSON_TYPE) || this.check(TokenType.CSV) ||
+        this.check(TokenType.ENV) || this.check(TokenType.LBRACE)) {
+      return this.parseExpression();
+    }
+
     // Check for command call patterns
     if (this.check(TokenType.IDENTIFIER) || this.isKeywordUsableAsIdentifier()) {
       const savedPos = this.pos;
@@ -251,7 +292,8 @@ export class Parser {
              TokenType.GT, TokenType.LT, TokenType.GTE, TokenType.LTE,
              TokenType.IS, TokenType.CONTAINS, TokenType.WHERE, TokenType.EACH,
              TokenType.LPAREN, TokenType.DOT, TokenType.DOT_IDENTIFIER,
-             TokenType.ROUNDED].includes(t)) {
+             TokenType.ROUNDED, TokenType.FORMAT, TokenType.MATCHES,
+             TokenType.PIPE, TokenType.EXISTS].includes(t)) {
           hasOperator = true;
         }
         tokenCount++;
@@ -264,7 +306,7 @@ export class Parser {
         this.advance();
         const args: AST.Expression[] = [];
         while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
-          if (this.check(TokenType.AND)) { this.advance(); continue; }
+          if (this.check(TokenType.AND) || this.check(TokenType.COMMA)) { this.advance(); continue; }
           args.push(this.parseAddition());
         }
         if (args.length > 0) {
@@ -280,6 +322,7 @@ export class Parser {
         this.advance();
         const args: AST.Expression[] = [];
         while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+          if (this.check(TokenType.COMMA)) { this.advance(); continue; }
           args.push(this.parseAddition());
         }
         if (args.length > 0) {
@@ -309,6 +352,29 @@ export class Parser {
         parts.push({ type: 'interpolation', path: path.slice(1) }); // remove leading dot
       } else if (this.check(TokenType.LPAREN)) {
         this.advance(); // skip (
+        // Check for function call pattern: (funcName args...)
+        const savedPos = this.pos;
+        if ((this.check(TokenType.IDENTIFIER) || this.isKeywordUsableAsIdentifier()) && !this.check(TokenType.RPAREN)) {
+          const name = this.current().value;
+          this.advance();
+          if (!this.check(TokenType.RPAREN) && !this.check(TokenType.PLUS) && !this.check(TokenType.MINUS) &&
+              !this.check(TokenType.STAR) && !this.check(TokenType.SLASH) && !this.check(TokenType.EQ) &&
+              !this.check(TokenType.NEQ) && !this.check(TokenType.GT) && !this.check(TokenType.LT) &&
+              !this.check(TokenType.GTE) && !this.check(TokenType.LTE) && !this.check(TokenType.DOT) &&
+              !this.check(TokenType.DOT_IDENTIFIER) &&
+              !this.check(TokenType.IS) && !this.check(TokenType.AND) && !this.check(TokenType.OR)) {
+            // Looks like a function call: (funcName arg1, arg2)
+            const args: AST.Expression[] = [];
+            while (!this.check(TokenType.RPAREN) && !this.isAtEnd()) {
+              args.push(this.parseAddition());
+              if (this.check(TokenType.COMMA)) this.advance();
+            }
+            this.expect(TokenType.RPAREN);
+            parts.push({ type: 'expression', expr: { type: 'CallExpression', name, args } });
+            continue;
+          }
+          this.pos = savedPos;
+        }
         const expr = this.parseExpression();
         this.expect(TokenType.RPAREN);
         parts.push({ type: 'expression', expr });
@@ -386,12 +452,19 @@ export class Parser {
     const line = this.current().line;
     this.advance(); // skip 'repeat'
 
+    // Check for label: repeat as outer
+    let label: string | undefined;
+    if (this.check(TokenType.AS)) {
+      this.advance();
+      label = this.expectIdentifierName();
+    }
+
     if (this.check(TokenType.FOREVER)) {
       this.advance();
       this.skipNewlines();
       const body = this.parseBlock(['END']);
       this.expect(TokenType.END);
-      return { type: 'RepeatStatement', variant: 'forever', body, line };
+      return { type: 'RepeatStatement', variant: 'forever', label, body, line };
     }
 
     if (this.check(TokenType.WHILE)) {
@@ -412,7 +485,7 @@ export class Parser {
       return { type: 'RepeatStatement', variant: 'until', condition, body, line };
     }
 
-    // repeat N times [with i]
+    // repeat N times [with i] [as label]
     const count = this.parseExpression();
     this.expect(TokenType.TIMES);
 
@@ -422,10 +495,16 @@ export class Parser {
       counterVariable = this.expectIdentifierName();
     }
 
+    // Check for label after times: repeat 5 times as outer
+    if (this.check(TokenType.AS)) {
+      this.advance();
+      label = this.expectIdentifierName();
+    }
+
     this.skipNewlines();
     const body = this.parseBlock(['END']);
     this.expect(TokenType.END);
-    return { type: 'RepeatStatement', variant: 'times', count, counterVariable, body, line };
+    return { type: 'RepeatStatement', variant: 'times', count, counterVariable, label, body, line };
   }
 
   private parseForEach(): AST.ForEachStatement {
@@ -456,27 +535,81 @@ export class Parser {
       iterable = startExpr;
     }
 
+    // Check for "by N" step
+    let step: AST.Expression | undefined;
+    if (this.check(TokenType.BY)) {
+      this.advance();
+      step = this.parseExpression();
+    }
+
     this.skipNewlines();
     const body = this.parseBlock(['END']);
     this.expect(TokenType.END);
-    return { type: 'ForEachStatement', variable, indexVariable, iterable, body, line };
+    return { type: 'ForEachStatement', variable, indexVariable, iterable, step, body, line };
   }
 
-  private parseKind(): AST.KindDeclaration {
+  private parseKind(): AST.KindDeclaration | AST.EnumDeclaration {
     const line = this.current().line;
     this.advance(); // skip 'kind'
     const name = this.expectIdentifierName();
+
+    // Enum shorthand: kind Color is red, green, blue end
+    if (this.check(TokenType.IS)) {
+      const savedPos = this.pos;
+      this.advance();
+      if (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+        const firstName = this.expectIdentifierName();
+        if (this.check(TokenType.COMMA)) {
+          const values: string[] = [firstName];
+          while (this.check(TokenType.COMMA)) {
+            this.advance();
+            values.push(this.expectIdentifierName());
+          }
+          this.skipNewlines();
+          if (this.check(TokenType.END)) this.advance();
+          return { type: 'EnumDeclaration', name, values, line };
+        }
+        // Not an enum, restore - fall through to normal kind
+        this.pos = savedPos;
+      } else {
+        this.pos = savedPos;
+      }
+    }
+
     let parent: string | undefined;
+    let implementsList: string[] | undefined;
+    let mixins: string[] | undefined;
 
     if (this.check(TokenType.FROM)) {
       this.advance();
       parent = this.expectIdentifierName();
     }
 
+    if (this.check(TokenType.IMPLEMENTS)) {
+      this.advance();
+      implementsList = [this.expectIdentifierName()];
+      while (this.check(TokenType.COMMA)) {
+        this.advance();
+        implementsList.push(this.expectIdentifierName());
+      }
+    }
+
+    if (this.check(TokenType.USES)) {
+      this.advance();
+      mixins = [this.expectIdentifierName()];
+      while (this.check(TokenType.COMMA)) {
+        this.advance();
+        mixins.push(this.expectIdentifierName());
+      }
+    }
+
     this.skipNewlines();
 
-    const fields: { name: string; defaultValue: AST.Expression }[] = [];
+    const fields: { name: string; defaultValue: AST.Expression; isPrivate?: boolean }[] = [];
     const methods: AST.OnHandler[] = [];
+    const staticMethods: AST.OnHandler[] = [];
+    const getters: AST.OnHandler[] = [];
+    const operators: { op: string; handler: AST.OnHandler }[] = [];
 
     while (!this.check(TokenType.END) && !this.isAtEnd()) {
       this.skipNewlines();
@@ -484,6 +617,26 @@ export class Parser {
 
       if (this.check(TokenType.ON)) {
         methods.push(this.parseOn() as AST.OnHandler);
+      } else if (this.check(TokenType.STATIC)) {
+        this.advance();
+        if (this.check(TokenType.ON)) {
+          staticMethods.push(this.parseOn() as AST.OnHandler);
+        }
+      } else if (this.check(TokenType.GETTER)) {
+        this.advance();
+        getters.push(this.parseOn() as AST.OnHandler);
+      } else if (this.check(TokenType.OVERLOAD)) {
+        this.advance();
+        const op = this.expectIdentifierName();
+        const handler = this.parseOn() as AST.OnHandler;
+        operators.push({ op, handler });
+      } else if (this.check(TokenType.SECRET)) {
+        this.advance();
+        const fieldName = this.expectIdentifierName();
+        this.expect(TokenType.IS);
+        const defaultValue = this.parseSimpleValue();
+        fields.push({ name: fieldName, defaultValue, isPrivate: true });
+        this.skipNewlines();
       } else {
         // field: name is default
         const fieldName = this.expectIdentifierName();
@@ -495,7 +648,12 @@ export class Parser {
     }
 
     this.expect(TokenType.END);
-    return { type: 'KindDeclaration', name, parent, fields, methods, line };
+    return {
+      type: 'KindDeclaration', name, parent,
+      implements: implementsList, mixins,
+      fields, methods, staticMethods, getters, operators,
+      line,
+    };
   }
 
   private parseMake(): AST.MakeStatement {
@@ -571,30 +729,60 @@ export class Parser {
 
     const name = this.expectIdentifierName();
     const params: string[] = [];
+    const paramTypes: (string | undefined)[] = [];
 
-    while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
-      const paramName = this.current().value;
-      // Skip 'and' between params
-      if (this.check(TokenType.AND)) {
-        this.advance();
-        continue;
-      }
-      params.push(paramName);
+    // Support (param as type, param as type) syntax
+    if (this.check(TokenType.LPAREN)) {
       this.advance();
+      while (!this.check(TokenType.RPAREN) && !this.isAtEnd()) {
+        const paramName = this.expectIdentifierName();
+        params.push(paramName);
+        if (this.check(TokenType.AS)) {
+          this.advance();
+          paramTypes.push(this.parseTypeName());
+        } else {
+          paramTypes.push(undefined);
+        }
+        if (this.check(TokenType.COMMA)) this.advance();
+      }
+      if (this.check(TokenType.RPAREN)) this.advance();
+    } else {
+      while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+        // Skip 'and' and commas between params
+        if (this.check(TokenType.AND) || this.check(TokenType.COMMA)) {
+          this.advance();
+          continue;
+        }
+        const paramName = this.current().value;
+        params.push(paramName);
+        this.advance();
+      }
     }
 
     this.skipNewlines();
     const body = this.parseBlock(['END']);
     this.expect(TokenType.END);
 
-    return { type: 'CommandDeclaration', name, params, body, line };
+    return { type: 'CommandDeclaration', name, params, paramTypes: paramTypes.length > 0 ? paramTypes : undefined, body, line };
   }
 
   private parseReturn(): AST.ReturnStatement {
     const line = this.current().line;
     this.advance(); // skip 'return'
+    // Guard clause: return if condition
+    if (this.check(TokenType.IF)) {
+      this.advance();
+      const condition = this.parseExpression();
+      return { type: 'ReturnStatement', value: { type: 'NothingLiteral' }, condition, line };
+    }
     const value = this.parseExpression();
-    return { type: 'ReturnStatement', value, line };
+    // Check for guard: return VALUE if CONDITION
+    let condition: AST.Expression | undefined;
+    if (this.check(TokenType.IF)) {
+      this.advance();
+      condition = this.parseExpression();
+    }
+    return { type: 'ReturnStatement', value, condition, line };
   }
 
   private parseAdd(): AST.AddStatement {
@@ -759,7 +947,13 @@ export class Parser {
   private parseStop(): AST.StopStatement {
     const line = this.current().line;
     this.advance();
-    return { type: 'StopStatement', line };
+    // Check for labeled break: stop outer
+    let label: string | undefined;
+    if (this.check(TokenType.IDENTIFIER) && !this.check(TokenType.NEWLINE)) {
+      label = this.current().value;
+      this.advance();
+    }
+    return { type: 'StopStatement', label, line };
   }
 
   private parseWait(): AST.WaitStatement {
@@ -878,9 +1072,22 @@ export class Parser {
           cases.push({ value, body });
         } else {
           const value = this.parseExpression();
+          // Support "is VALUE1 or VALUE2" fallthrough
+          const orValues: AST.Expression[] = [value];
+          while (this.check(TokenType.OR)) {
+            this.advance();
+            orValues.push(this.parseExpression());
+          }
           this.skipNewlines();
           const body = this.parseBlock(['IS', 'ELSE', 'END']);
-          cases.push({ value, body });
+          if (orValues.length === 1) {
+            cases.push({ value, body });
+          } else {
+            // Add each or-value with the same body
+            for (const v of orValues) {
+              cases.push({ value: v, body });
+            }
+          }
         }
       } else if (this.check(TokenType.ELSE)) {
         this.advance();
@@ -1119,7 +1326,21 @@ export class Parser {
   // ---- Expression parsing ----
 
   private parseExpression(): AST.Expression {
-    return this.parseLogical();
+    let expr = this.parseLogical();
+
+    // Pipeline: expr | transform | transform  or  expr |> transform
+    while (this.check(TokenType.PIPE)) {
+      this.advance();
+      const stages: AST.Expression[] = [expr];
+      stages.push(this.parseLogical());
+      while (this.check(TokenType.PIPE)) {
+        this.advance();
+        stages.push(this.parseLogical());
+      }
+      expr = { type: 'PipelineExpression', stages };
+    }
+
+    return expr;
   }
 
   private parseLogical(): AST.Expression {
@@ -1184,6 +1405,34 @@ export class Parser {
       // "is X" means equality
       const right = this.parseAddition();
       return { type: 'ComparisonExpression', op: '==', left, right };
+    }
+
+    // "matches" pattern
+    if (this.check(TokenType.MATCHES)) {
+      this.advance();
+      const pattern = this.parseAddition();
+      return { type: 'RegexMatchExpression', value: left, pattern };
+    }
+
+    // "exists" check
+    if (this.check(TokenType.EXISTS)) {
+      this.advance();
+      return { type: 'ExistsExpression', target: left };
+    }
+
+    // "format N places" expression
+    if (this.check(TokenType.FORMAT)) {
+      this.advance();
+      const places = this.parseAddition();
+      if (this.check(TokenType.PLACES)) this.advance();
+      return { type: 'FormatExpression', value: left, places };
+    }
+
+    // "touches" check
+    if (this.check(TokenType.TOUCHES)) {
+      this.advance();
+      const right = this.parseAddition();
+      return { type: 'TouchesExpression', left, right };
     }
 
     if (this.check(TokenType.EQ) || this.check(TokenType.NEQ) ||
@@ -1436,9 +1685,35 @@ export class Parser {
       return { type: 'ParenExpression', expr };
     }
 
-    // Map literal
+    // Map literal (empty or with entries)
     if (this.check(TokenType.MAP)) {
       this.advance();
+      // Check for map with entries: map key: value, key: value
+      if (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd() &&
+          !this.check(TokenType.INTO) && !this.check(TokenType.RPAREN)) {
+        const savedPos = this.pos;
+        try {
+          const entries: { key: AST.Expression; value: AST.Expression }[] = [];
+          const keyName = this.expectIdentifierName();
+          if (this.check(TokenType.COLON)) {
+            this.advance();
+            const val = this.parseExpression();
+            entries.push({ key: { type: 'StringLiteral', value: keyName }, value: val });
+            while (this.check(TokenType.COMMA)) {
+              this.advance();
+              const k = this.expectIdentifierName();
+              this.expect(TokenType.COLON);
+              const v = this.parseExpression();
+              entries.push({ key: { type: 'StringLiteral', value: k }, value: v });
+            }
+            return { type: 'MapLiteralWithEntries', entries };
+          }
+          // Not a keyed map, restore
+          this.pos = savedPos;
+        } catch {
+          this.pos = savedPos;
+        }
+      }
       return { type: 'MapLiteral' };
     }
 
@@ -1489,6 +1764,133 @@ export class Parser {
       this.advance();
       const key = this.parseExpression();
       return { type: 'RecallExpression', key, line: recallLine };
+    }
+
+    // Interpolated string: "hello {name}"
+    if (this.check(TokenType.INTERPOLATED_STRING)) {
+      const raw = this.current().value;
+      this.advance();
+      return this.parseInterpolatedString(raw);
+    }
+
+    // Lambda: { x -> x * 2 } or { -> show hello }
+    if (this.check(TokenType.LBRACE)) {
+      return this.parseLambda();
+    }
+
+    // Pair literal
+    if (this.check(TokenType.PAIR)) {
+      this.advance();
+      const first = this.parseComparison();
+      if (this.check(TokenType.AND)) {
+        this.advance();
+      } else {
+        this.expect(TokenType.COMMA);
+      }
+      const second = this.parseComparison();
+      return { type: 'PairLiteral', first, second };
+    }
+
+    // Set literal: unique list or set keyword
+    if (this.check(TokenType.UNIQUE)) {
+      this.advance();
+      if (this.check(TokenType.LIST)) this.advance();
+      const items = this.parseListItems();
+      return { type: 'SetLiteral', items };
+    }
+
+    // Curry expression
+    if (this.check(TokenType.CURRY)) {
+      this.advance();
+      const command = this.expectIdentifierName();
+      const args: AST.Expression[] = [];
+      if (this.check(TokenType.WITH)) this.advance();
+      // Parse remaining args (with or without 'with' keyword)
+      while (!this.isAtEnd() && !this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) &&
+             !this.check(TokenType.RPAREN) && !this.check(TokenType.RBRACE)) {
+        args.push(this.parseAddition());
+        if (this.check(TokenType.COMMA)) this.advance();
+        else break;
+      }
+      return { type: 'CurryExpression', command, args };
+    }
+
+    // Compose expression
+    if (this.check(TokenType.COMPOSE)) {
+      this.advance();
+      const functions: AST.Expression[] = [];
+      functions.push(this.parsePrimary());
+      while (this.check(TokenType.COMMA)) {
+        this.advance();
+        functions.push(this.parsePrimary());
+      }
+      return { type: 'ComposeExpression', functions };
+    }
+
+    // Env expression
+    if (this.check(TokenType.ENV)) {
+      this.advance();
+      const key = this.parsePrimary();
+      return { type: 'EnvExpression', key };
+    }
+
+    // DateTime expressions
+    if (this.check(TokenType.CURRENT)) {
+      this.advance();
+      if (this.check(TokenType.TIME)) { this.advance(); return { type: 'DateTimeExpression', variant: 'now' }; }
+      if (this.check(TokenType.DATE)) { this.advance(); return { type: 'DateTimeExpression', variant: 'today' }; }
+      return { type: 'DateTimeExpression', variant: 'now' };
+    }
+    if (this.check(TokenType.TODAY)) {
+      this.advance();
+      return { type: 'DateTimeExpression', variant: 'today' };
+    }
+
+    // CSV parse
+    if (this.check(TokenType.CSV)) {
+      const csvLine = this.current().line;
+      this.advance();
+      const source = this.parsePrimary();
+      return { type: 'CsvParseExpression', source, line: csvLine };
+    }
+
+    // JSON parse
+    if (this.check(TokenType.JSON_TYPE)) {
+      const jsonLine = this.current().line;
+      this.advance();
+      const source = this.parsePrimary();
+      return { type: 'JsonParseExpression', source, line: jsonLine };
+    }
+
+    // Files expression
+    if (this.check(TokenType.FILES)) {
+      const filesLine = this.current().line;
+      this.advance();
+      if (this.check(TokenType.IN)) this.advance();
+      const path = this.parsePrimary();
+      return { type: 'FilesExpression', path, line: filesLine };
+    }
+
+    // Shell expression
+    if (this.check(TokenType.SHELL) || this.check(TokenType.EXECUTE)) {
+      const shellLine = this.current().line;
+      this.advance();
+      const command = this.parsePrimary();
+      return { type: 'ShellExpression', command, line: shellLine };
+    }
+
+    // Await expression
+    if (this.check(TokenType.AWAIT)) {
+      const awaitLine = this.current().line;
+      this.advance();
+      const value = this.parseExpression();
+      return { type: 'AwaitExpression', value, line: awaitLine };
+    }
+
+    // Arguments
+    if (this.check(TokenType.ARGUMENTS)) {
+      this.advance();
+      return { type: 'Identifier', name: '__arguments' };
     }
 
     // Read expression
@@ -1703,6 +2105,29 @@ export class Parser {
       TokenType.WIDTH, TokenType.HEIGHT, TokenType.DEBUG, TokenType.STEP,
       TokenType.BREAKPOINT, TokenType.CLASSROOM, TokenType.SUBMIT,
       TokenType.COLLECT, TokenType.ROUTE, TokenType.REQUEST, TokenType.STATUS,
+      // New feature keywords usable as identifiers
+      TokenType.PAIR, TokenType.ENUM, TokenType.EXISTS, TokenType.UNIQUE,
+      TokenType.MATCHES, TokenType.FORMAT, TokenType.PLACES, TokenType.TEMPLATE,
+      TokenType.BY, TokenType.AWAIT,
+      TokenType.CONTRACT, TokenType.IMPLEMENTS, TokenType.SECRET, TokenType.STATIC,
+      TokenType.USES, TokenType.GETTER, TokenType.OVERLOAD,
+      TokenType.APPLY, TokenType.CURRY, TokenType.COMPOSE,
+      TokenType.CSV, TokenType.JSON_TYPE, TokenType.ENV, TokenType.ARGUMENTS,
+      TokenType.CURRENT, TokenType.TIME, TokenType.TODAY, TokenType.DATE,
+      TokenType.FILES, TokenType.FOLDER, TokenType.EXECUTE, TokenType.SHELL,
+      TokenType.ANIMATE, TokenType.MOVING, TokenType.OVER, TokenType.SPRITE,
+      TokenType.LOAD, TokenType.TOUCHES, TokenType.SCENE, TokenType.SWITCH,
+      TokenType.FORWARD, TokenType.BACKWARD, TokenType.TURN,
+      TokenType.LEFT, TokenType.RIGHT, TokenType.PEN, TokenType.UP, TokenType.DOWN,
+      TokenType.LAYER,
+      TokenType.CONNECT, TokenType.SOCKET, TokenType.EMIT,
+      TokenType.COOKIE, TokenType.SESSION, TokenType.ALLOW, TokenType.STREAM,
+      TokenType.CLIENT,
+      TokenType.MOCK, TokenType.BEFORE, TokenType.AFTER, TokenType.SNAPSHOT,
+      TokenType.BENCHMARK, TokenType.PROPERTY, TokenType.ANY,
+      TokenType.WATCH, TokenType.PROFILE, TokenType.LINT, TokenType.SAVE,
+      TokenType.HISTORY,
+      TokenType.VISUALIZE, TokenType.CHALLENGE, TokenType.GRADE, TokenType.RUBRIC,
     ].includes(t);
   }
 
@@ -1767,7 +2192,422 @@ export class Parser {
 
   private isEndToken(): boolean {
     const t = this.current().type;
-    return [TokenType.END, TokenType.ELSE, TokenType.ELSE_IF, TokenType.OR, TokenType.CATCH].includes(t);
+    return [TokenType.END, TokenType.ELSE, TokenType.ELSE_IF, TokenType.OR, TokenType.CATCH, TokenType.RBRACE].includes(t);
+  }
+
+  private parseInterpolatedString(raw: string): AST.InterpolatedStringExpression {
+    const parts: (string | AST.Expression)[] = [];
+    let current = '';
+    let i = 0;
+    while (i < raw.length) {
+      if (raw[i] === '{') {
+        if (current) { parts.push(current); current = ''; }
+        i++; // skip {
+        let expr = '';
+        let depth = 1;
+        while (i < raw.length && depth > 0) {
+          if (raw[i] === '{') depth++;
+          if (raw[i] === '}') depth--;
+          if (depth > 0) expr += raw[i];
+          i++;
+        }
+        if (expr) {
+          const lexer = new Lexer(expr);
+          const tokens = lexer.tokenize();
+          const parser = new Parser();
+          const program = parser.parse(tokens);
+          if (program.body.length > 0) {
+            const node = program.body[0];
+            if (node.type === 'ExpressionStatement') {
+              parts.push(node.expression);
+            } else if (node.type === 'ShowStatement') {
+              // fallback - just use as identifier
+              parts.push({ type: 'Identifier', name: expr.trim() } as AST.Expression);
+            } else {
+              parts.push({ type: 'Identifier', name: expr.trim() } as AST.Expression);
+            }
+          } else {
+            parts.push({ type: 'Identifier', name: expr.trim() } as AST.Expression);
+          }
+        }
+      } else {
+        current += raw[i];
+        i++;
+      }
+    }
+    if (current) parts.push(current);
+    return { type: 'InterpolatedStringExpression', parts };
+  }
+
+  private parseLambda(): AST.LambdaExpression {
+    const line = this.current().line;
+    this.advance(); // skip '{'
+    const params: string[] = [];
+
+    // Check for params -> body pattern
+    const savedPos = this.pos;
+    let hasArrow = false;
+
+    // Try to parse params before ->
+    while (!this.check(TokenType.ARROW) && !this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      if (this.check(TokenType.IDENTIFIER)) {
+        params.push(this.current().value);
+        this.advance();
+        if (this.check(TokenType.COMMA)) this.advance();
+      } else {
+        break;
+      }
+    }
+
+    if (this.check(TokenType.ARROW)) {
+      this.advance(); // skip ->
+      hasArrow = true;
+    } else {
+      // No arrow found, restore and treat as parameterless lambda
+      this.pos = savedPos;
+      params.length = 0;
+    }
+
+    // Parse body until }
+    this.skipNewlines();
+    if (hasArrow || params.length === 0) {
+      // Try to parse as single expression first
+      const bodyStart = this.pos;
+      try {
+        const expr = this.parseExpression();
+        if (this.check(TokenType.RBRACE)) {
+          this.advance();
+          return { type: 'LambdaExpression', params, body: expr, line };
+        }
+      } catch {
+        // fall through to block parsing
+      }
+      this.pos = bodyStart;
+    }
+
+    // Parse as block
+    const body = this.parseBlock(['RBRACE']);
+    if (this.check(TokenType.RBRACE)) this.advance();
+    return { type: 'LambdaExpression', params, body, line };
+  }
+
+  private checkAhead(type: TokenType, offset: number): boolean {
+    const idx = this.pos + offset;
+    if (idx >= this.tokens.length) return false;
+    return this.tokens[idx].type === type;
+  }
+
+  // --- New feature parsers ---
+
+  private parseContract(): AST.ContractDeclaration {
+    const line = this.current().line;
+    this.advance(); // skip 'contract'
+    const name = this.expectIdentifierName();
+    this.skipNewlines();
+    const methods: string[] = [];
+    while (!this.check(TokenType.END) && !this.isAtEnd()) {
+      this.skipNewlines();
+      if (this.check(TokenType.END)) break;
+      if (this.check(TokenType.ON)) {
+        this.advance();
+        methods.push(this.expectIdentifierName());
+        // skip params and body indicator
+        while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+          this.advance();
+        }
+      } else {
+        this.advance();
+      }
+    }
+    this.expect(TokenType.END);
+    return { type: 'ContractDeclaration', name, methods, line };
+  }
+
+  private parseEnum(): AST.EnumDeclaration {
+    const line = this.current().line;
+    this.advance(); // skip 'enum'
+    const name = this.expectIdentifierName();
+    const values: string[] = [];
+    if (this.check(TokenType.IS)) this.advance();
+    values.push(this.expectIdentifierName());
+    while (this.check(TokenType.COMMA)) {
+      this.advance();
+      values.push(this.expectIdentifierName());
+    }
+    return { type: 'EnumDeclaration', name, values, line };
+  }
+
+  private parseMock(): AST.MockStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'mock'
+    const target = this.expectIdentifierName();
+    if (this.check(TokenType.TO)) this.advance();
+    if (this.check(TokenType.RETURN)) this.advance();
+    // Also skip "returns" as an identifier
+    if (this.check(TokenType.IDENTIFIER) && this.current().value.toLowerCase() === 'returns') this.advance();
+    const returnValue = this.parseExpression();
+    return { type: 'MockStatement', target, returnValue, line };
+  }
+
+  private parseBefore(): AST.BeforeBlock {
+    const line = this.current().line;
+    this.advance(); // skip 'before'
+    if (this.check(TokenType.EACH)) this.advance();
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'BeforeBlock', body, line };
+  }
+
+  private parseAfter(): AST.AfterBlock {
+    const line = this.current().line;
+    this.advance(); // skip 'after'
+    if (this.check(TokenType.EACH)) this.advance();
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'AfterBlock', body, line };
+  }
+
+  private parseBenchmark(): AST.BenchmarkBlock {
+    const line = this.current().line;
+    this.advance(); // skip 'benchmark'
+    let name = 'benchmark';
+    if (this.check(TokenType.STRING)) {
+      name = this.current().value;
+      this.advance();
+    } else if (this.check(TokenType.IDENTIFIER)) {
+      name = this.current().value;
+      this.advance();
+    }
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'BenchmarkBlock', name, body, line };
+  }
+
+  private parseAnimate(): AST.AnimateStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'animate'
+    const target = this.expectIdentifierName();
+    let property = 'position';
+    if (this.check(TokenType.DOT_IDENTIFIER)) {
+      property = this.current().value.slice(1); // remove leading dot
+      this.advance();
+    } else if (this.check(TokenType.DOT)) {
+      this.advance();
+      property = this.expectIdentifierName();
+    } else if (this.check(TokenType.IDENTIFIER)) {
+      property = this.expectIdentifierName();
+    }
+    let from: AST.Expression = { type: 'NumberLiteral', value: 0 };
+    let to: AST.Expression = { type: 'NumberLiteral', value: 100 };
+    let duration: AST.Expression = { type: 'NumberLiteral', value: 1 };
+    if (this.check(TokenType.FROM)) {
+      this.advance();
+      from = this.parseExpression();
+    }
+    if (this.check(TokenType.TO)) {
+      this.advance();
+      to = this.parseExpression();
+    }
+    if (this.check(TokenType.OVER)) {
+      this.advance();
+      duration = this.parseExpression();
+      // skip optional 'seconds'
+      if (this.check(TokenType.SECONDS) || this.check(TokenType.SECOND)) this.advance();
+    }
+    return { type: 'AnimateStatement', target, property, from, to, duration, line };
+  }
+
+  private parseTurtle(action: 'forward' | 'backward'): AST.TurtleStatement {
+    const line = this.current().line;
+    this.advance();
+    let value: AST.Expression | undefined;
+    if (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+      value = this.parseExpression();
+    }
+    return { type: 'TurtleStatement', action, value, line };
+  }
+
+  private parseTurnStatement(): AST.TurtleStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'turn'
+    let action: 'left' | 'right' = 'right';
+    if (this.check(TokenType.LEFT)) {
+      action = 'left';
+      this.advance();
+    } else if (this.check(TokenType.RIGHT)) {
+      action = 'right';
+      this.advance();
+    }
+    let value: AST.Expression | undefined;
+    if (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+      value = this.parseExpression();
+    }
+    return { type: 'TurtleStatement', action, value, line };
+  }
+
+  private parsePen(): AST.TurtleStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'pen'
+    let action: 'penup' | 'pendown' = 'pendown';
+    if (this.check(TokenType.UP)) {
+      action = 'penup';
+      this.advance();
+    } else if (this.check(TokenType.DOWN)) {
+      action = 'pendown';
+      this.advance();
+    }
+    return { type: 'TurtleStatement', action, line };
+  }
+
+  private parseSwitchScene(): AST.SwitchSceneStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'switch'
+    if (this.check(TokenType.TO)) this.advance();
+    if (this.check(TokenType.SCENE)) this.advance();
+    const scene = this.parseExpression();
+    return { type: 'SwitchSceneStatement', scene, line };
+  }
+
+  private parseConnect(): AST.ConnectStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'connect'
+    if (this.check(TokenType.TO)) this.advance();
+    const url = this.parseExpression();
+    let alias = 'socket';
+    if (this.check(TokenType.AS)) {
+      this.advance();
+      alias = this.expectIdentifierName();
+    }
+    return { type: 'ConnectStatement', url, alias, line };
+  }
+
+  private parseEmit(): AST.EmitStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'emit'
+    const event = this.parseExpression();
+    let data: AST.Expression | undefined;
+    let target: string | undefined;
+    if (this.check(TokenType.WITH)) {
+      this.advance();
+      data = this.parseExpression();
+    }
+    if (this.check(TokenType.TO)) {
+      this.advance();
+      target = this.expectIdentifierName();
+    }
+    return { type: 'EmitStatement', event, data, target, line };
+  }
+
+  private parseCookie(): AST.CookieStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'cookie'
+    let action: 'set' | 'get' | 'delete' = 'set';
+    if (this.check(TokenType.SET)) {
+      action = 'set';
+      this.advance();
+    } else if (this.check(TokenType.IDENTIFIER) && this.current().value === 'get') {
+      action = 'get';
+      this.advance();
+    } else if (this.check(TokenType.IDENTIFIER) && this.current().value === 'delete') {
+      action = 'delete';
+      this.advance();
+    }
+    const name = this.parseExpression();
+    let value: AST.Expression | undefined;
+    if (action === 'set' && (this.check(TokenType.TO) || this.check(TokenType.AS))) {
+      this.advance();
+      value = this.parseExpression();
+    }
+    return { type: 'CookieStatement', action, name, value, line };
+  }
+
+  private parseAllow(): AST.AllowStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'allow'
+    // allow requests from "origin"
+    while (!this.check(TokenType.STRING) && !this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
+      this.advance();
+    }
+    const origin = this.parseExpression();
+    return { type: 'AllowStatement', origin, line };
+  }
+
+  private parseStream(): AST.StreamStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'stream'
+    const data = this.parseExpression();
+    let interval: AST.Expression | undefined;
+    if (this.check(TokenType.EVERY)) {
+      this.advance();
+      interval = this.parseExpression();
+      if (this.check(TokenType.SECONDS) || this.check(TokenType.SECOND)) this.advance();
+    }
+    return { type: 'StreamStatement', data, interval, line };
+  }
+
+  private parseTemplate(): AST.TemplateDeclaration {
+    const line = this.current().line;
+    this.advance(); // skip 'template'
+    const name = this.expectIdentifierName();
+    const params: string[] = [];
+    if (this.check(TokenType.FOR)) {
+      this.advance();
+      params.push(this.expectIdentifierName());
+      while (this.check(TokenType.COMMA)) {
+        this.advance();
+        params.push(this.expectIdentifierName());
+      }
+    }
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'TemplateDeclaration', name, params, body, line };
+  }
+
+  private parseFormat(): AST.FormatStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'format'
+    const value = this.parseExpression();
+    let places: AST.Expression = { type: 'NumberLiteral', value: 2 };
+    if (this.check(TokenType.TO)) {
+      this.advance();
+      places = this.parseExpression();
+      if (this.check(TokenType.PLACES)) this.advance();
+    }
+    return { type: 'FormatStatement', value, places, line };
+  }
+
+  private parseApply(): AST.ExpressionStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'apply'
+    const func = this.parseExpression();
+    let target: AST.Expression = { type: 'NothingLiteral' };
+    if (this.check(TokenType.TO)) {
+      this.advance();
+      if (this.check(TokenType.EACH)) this.advance();
+      target = this.parseExpression();
+    }
+    return {
+      type: 'ExpressionStatement',
+      expression: { type: 'CallExpression', name: '__apply', args: [func, target] },
+      line,
+    };
+  }
+
+  private parseDestructure(line: number): AST.DestructureStatement {
+    // Already consumed 'put' — expecting: first, second from EXPR into a, b
+    const variables: string[] = [];
+    variables.push(this.expectIdentifierName());
+    while (this.check(TokenType.COMMA)) {
+      this.advance();
+      variables.push(this.expectIdentifierName());
+    }
+    this.expect(TokenType.FROM);
+    const source = this.parseExpression();
+    return { type: 'DestructureStatement', variables, source, line };
   }
 
   private looksLikeMethodArg(): boolean {

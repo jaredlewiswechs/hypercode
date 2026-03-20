@@ -762,7 +762,7 @@ describe('Integration: Example programs parse and run', () => {
     const source = fs.readFileSync(path.join(__dirname, '..', 'examples', 'string_fun.say'), 'utf-8');
     const output = await collect(source);
     expect(output).toContain('Sum of 1 to 10 = 55');
-    expect(output).toContain('Grade B');
+    expect(output).toContain('Grade: B');
   });
 
   it('fibonacci.say produces correct output', async () => {

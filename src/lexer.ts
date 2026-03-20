@@ -55,7 +55,13 @@ export class Lexer {
         continue;
       }
 
-      // String literals
+      // Triple-quoted multiline strings
+      if (ch === '"' && this.peek(1) === '"' && this.peek(2) === '"') {
+        this.readTripleQuoteString();
+        continue;
+      }
+
+      // String literals (with interpolation support)
       if (ch === '"') {
         this.readString();
         continue;
@@ -82,10 +88,32 @@ export class Lexer {
         case '^': this.addToken(TokenType.CARET, '^'); this.advance(); continue;
         case '(': this.addToken(TokenType.LPAREN, '('); this.advance(); continue;
         case ')': this.addToken(TokenType.RPAREN, ')'); this.advance(); continue;
+        case '{': this.addToken(TokenType.LBRACE, '{'); this.advance(); continue;
+        case '}': this.addToken(TokenType.RBRACE, '}'); this.advance(); continue;
+        case '[': this.addToken(TokenType.LBRACKET, '['); this.advance(); continue;
+        case ']': this.addToken(TokenType.RBRACKET, ']'); this.advance(); continue;
+        case ':': this.addToken(TokenType.COLON, ':'); this.advance(); continue;
+        case '|':
+          if (this.peek(1) === '>') {
+            this.addToken(TokenType.PIPE, '|>');
+            this.advance(); this.advance();
+          } else {
+            this.addToken(TokenType.PIPE, '|');
+            this.advance();
+          }
+          continue;
         case ',': this.addToken(TokenType.COMMA, ','); this.advance(); continue;
         case '.': this.addToken(TokenType.DOT, '.'); this.advance(); continue;
         case '?': this.addToken(TokenType.QUESTION, '?'); this.advance(); continue;
-        case '-': this.addToken(TokenType.MINUS, '-'); this.advance(); continue;
+        case '-':
+          if (this.peek(1) === '>') {
+            this.addToken(TokenType.ARROW, '->');
+            this.advance(); this.advance();
+          } else {
+            this.addToken(TokenType.MINUS, '-');
+            this.advance();
+          }
+          continue;
         case '=':
           if (this.peek(1) === '=') {
             this.addToken(TokenType.EQ, '==');
@@ -267,6 +295,7 @@ export class Lexer {
     const start = this.pos;
     this.pos++; // skip opening quote
     let value = '';
+    let hasInterpolation = false;
     while (this.pos < this.source.length && this.source[this.pos] !== '"') {
       if (this.source[this.pos] === '\\' && this.pos + 1 < this.source.length) {
         this.pos++;
@@ -275,14 +304,38 @@ export class Lexer {
           case 't': value += '\t'; break;
           case '"': value += '"'; break;
           case '\\': value += '\\'; break;
+          case '{': value += '{'; break;
           default: value += this.source[this.pos];
         }
       } else {
+        if (this.source[this.pos] === '{') hasInterpolation = true;
         value += this.source[this.pos];
       }
       this.pos++;
     }
     if (this.pos < this.source.length) this.pos++; // skip closing quote
+    this.addToken(hasInterpolation ? TokenType.INTERPOLATED_STRING : TokenType.STRING, value);
+    this.column += (this.pos - start);
+  }
+
+  private readTripleQuoteString(): void {
+    const start = this.pos;
+    this.pos += 3; // skip opening """
+    let value = '';
+    while (this.pos < this.source.length) {
+      if (this.source[this.pos] === '"' && this.peek(1) === '"' && this.peek(2) === '"') {
+        this.pos += 3; // skip closing """
+        break;
+      }
+      if (this.source[this.pos] === '\n') {
+        this.line++;
+        this.column = 1;
+        value += '\n';
+      } else {
+        value += this.source[this.pos];
+      }
+      this.pos++;
+    }
     this.addToken(TokenType.STRING, value);
     this.column += (this.pos - start);
   }

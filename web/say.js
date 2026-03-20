@@ -1847,8 +1847,21 @@ var HyperCode = (() => {
       while (!this.check("NEWLINE" /* NEWLINE */) && !this.check("EOF" /* EOF */) && !this.isAtEnd()) {
         const paramName = this.current().value;
         this.advance();
-        if (paramName === "at" || paramName === "from" || paramName === "to" || paramName === "radius" || paramName === "size" || paramName === "saying") {
+        if (paramName === "at" || paramName === "from" || paramName === "to") {
+          const first = this.parseAddition();
+          if (this.check("COMMA" /* COMMA */)) {
+            this.advance();
+            const second = this.parseAddition();
+            params[paramName] = { type: "ListLiteral", items: [first, second] };
+          } else {
+            params[paramName] = first;
+          }
+        } else if (paramName === "radius" || paramName === "size" || paramName === "saying" || paramName === "width" || paramName === "height") {
           params[paramName] = this.parseExpression();
+        } else if (paramName === "with") {
+          continue;
+        } else if (paramName === "and") {
+          continue;
         }
       }
       return { type: "DrawStatement", shape, canvas, params, line };
@@ -4168,7 +4181,19 @@ Output ONLY the HyperCode code, no explanation.`;
       return null;
     }
     async executeAsk(node) {
-      const answer = await this.input(node.prompt);
+      const prompt = node.prompt.replace(/\.([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*)/g, (_match, path) => {
+        const parts = path.split(".");
+        let val = this.env.get(parts[0]) ?? null;
+        for (let i = 1; i < parts.length; i++) {
+          if (val instanceof SayInstance) {
+            val = val.get(parts[i]);
+          } else {
+            return _match;
+          }
+        }
+        return toString(val);
+      });
+      const answer = await this.input(prompt);
       this.itValue = answer;
       this.env.set("it", answer);
       return answer;
@@ -4379,6 +4404,8 @@ Output ONLY the HyperCode code, no explanation.`;
       const target = await this.evaluate(node.target);
       if (target instanceof SayList) {
         target.add(value);
+      } else if (target instanceof SaySet) {
+        target.add(value);
       } else if (target instanceof SayUIElement) {
       }
       return null;
@@ -4387,6 +4414,8 @@ Output ONLY the HyperCode code, no explanation.`;
       const value = await this.evaluate(node.value);
       const target = await this.evaluate(node.target);
       if (target instanceof SayList) {
+        target.remove(value);
+      } else if (target instanceof SaySet) {
         target.remove(value);
       } else if (target instanceof SayMap) {
         target.remove(toString(value));
@@ -4700,8 +4729,16 @@ Output ONLY the HyperCode code, no explanation.`;
     }
     // --- Concurrency ---
     async executeDoTogether(node) {
-      const promises = node.blocks.map((block) => this.executeBlock(block));
-      await Promise.all(promises);
+      for (const block of node.blocks) {
+        const childEnv = new Environment(this.env);
+        const prevEnv = this.env;
+        this.env = childEnv;
+        try {
+          await this.executeBlock(block);
+        } finally {
+          this.env = prevEnv;
+        }
+      }
       return null;
     }
     // --- Events ---

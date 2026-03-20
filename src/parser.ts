@@ -1038,9 +1038,25 @@ export class Parser {
     while (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.isAtEnd()) {
       const paramName = this.current().value;
       this.advance();
-      if (paramName === 'at' || paramName === 'from' || paramName === 'to' ||
-          paramName === 'radius' || paramName === 'size' || paramName === 'saying') {
+      if (paramName === 'at' || paramName === 'from' || paramName === 'to') {
+        // Coordinate params: parse x, y as a list
+        const first = this.parseAddition();
+        if (this.check(TokenType.COMMA)) {
+          this.advance();
+          const second = this.parseAddition();
+          params[paramName] = { type: 'ListLiteral', items: [first, second] };
+        } else {
+          params[paramName] = first;
+        }
+      } else if (paramName === 'radius' || paramName === 'size' || paramName === 'saying' ||
+                 paramName === 'width' || paramName === 'height') {
         params[paramName] = this.parseExpression();
+      } else if (paramName === 'with') {
+        // 'with' is a connector — skip it and continue to next param
+        continue;
+      } else if (paramName === 'and') {
+        // 'and' can separate params like "with width 100 and height 60"
+        continue;
       }
     }
 

@@ -549,7 +549,20 @@ export class Interpreter {
   }
 
   private async executeAsk(node: AST.AskExpression): Promise<SayValue> {
-    const answer = await this.input(node.prompt);
+    // Interpolate .dotIdentifier references in the prompt
+    const prompt = node.prompt.replace(/\.([a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*)/g, (_match, path: string) => {
+      const parts = path.split('.');
+      let val: SayValue = this.env.get(parts[0]) ?? null;
+      for (let i = 1; i < parts.length; i++) {
+        if (val instanceof SayInstance) {
+          val = val.get(parts[i]);
+        } else {
+          return _match; // can't resolve, keep original
+        }
+      }
+      return toString(val);
+    });
+    const answer = await this.input(prompt);
     this.itValue = answer;
     this.env.set('it', answer);
     return answer;
@@ -797,6 +810,8 @@ export class Interpreter {
 
     if (target instanceof SayList) {
       target.add(value);
+    } else if (target instanceof SaySet) {
+      target.add(value);
     } else if (target instanceof SayUIElement) {
       // UI stub - add child
     }
@@ -809,6 +824,8 @@ export class Interpreter {
     const target = await this.evaluate(node.target);
 
     if (target instanceof SayList) {
+      target.remove(value);
+    } else if (target instanceof SaySet) {
       target.remove(value);
     } else if (target instanceof SayMap) {
       target.remove(toString(value));
@@ -1175,8 +1192,20 @@ export class Interpreter {
 
   // --- Concurrency ---
   private async executeDoTogether(node: AST.DoTogetherStatement): Promise<SayValue> {
-    const promises = node.blocks.map(block => this.executeBlock(block));
-    await Promise.all(promises);
+    // Run each block in its own child environment sequentially.
+    // True parallel execution is not possible in single-threaded JS
+    // without a separate interpreter instance per block, and Promise.all
+    // causes env trampling when blocks interleave at await points.
+    for (const block of node.blocks) {
+      const childEnv = new Environment(this.env);
+      const prevEnv = this.env;
+      this.env = childEnv;
+      try {
+        await this.executeBlock(block);
+      } finally {
+        this.env = prevEnv;
+      }
+    }
     return null;
   }
 

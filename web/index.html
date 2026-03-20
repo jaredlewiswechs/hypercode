@@ -363,7 +363,7 @@ show Hello, World!
         defaultToken: '',
         ignoreCase: true,
 
-        // Keywords grouped by role
+        // Keywords grouped by role — synced with src/tokens.ts KEYWORDS map
         actions: [
           'into', 'set', 'make', 'send', 'add', 'remove',
           'go', 'open', 'hide', 'draw', 'wait', 'play', 'clear', 'stop', 'return',
@@ -372,16 +372,23 @@ show Hello, World!
           'think', 'explain', 'listen', 'emit', 'connect', 'stream',
           'animate', 'forward', 'backward', 'turn', 'pen', 'switch', 'cookie',
           'allow', 'share', 'snapshot',
+          // Missing actions added:
+          'request', 'submit', 'collect', 'load', 'save', 'execute', 'apply',
+          'fill', 'stroke', 'debug', 'visualize', 'lint', 'watch', 'profile',
         ],
         control: [
           'if', 'else', 'repeat', 'times', 'while', 'until', 'forever',
           'for', 'each', 'in', 'to', 'at', 'by', 'as', 'when', 'is',
           'try', 'or', 'catch', 'do', 'together', 'every', 'scene',
+          // Missing control keywords added:
+          'await', 'second', 'seconds', 'timer',
         ],
         structure: [
           'kind', 'from', 'on', 'me', 'end', 'command', 'template', 'contract',
           'implements', 'secret', 'static', 'test', 'check', 'mock', 'before',
           'after', 'benchmark', 'enum',
+          // Missing structure keywords added:
+          'uses', 'getter', 'overload', 'property', 'namespace', 'classroom',
         ],
         connectors: [
           'a', 'called', 'with', 'it', 'not', 'and', 'greater', 'less', 'than',
@@ -389,6 +396,13 @@ show Hello, World!
           'random', 'pick', 'rounded', 'unique', 'pair', 'exists', 'matches',
           'format', 'places', 'curry', 'compose', 'csv', 'json', 'env',
           'current', 'today', 'left', 'right', 'up', 'down',
+          // Missing connectors added:
+          'clicked', 'pressed', 'changed', 'key', 'aloud', 'note', 'sound',
+          'canvas', 'color', 'size', 'line', 'circle', 'rectangle', 'width', 'height',
+          'step', 'breakpoint', 'moving', 'over', 'sprite', 'touches', 'layer',
+          'socket', 'session', 'client', 'status',
+          'any', 'arguments', 'files', 'folder', 'shell',
+          'challenge', 'grade', 'rubric', 'history',
         ],
         typeKeywords: ['text', 'number', 'boolean', 'date', 'time', 'list', 'map', 'lambda'],
         atoms: ['true', 'false', 'nothing'],

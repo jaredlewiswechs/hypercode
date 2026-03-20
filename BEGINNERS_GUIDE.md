@@ -774,6 +774,111 @@ Use comments to:
 
 ---
 
+## Lesson 16: Drawing Pictures
+
+HyperCode can draw shapes! When you run a program with draw commands, it creates an SVG image file.
+
+```say
+draw circle at 200, 200 size 80
+draw rectangle at 50, 50 size 100
+draw line from 0, 400 to 400, 0
+```
+
+Shapes you can draw: `circle`, `rectangle`, `line`, `text`, `triangle`, `star`, `ellipse`.
+
+---
+
+## Lesson 17: Remembering Things Between Runs
+
+Normally, variables disappear when your program ends. Use `remember` to save values permanently:
+
+```say
+set visits to recall "visit_count"
+if visits is nothing
+  set visits to 0
+end
+set visits to visits + 1
+remember "visit_count" as visits
+show This program has been run .visits times!
+```
+
+Run this program multiple times — the count goes up each time!
+
+Use `forget` to delete a stored value:
+```say
+forget "visit_count"
+```
+
+---
+
+## Lesson 18: Asking AI Questions
+
+If you have an AI API key set up, you can ask AI questions from your programs:
+
+```say
+set answer to think "What is the largest planet?"
+show .answer
+```
+
+---
+
+## Lesson 19: The Browser Playground
+
+You don't need to install anything to try HyperCode! Start the playground:
+
+```bash
+say playground
+```
+
+Then open `http://localhost:3000` in your browser. You can write code, run it, and see the output — all in the browser.
+
+---
+
+## Lesson 20: Running Tasks at the Same Time
+
+Use `do together` to run multiple blocks of code concurrently:
+
+```say
+do together
+  repeat 3 times
+    show Task A working...
+  end
+and
+  repeat 3 times
+    show Task B working...
+  end
+end
+show Both tasks done!
+```
+
+---
+
+## Lesson 21: Pattern Matching on Kinds
+
+You can match objects by their type using `when ... is a`:
+
+```say
+kind Dog
+  name is Unknown
+end
+kind Cat
+  name is Unknown
+end
+
+make a Dog called pet with name Buddy
+
+when pet
+is a Dog
+  show It's a dog!
+is a Cat
+  show It's a cat!
+else
+  show Unknown pet
+end
+```
+
+---
+
 ## Quick Reference Card
 
 ### Storing Values
@@ -855,6 +960,42 @@ make a Person called p with name Alex
 send greet to p
 ```
 
+### Drawing
+```say
+draw circle at 200, 200 size 50
+draw rectangle at 10, 10 size 100
+draw line from 0, 0 to 400, 400
+```
+
+### Storage
+```say
+remember "key" as value          -- save permanently
+set x to recall "key"            -- load it back
+forget "key"                     -- delete it
+```
+
+### AI
+```say
+set answer to think "question"   -- ask AI (needs API key)
+```
+
+### Web Server
+```say
+serve on port 8080
+route GET "/"
+  respond with "<h1>Hello!</h1>"
+end
+```
+
+### Concurrency
+```say
+do together
+  -- block 1
+and
+  -- block 2
+end
+```
+
 ---
 
 ## Project Ideas
@@ -885,6 +1026,18 @@ Here are some projects to try as you learn. They're listed from easiest to harde
 
 9. **Simple Bank** — Create an `Account` kind with deposit, withdraw, and balance methods. Handle overdraft errors with `try`/`or`.
 
+### Using New Features
+
+10. **Persistent High Score** — Build a game (like number guessing) that uses `remember`/`recall` to keep a high score between runs.
+
+11. **Drawing Art** — Use `draw` commands to create a picture (house, face, flag, pattern). The SVG file is saved automatically.
+
+12. **Personal Website** — Use `serve` and `route` to build a multi-page website about yourself.
+
+13. **AI Study Helper** — Use `think` to build a study tool that explains topics, generates practice questions, or checks answers.
+
+14. **Classroom Poll** — Use the classroom features to build a poll where students submit answers and the teacher sees results in real-time.
+
 ---
 
 ## For Teachers
@@ -912,7 +1065,9 @@ HyperCode is designed to remove the barriers that frustrate beginning programmer
 | 7 | Lesson 10 | Kinds (OOP), instances, methods |
 | 8 | Lessons 8, 11 | Maps, string operations |
 | 9 | Lessons 12-14 | Error handling, testing, file I/O |
-| 10 | Projects | Student-chosen projects |
+| 10 | Lessons 16-17 | Drawing, persistent storage |
+| 11 | Lessons 18-21 | AI, concurrency, pattern matching, web |
+| 12 | Projects | Student-chosen projects |
 
 ### Assessment Ideas
 
@@ -925,10 +1080,14 @@ HyperCode is designed to remove the barriers that frustrate beginning programmer
 ### Classroom Tips
 
 - **Start in the REPL** — Let students type one line at a time before writing files. Seeing immediate results builds confidence.
+- **Use the Playground** — Run `say playground` and share the URL with students. No installation needed — they code in the browser.
 - **Pair programming** — Have students work in pairs. One types, one reads the output. Switch every 10 minutes.
 - **Read code aloud** — HyperCode is designed to be read as English. Have students practice reading their programs out loud.
 - **Show the examples** — The `examples/` directory has complete programs that demonstrate every major feature. Walk through them together.
 - **Use `explain`** — When students are confused about what a variable holds, have them use `explain` to see its contents.
+- **Use the Classroom** — Run `say classroom start` to collect student submissions. Students submit with `say submit myfile.say --name "Name"`.
+- **Try AI Tutor** — If you have an API key, `say tutor myfile.say` gives students personalized feedback on their code.
+- **Use the Debugger** — When students are stuck, `say debug myfile.say` lets them step through their program line by line.
 
 ---
 

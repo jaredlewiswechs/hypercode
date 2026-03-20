@@ -1,7 +1,7 @@
 -- guessing_game.say — Number guessing with loops and conditions
 
-put 7 into secret
-put 0 into attempts
+set secret to random 1 to 10
+set attempts to 0
 
 show I'm thinking of a number between 1 and 10...
 

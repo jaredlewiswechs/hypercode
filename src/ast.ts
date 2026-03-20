@@ -34,7 +34,17 @@ export type ASTNode =
   | ListLiteralMultiline
   | SetStatement
   | WhenStatement
-  | WriteStatement;
+  | WriteStatement
+  | RememberStatement
+  | ForgetStatement
+  | ServeStatement
+  | RespondStatement
+  | RouteStatement
+  | GrabStatement
+  | ShareStatement
+  | DoTogetherStatement
+  | ListenStatement
+  | EveryStatement;
 
 export interface Program {
   type: 'Program';
@@ -327,7 +337,10 @@ export type Expression =
   | RandomExpression
   | TypeCheckExpression
   | RoundedExpression
-  | ReadExpression;
+  | ReadExpression
+  | ThinkExpression
+  | FetchExpression
+  | RecallExpression;
 
 export interface NumberLiteral {
   type: 'NumberLiteral';
@@ -481,5 +494,100 @@ export interface ReadExpression {
   type: 'ReadExpression';
   path: Expression;
   asType?: 'list';
+  line: number;
+}
+
+// --- AI ---
+export interface ThinkExpression {
+  type: 'ThinkExpression';
+  prompt: Expression;
+  line: number;
+}
+
+// --- HTTP ---
+export interface FetchExpression {
+  type: 'FetchExpression';
+  url: Expression;
+  options?: { method?: string; body?: Expression; headers?: Expression };
+  line: number;
+}
+
+// --- Storage ---
+export interface RememberStatement {
+  type: 'RememberStatement';
+  key: Expression;
+  value: Expression;
+  line: number;
+}
+
+export interface RecallExpression {
+  type: 'RecallExpression';
+  key: Expression;
+  line: number;
+}
+
+export interface ForgetStatement {
+  type: 'ForgetStatement';
+  key: Expression;
+  line: number;
+}
+
+// --- Web server ---
+export interface ServeStatement {
+  type: 'ServeStatement';
+  port: Expression;
+  line: number;
+}
+
+export interface RespondStatement {
+  type: 'RespondStatement';
+  value: Expression;
+  statusCode?: Expression;
+  line: number;
+}
+
+export interface RouteStatement {
+  type: 'RouteStatement';
+  method: string;
+  path: Expression;
+  body: ASTNode[];
+  line: number;
+}
+
+// --- Packages ---
+export interface GrabStatement {
+  type: 'GrabStatement';
+  module: string;
+  line: number;
+}
+
+// --- Sharing ---
+export interface ShareStatement {
+  type: 'ShareStatement';
+  target: Expression;
+  line: number;
+}
+
+// --- Concurrency ---
+export interface DoTogetherStatement {
+  type: 'DoTogetherStatement';
+  blocks: ASTNode[][];
+  line: number;
+}
+
+// --- Events ---
+export interface ListenStatement {
+  type: 'ListenStatement';
+  event: string;
+  variable?: string;
+  body: ASTNode[];
+  line: number;
+}
+
+export interface EveryStatement {
+  type: 'EveryStatement';
+  interval: Expression;
+  unit: string;
+  body: ASTNode[];
   line: number;
 }

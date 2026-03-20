@@ -1,6 +1,6 @@
 -- fibonacci.say — Generate the Fibonacci sequence
-put 0 into a
-put 1 into b
+set a to 0
+set b to 1
 set fibs to list a, b
 
 repeat 13 times

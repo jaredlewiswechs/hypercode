@@ -1,6 +1,10 @@
 import * as AST from './ast';
 import { Lexer } from './lexer';
 import { Parser } from './parser';
+import { createCanvas, addDrawCommand, setCanvasColor, clearCanvas, canvasToSVG, canvasToText, CanvasState } from './graphics';
+import { Storage } from './storage';
+import { AIEngine, AIOptions } from './ai';
+import { SayServer, RequestInfo, ResponseInfo } from './server';
 
 export class ReturnSignal {
   constructor(public value: SayValue) {}
@@ -240,6 +244,9 @@ export interface InterpreterOptions {
   readFile?: (path: string) => string | Promise<string>;
   writeFile?: (path: string, content: string) => void | Promise<void>;
   appendFile?: (path: string, content: string) => void | Promise<void>;
+  aiOptions?: AIOptions;
+  storagePath?: string;
+  httpFetch?: (url: string, options?: any) => Promise<any>;
 }
 
 export class Interpreter {
@@ -256,6 +263,14 @@ export class Interpreter {
   private readFile: (path: string) => string | Promise<string>;
   private writeFile: (path: string, content: string) => void | Promise<void>;
   private appendFile: (path: string, content: string) => void | Promise<void>;
+  private aiEngine: AIEngine;
+  private storage: Storage | null = null;
+  private storagePath: string | undefined;
+  private httpFetch: (url: string, options?: any) => Promise<any>;
+  private canvases: Map<string, CanvasState> = new Map();
+  private server: SayServer | null = null;
+  private eventListeners: Map<string, { variable?: string; body: AST.ASTNode[] }[]> = new Map();
+  private timers: NodeJS.Timeout[] = [];
 
   constructor(options: InterpreterOptions = {}) {
     this.globalEnv = new Environment();
@@ -266,6 +281,9 @@ export class Interpreter {
     this.readFile = options.readFile || (() => { throw new Error('File reading not available'); });
     this.writeFile = options.writeFile || (() => { throw new Error('File writing not available'); });
     this.appendFile = options.appendFile || (() => { throw new Error('File appending not available'); });
+    this.aiEngine = new AIEngine(options.aiOptions);
+    this.storagePath = options.storagePath;
+    this.httpFetch = options.httpFetch || (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : async () => { throw new Error('HTTP fetch not available'); });
     this.registerBuiltins();
   }
 
@@ -274,7 +292,11 @@ export class Interpreter {
     const mathModule = new SayInstance(new SayKind('Module'));
     mathModule.set('pi', Math.PI);
     mathModule.set('e', Math.E);
+    mathModule.set('infinity', Infinity);
     this.globalEnv.define('math', mathModule);
+
+    // Default canvas
+    this.canvases.set('canvas', createCanvas());
   }
 
   async run(program: AST.Program): Promise<void> {
@@ -331,16 +353,26 @@ export class Interpreter {
       case 'InspectExpression': return this.executeInspect(node);
       case 'StopStatement': throw new StopSignal();
       case 'WaitStatement': return this.executeWait(node);
-      case 'DrawStatement': return null; // Visual stub
-      case 'ClearStatement': return null; // Visual stub
-      case 'GoStatement': return null; // Visual stub
-      case 'OpenStatement': return null; // Visual stub
-      case 'HideStatement': return null; // Visual stub
-      case 'PlayStatement': return null; // Visual stub
+      case 'DrawStatement': return this.executeDraw(node);
+      case 'ClearStatement': return this.executeClear(node);
+      case 'GoStatement': return null;
+      case 'OpenStatement': return null;
+      case 'HideStatement': return null;
+      case 'PlayStatement': return this.executePlay(node);
       case 'ExpressionStatement': return this.evaluate(node.expression);
       case 'ListLiteralMultiline': return this.executeListMultiline(node);
       case 'WhenStatement': return this.executeWhen(node);
       case 'WriteStatement': return this.executeWrite(node);
+      case 'RememberStatement': return this.executeRemember(node);
+      case 'ForgetStatement': return this.executeForget(node);
+      case 'ServeStatement': return this.executeServe(node);
+      case 'RespondStatement': return this.executeRespond(node);
+      case 'RouteStatement': return this.executeRoute(node);
+      case 'GrabStatement': return this.executeGrab(node);
+      case 'ShareStatement': return this.executeShare(node);
+      case 'DoTogetherStatement': return this.executeDoTogether(node);
+      case 'ListenStatement': return this.executeListen(node);
+      case 'EveryStatement': return this.executeEvery(node);
       default:
         return null;
     }
@@ -794,12 +826,296 @@ export class Interpreter {
     return list;
   }
 
+  private async executeWrite(node: AST.WriteStatement): Promise<SayValue> {
+    const filePath = toString(await this.evaluate(node.path));
+    const value = toString(await this.evaluate(node.value));
+    if (node.append) {
+      await this.appendFile(filePath, value);
+    } else {
+      await this.writeFile(filePath, value);
+    }
+    return null;
+  }
+
+  // --- Graphics ---
+  private async executeDraw(node: AST.DrawStatement): Promise<SayValue> {
+    const canvasName = node.canvas || 'canvas';
+    if (!this.canvases.has(canvasName)) {
+      this.canvases.set(canvasName, createCanvas());
+    }
+    const canvas = this.canvases.get(canvasName)!;
+
+    // Resolve params
+    const params: Record<string, any> = {};
+    for (const [key, expr] of Object.entries(node.params)) {
+      params[key] = await this.evaluate(expr);
+    }
+
+    // Handle 'at x, y' param as coordinates
+    if (params.at !== undefined) {
+      const val = params.at;
+      if (val instanceof SayList && val.items.length >= 2) {
+        params.x = toNumber(val.items[0]);
+        params.y = toNumber(val.items[1]);
+      } else {
+        params.x = toNumber(val);
+        // Check if next param exists for y
+      }
+      delete params.at;
+    }
+
+    // Handle 'from' and 'to' for lines
+    if (params.from !== undefined) {
+      const val = params.from;
+      if (val instanceof SayList && val.items.length >= 2) {
+        params.x1 = toNumber(val.items[0]);
+        params.y1 = toNumber(val.items[1]);
+      }
+      delete params.from;
+    }
+    if (params.to !== undefined) {
+      const val = params.to;
+      if (val instanceof SayList && val.items.length >= 2) {
+        params.x2 = toNumber(val.items[0]);
+        params.y2 = toNumber(val.items[1]);
+      }
+      delete params.to;
+    }
+
+    addDrawCommand(canvas, node.shape, params);
+    this.output(canvasToText(canvas).split('\n').pop() || '');
+    return null;
+  }
+
+  private executeClear(node: AST.ClearStatement): SayValue {
+    const canvasName = node.target || 'canvas';
+    if (this.canvases.has(canvasName)) {
+      clearCanvas(this.canvases.get(canvasName)!);
+    }
+    return null;
+  }
+
+  private executePlay(node: AST.PlayStatement): SayValue {
+    this.output(`♪ Playing sound: ${node.sound}`);
+    return null;
+  }
+
+  // --- Storage ---
+  private getStorage(): Storage {
+    if (!this.storage) {
+      this.storage = new Storage(this.storagePath);
+    }
+    return this.storage;
+  }
+
+  private async executeRemember(node: AST.RememberStatement): Promise<SayValue> {
+    const key = toString(await this.evaluate(node.key));
+    const value = await this.evaluate(node.value);
+    const storage = this.getStorage();
+    storage.remember(key, this.sayValueToJson(value));
+    return null;
+  }
+
+  private async executeForget(node: AST.ForgetStatement): Promise<SayValue> {
+    const key = toString(await this.evaluate(node.key));
+    const storage = this.getStorage();
+    storage.forget(key);
+    return null;
+  }
+
+  // --- Web server ---
+  private async executeServe(node: AST.ServeStatement): Promise<SayValue> {
+    const port = toNumber(await this.evaluate(node.port));
+    this.server = new SayServer(this.output);
+    await this.server.start(port);
+    return null;
+  }
+
+  private async executeRespond(node: AST.RespondStatement): Promise<SayValue> {
+    // This sets a response value in the current environment for the route handler
+    const value = toString(await this.evaluate(node.value));
+    const status = node.statusCode ? toNumber(await this.evaluate(node.statusCode)) : 200;
+    this.env.set('__response_body', value);
+    this.env.set('__response_status', status);
+    return null;
+  }
+
+  private async executeRoute(node: AST.RouteStatement): Promise<SayValue> {
+    if (!this.server) {
+      throw new Error('No server running. Use "serve on port N" first.');
+    }
+    const routePath = toString(await this.evaluate(node.path));
+    const body = node.body;
+    const interpreter = this;
+
+    this.server.addRoute(node.method, routePath, async (req: RequestInfo): Promise<ResponseInfo> => {
+      const routeEnv = new Environment(interpreter.env);
+      routeEnv.define('path', req.path);
+      routeEnv.define('method', req.method);
+      routeEnv.define('body', req.body);
+      routeEnv.define('__response_body', 'OK');
+      routeEnv.define('__response_status', 200);
+
+      // Set query params
+      const queryMap = new SayMap();
+      for (const [k, v] of Object.entries(req.query)) {
+        queryMap.set(k, v);
+      }
+      routeEnv.define('query', queryMap);
+
+      const prevEnv = interpreter.env;
+      interpreter.env = routeEnv;
+      try {
+        await interpreter.executeBlock(body);
+      } catch (e) {
+        // Ignore return signals in route handlers
+      } finally {
+        interpreter.env = prevEnv;
+      }
+
+      return {
+        body: toString(routeEnv.get('__response_body')),
+        status: toNumber(routeEnv.get('__response_status')),
+        headers: {},
+      };
+    });
+
+    return null;
+  }
+
+  // --- Packages ---
+  private async executeGrab(node: AST.GrabStatement): Promise<SayValue> {
+    // Try to load from a packages/ directory
+    const tryPaths = [
+      `packages/${node.module}/index.say`,
+      `packages/${node.module}.say`,
+      `node_modules/${node.module}/index.say`,
+    ];
+
+    for (const tryPath of tryPaths) {
+      try {
+        const source = await this.readFile(tryPath);
+        const lexer = new Lexer(source);
+        const tokens = lexer.tokenize();
+        const parser = new Parser();
+        const program = parser.parse(tokens);
+        for (const child of program.body) {
+          await this.execute(child);
+        }
+        return null;
+      } catch {
+        continue;
+      }
+    }
+
+    this.output(`Package "${node.module}" not found. Create it at packages/${node.module}/index.say`);
+    return null;
+  }
+
+  // --- Sharing ---
+  private async executeShare(node: AST.ShareStatement): Promise<SayValue> {
+    const target = toString(await this.evaluate(node.target));
+    this.output(`Sharing: ${target}`);
+    this.output('To share files, use the CLI: say share myfile.say');
+    return null;
+  }
+
+  // --- Concurrency ---
+  private async executeDoTogether(node: AST.DoTogetherStatement): Promise<SayValue> {
+    const promises = node.blocks.map(block => this.executeBlock(block));
+    await Promise.all(promises);
+    return null;
+  }
+
+  // --- Events ---
+  private async executeListen(node: AST.ListenStatement): Promise<SayValue> {
+    const listeners = this.eventListeners.get(node.event) || [];
+    listeners.push({ variable: node.variable, body: node.body });
+    this.eventListeners.set(node.event, listeners);
+    this.output(`Listening for "${node.event}" events`);
+    return null;
+  }
+
+  private async executeEvery(node: AST.EveryStatement): Promise<SayValue> {
+    const interval = toNumber(await this.evaluate(node.interval));
+    const ms = node.unit === 'milliseconds' || node.unit === 'ms' ? interval : interval * 1000;
+
+    const timer = setInterval(async () => {
+      try {
+        await this.executeBlock(node.body);
+      } catch (e) {
+        if (e instanceof StopSignal) {
+          clearInterval(timer);
+        }
+      }
+    }, ms);
+
+    this.timers.push(timer);
+    return null;
+  }
+
+  // --- Emit event ---
+  async emitEvent(event: string, data?: SayValue): Promise<void> {
+    const listeners = this.eventListeners.get(event) || [];
+    for (const listener of listeners) {
+      const eventEnv = new Environment(this.env);
+      if (listener.variable && data !== undefined) {
+        eventEnv.define(listener.variable, data);
+      }
+      const prevEnv = this.env;
+      this.env = eventEnv;
+      try {
+        await this.executeBlock(listener.body);
+      } finally {
+        this.env = prevEnv;
+      }
+    }
+  }
+
+  // --- Canvas export ---
+  getCanvasSVG(name: string = 'canvas'): string | null {
+    const canvas = this.canvases.get(name);
+    if (!canvas || canvas.commands.length === 0) return null;
+    return canvasToSVG(canvas);
+  }
+
+  // --- When with type matching ---
   private async executeWhen(node: AST.WhenStatement): Promise<SayValue> {
     const target = await this.evaluate(node.target);
     for (const c of node.cases) {
-      const caseValue = await this.evaluate(c.value);
-      if (valuesEqual(target, caseValue)) {
-        return this.executeBlock(c.body);
+      // Check for type matching (is a KindName)
+      if (c.value.type === 'TypeCheckExpression' && (c.value as AST.TypeCheckExpression).value.type === 'StringLiteral' && ((c.value as AST.TypeCheckExpression).value as AST.StringLiteral).value === '__when_type_check__') {
+        const typeCheck = c.value as AST.TypeCheckExpression;
+        let matches = false;
+        switch (typeCheck.targetType) {
+          case 'number': matches = typeof target === 'number'; break;
+          case 'text': matches = typeof target === 'string'; break;
+          case 'list': matches = target instanceof SayList; break;
+          case 'map': matches = target instanceof SayMap; break;
+          case 'boolean': matches = typeof target === 'boolean'; break;
+          case 'nothing': matches = target === null || target === undefined; break;
+          default: {
+            if (target instanceof SayInstance) {
+              matches = target.kind.name === typeCheck.targetType;
+              if (!matches) {
+                let parent = target.kind.parent;
+                while (parent) {
+                  if (parent.name === typeCheck.targetType) { matches = true; break; }
+                  parent = parent.parent;
+                }
+              }
+            }
+            break;
+          }
+        }
+        if (matches) {
+          return this.executeBlock(c.body);
+        }
+      } else {
+        const caseValue = await this.evaluate(c.value);
+        if (valuesEqual(target, caseValue)) {
+          return this.executeBlock(c.body);
+        }
       }
     }
     if (node.elseBody.length > 0) {
@@ -808,15 +1124,56 @@ export class Interpreter {
     return null;
   }
 
-  private async executeWrite(node: AST.WriteStatement): Promise<SayValue> {
-    const path = toString(await this.evaluate(node.path));
-    const value = toString(await this.evaluate(node.value));
-    if (node.append) {
-      await this.appendFile(path, value);
-    } else {
-      await this.writeFile(path, value);
+  // --- Cleanup ---
+  cleanup(): void {
+    for (const timer of this.timers) {
+      clearInterval(timer);
     }
-    return null;
+    this.timers = [];
+    if (this.server) {
+      this.server.stop();
+      this.server = null;
+    }
+  }
+
+  // --- Helpers for JSON <-> SayValue ---
+  private jsonToSayValue(val: any): SayValue {
+    if (val === null || val === undefined) return null;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'boolean') return val;
+    if (Array.isArray(val)) {
+      return new SayList(val.map(item => this.jsonToSayValue(item)));
+    }
+    if (typeof val === 'object') {
+      const map = new SayMap();
+      for (const [k, v] of Object.entries(val)) {
+        map.set(k, this.jsonToSayValue(v));
+      }
+      return map;
+    }
+    return toString(val);
+  }
+
+  private sayValueToJson(val: SayValue): any {
+    if (val === null || val === undefined) return null;
+    if (typeof val === 'number' || typeof val === 'string' || typeof val === 'boolean') return val;
+    if (val instanceof SayList) return val.items.map(item => this.sayValueToJson(item));
+    if (val instanceof SayMap) {
+      const obj: Record<string, any> = {};
+      for (const [k, v] of val.entries) {
+        obj[k] = this.sayValueToJson(v);
+      }
+      return obj;
+    }
+    if (val instanceof SayInstance) {
+      const obj: Record<string, any> = { __kind: val.kind.name };
+      for (const [k, v] of val.properties) {
+        obj[k] = this.sayValueToJson(v);
+      }
+      return obj;
+    }
+    return String(val);
   }
 
   private async executeBlock(body: AST.ASTNode[]): Promise<SayValue> {
@@ -1096,6 +1453,7 @@ export class Interpreter {
         switch (node.targetType) {
           case 'number': result = typeof val === 'number'; break;
           case 'text': result = typeof val === 'string'; break;
+          case 'boolean': result = typeof val === 'boolean'; break;
           case 'list': result = val instanceof SayList; break;
           case 'map': result = val instanceof SayMap; break;
           case 'nothing': result = val === null || val === undefined; break;
@@ -1130,6 +1488,36 @@ export class Interpreter {
           return new SayList(content.split('\n'));
         }
         return content;
+      }
+
+      case 'ThinkExpression': {
+        const prompt = toString(await this.evaluate(node.prompt));
+        return this.aiEngine.think(prompt);
+      }
+
+      case 'FetchExpression': {
+        const url = toString(await this.evaluate(node.url));
+        try {
+          const response = await this.httpFetch(url);
+          if (typeof response.json === 'function') {
+            try {
+              const data = await response.json();
+              return this.jsonToSayValue(data);
+            } catch {
+              return await response.text();
+            }
+          }
+          return toString(response);
+        } catch (e) {
+          throw new Error(`Fetch failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
+
+      case 'RecallExpression': {
+        const key = toString(await this.evaluate(node.key));
+        const storage = this.getStorage();
+        const val = storage.recall(key);
+        return this.jsonToSayValue(val);
       }
 
       default:

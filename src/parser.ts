@@ -67,6 +67,16 @@ export class Parser {
       case TokenType.WHEN: return this.parseWhen();
       case TokenType.WRITE: return this.parseWrite();
       case TokenType.APPEND: return this.parseAppend();
+      case TokenType.REMEMBER: return this.parseRemember();
+      case TokenType.FORGET: return this.parseForget();
+      case TokenType.SERVE: return this.parseServe();
+      case TokenType.RESPOND: return this.parseRespond();
+      case TokenType.ROUTE: return this.parseRoute();
+      case TokenType.GRAB: return this.parseGrab();
+      case TokenType.SHARE: return this.parseShare();
+      case TokenType.DO: return this.parseDoTogether();
+      case TokenType.LISTEN: return this.parseListen();
+      case TokenType.EVERY: return this.parseEvery();
       default:
         return this.parseExpressionStatement();
     }
@@ -857,10 +867,21 @@ export class Parser {
 
       if (this.check(TokenType.IS)) {
         this.advance(); // skip 'is'
-        const value = this.parseExpression();
-        this.skipNewlines();
-        const body = this.parseBlock(['IS', 'ELSE', 'END']);
-        cases.push({ value, body });
+        // Support "is a KindName" for type-based matching
+        if (this.check(TokenType.A)) {
+          this.advance(); // skip 'a'
+          const typeName = this.parseTypeName();
+          this.skipNewlines();
+          const body = this.parseBlock(['IS', 'ELSE', 'END']);
+          // Encode as TypeCheckExpression in the value slot
+          const value: AST.Expression = { type: 'TypeCheckExpression', value: { type: 'StringLiteral', value: '__when_type_check__' }, targetType: typeName, negated: false };
+          cases.push({ value, body });
+        } else {
+          const value = this.parseExpression();
+          this.skipNewlines();
+          const body = this.parseBlock(['IS', 'ELSE', 'END']);
+          cases.push({ value, body });
+        }
       } else if (this.check(TokenType.ELSE)) {
         this.advance();
         this.skipNewlines();
@@ -890,6 +911,158 @@ export class Parser {
     this.expect(TokenType.WITH);
     const value = this.parseExpression();
     return { type: 'WriteStatement', path, value, append: true, line };
+  }
+
+  // --- Remember/Recall/Forget ---
+  private parseRemember(): AST.RememberStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'remember'
+    const key = this.parseExpression();
+    this.expect(TokenType.AS);
+    const value = this.parseExpression();
+    return { type: 'RememberStatement', key, value, line };
+  }
+
+  private parseForget(): AST.ForgetStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'forget'
+    const key = this.parseExpression();
+    return { type: 'ForgetStatement', key, line };
+  }
+
+  // --- Web server ---
+  private parseServe(): AST.ServeStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'serve'
+    if (this.check(TokenType.ON)) this.advance(); // skip optional 'on'
+    if (this.check(TokenType.IDENTIFIER) && this.current().value === 'port') this.advance(); // skip optional 'port'
+    const port = this.parseExpression();
+    return { type: 'ServeStatement', port, line };
+  }
+
+  private parseRespond(): AST.RespondStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'respond'
+    if (this.check(TokenType.WITH)) this.advance(); // skip optional 'with'
+    const value = this.parseExpression();
+    let statusCode: AST.Expression | undefined;
+    if (this.check(TokenType.STATUS)) {
+      this.advance();
+      statusCode = this.parseExpression();
+    }
+    return { type: 'RespondStatement', value, statusCode, line };
+  }
+
+  private parseRoute(): AST.RouteStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'route'
+    let method = 'GET';
+    if (this.check(TokenType.IDENTIFIER)) {
+      const upper = this.current().value.toUpperCase();
+      if (['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(upper)) {
+        method = upper;
+        this.advance();
+      }
+    }
+    const path = this.parseExpression();
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'RouteStatement', method, path, body, line };
+  }
+
+  // --- Packages ---
+  private parseGrab(): AST.GrabStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'grab'
+    let module: string;
+    if (this.check(TokenType.STRING)) {
+      module = this.current().value;
+      this.advance();
+    } else {
+      module = this.expectIdentifierName();
+    }
+    return { type: 'GrabStatement', module, line };
+  }
+
+  // --- Sharing ---
+  private parseShare(): AST.ShareStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'share'
+    const target = this.parseExpression();
+    return { type: 'ShareStatement', target, line };
+  }
+
+  // --- Do together ---
+  private parseDoTogether(): AST.DoTogetherStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'do'
+    this.expect(TokenType.TOGETHER);
+    this.skipNewlines();
+
+    const blocks: AST.ASTNode[][] = [];
+    let currentBlock: AST.ASTNode[] = [];
+
+    while (!this.check(TokenType.END) && !this.isAtEnd()) {
+      this.skipNewlines();
+      if (this.check(TokenType.END)) break;
+
+      // 'and' separates concurrent blocks
+      if (this.check(TokenType.AND)) {
+        this.advance();
+        this.skipNewlines();
+        if (currentBlock.length > 0) {
+          blocks.push(currentBlock);
+          currentBlock = [];
+        }
+        continue;
+      }
+
+      const node = this.parseStatement();
+      if (node) currentBlock.push(node);
+    }
+
+    if (currentBlock.length > 0) blocks.push(currentBlock);
+    this.expect(TokenType.END);
+    return { type: 'DoTogetherStatement', blocks, line };
+  }
+
+  // --- Listen ---
+  private parseListen(): AST.ListenStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'listen'
+
+    // listen for <event> [as <var>]
+    if (this.check(TokenType.FOR)) this.advance(); // skip optional 'for'
+    const event = this.expectIdentifierName();
+    let variable: string | undefined;
+    if (this.check(TokenType.AS)) {
+      this.advance();
+      variable = this.expectIdentifierName();
+    }
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'ListenStatement', event, variable, body, line };
+  }
+
+  // --- Every (timer) ---
+  private parseEvery(): AST.EveryStatement {
+    const line = this.current().line;
+    this.advance(); // skip 'every'
+    const interval = this.parseExpression();
+    let unit = 'seconds';
+    if (this.check(TokenType.SECOND) || this.check(TokenType.SECONDS)) {
+      unit = this.current().value;
+      this.advance();
+    } else if (this.check(TokenType.IDENTIFIER)) {
+      unit = this.current().value;
+      this.advance();
+    }
+    this.skipNewlines();
+    const body = this.parseBlock(['END']);
+    this.expect(TokenType.END);
+    return { type: 'EveryStatement', interval, unit, body, line };
   }
 
   private parseExpressionStatement(): AST.ExpressionStatement | AST.InspectExpression {
@@ -1294,6 +1467,30 @@ export class Parser {
       return { type: 'RandomExpression', variant: 'float' };
     }
 
+    // Think expression (AI)
+    if (this.check(TokenType.THINK)) {
+      const thinkLine = this.current().line;
+      this.advance();
+      const prompt = this.parseExpression();
+      return { type: 'ThinkExpression', prompt, line: thinkLine };
+    }
+
+    // Fetch expression (HTTP)
+    if (this.check(TokenType.FETCH)) {
+      const fetchLine = this.current().line;
+      this.advance();
+      const url = this.parsePrimary();
+      return { type: 'FetchExpression', url, line: fetchLine };
+    }
+
+    // Recall expression (storage)
+    if (this.check(TokenType.RECALL)) {
+      const recallLine = this.current().line;
+      this.advance();
+      const key = this.parseExpression();
+      return { type: 'RecallExpression', key, line: recallLine };
+    }
+
     // Read expression
     if (this.check(TokenType.READ)) {
       const readLine = this.current().line;
@@ -1475,6 +1672,7 @@ export class Parser {
     if (this.check(TokenType.LIST)) { this.advance(); return 'list'; }
     if (this.check(TokenType.MAP)) { this.advance(); return 'map'; }
     if (this.check(TokenType.NOTHING)) { this.advance(); return 'nothing'; }
+    if (this.check(TokenType.BOOLEAN_TYPE)) { this.advance(); return 'boolean'; }
     // Kind name
     const name = this.expectIdentifierName();
     return name;
@@ -1496,6 +1694,15 @@ export class Parser {
       TokenType.TEXT, TokenType.NUMBER_TYPE, TokenType.MAP,
       TokenType.READ, TokenType.WRITE, TokenType.APPEND, TokenType.AS,
       TokenType.PICK, TokenType.ROUNDED, TokenType.SET,
+      TokenType.THINK, TokenType.FETCH, TokenType.SERVE, TokenType.RESPOND,
+      TokenType.REMEMBER, TokenType.RECALL, TokenType.FORGET, TokenType.GRAB,
+      TokenType.SHARE, TokenType.TOGETHER, TokenType.DO, TokenType.LISTEN,
+      TokenType.ALOUD, TokenType.NOTE, TokenType.SOUND, TokenType.BOOLEAN_TYPE,
+      TokenType.CANVAS, TokenType.COLOR, TokenType.SIZE, TokenType.LINE,
+      TokenType.CIRCLE, TokenType.RECTANGLE, TokenType.FILL, TokenType.STROKE,
+      TokenType.WIDTH, TokenType.HEIGHT, TokenType.DEBUG, TokenType.STEP,
+      TokenType.BREAKPOINT, TokenType.CLASSROOM, TokenType.SUBMIT,
+      TokenType.COLLECT, TokenType.ROUTE, TokenType.REQUEST, TokenType.STATUS,
     ].includes(t);
   }
 

@@ -140,6 +140,73 @@ export enum TokenType {
 
   // Timer
   TIMER = 'TIMER',
+
+  // Keywords - AI
+  THINK = 'THINK',
+
+  // Keywords - HTTP
+  FETCH = 'FETCH',
+
+  // Keywords - Web server
+  SERVE = 'SERVE',
+  RESPOND = 'RESPOND',
+  REQUEST = 'REQUEST',
+  ROUTE = 'ROUTE',
+  STATUS = 'STATUS',
+
+  // Keywords - Storage
+  REMEMBER = 'REMEMBER',
+  RECALL = 'RECALL',
+  FORGET = 'FORGET',
+
+  // Keywords - Packages
+  GRAB = 'GRAB',
+
+  // Keywords - Sharing
+  SHARE = 'SHARE',
+
+  // Keywords - Concurrency
+  TOGETHER = 'TOGETHER',
+  DO = 'DO',
+
+  // Keywords - Sound
+  ALOUD = 'ALOUD',
+  NOTE = 'NOTE',
+  SOUND = 'SOUND',
+
+  // Keywords - Types
+  BOOLEAN_TYPE = 'BOOLEAN_TYPE',
+
+  // Keywords - Modules
+  NAMESPACE = 'NAMESPACE',
+
+  // Keywords - Canvas
+  CANVAS = 'CANVAS',
+  COLOR = 'COLOR',
+  SIZE = 'SIZE',
+  LINE = 'LINE',
+  CIRCLE = 'CIRCLE',
+  RECTANGLE = 'RECTANGLE',
+  FILL = 'FILL',
+  STROKE = 'STROKE',
+  WIDTH = 'WIDTH',
+  HEIGHT = 'HEIGHT',
+
+  // Keywords - Debugging
+  DEBUG = 'DEBUG',
+  STEP = 'STEP',
+  BREAKPOINT = 'BREAKPOINT',
+
+  // Keywords - Classroom
+  CLASSROOM = 'CLASSROOM',
+  SUBMIT = 'SUBMIT',
+  COLLECT = 'COLLECT',
+
+  // Keywords - Say aloud
+  SAY_ALOUD = 'SAY_ALOUD',
+
+  // Keywords - Listen
+  LISTEN = 'LISTEN',
 }
 
 export interface Token {
@@ -232,4 +299,39 @@ export const KEYWORDS: Record<string, TokenType> = {
   'second': TokenType.SECOND,
   'seconds': TokenType.SECONDS,
   'timer': TokenType.TIMER,
+  'think': TokenType.THINK,
+  'fetch': TokenType.FETCH,
+  'serve': TokenType.SERVE,
+  'respond': TokenType.RESPOND,
+  'request': TokenType.REQUEST,
+  'route': TokenType.ROUTE,
+  'status': TokenType.STATUS,
+  'remember': TokenType.REMEMBER,
+  'recall': TokenType.RECALL,
+  'forget': TokenType.FORGET,
+  'grab': TokenType.GRAB,
+  'share': TokenType.SHARE,
+  'together': TokenType.TOGETHER,
+  'do': TokenType.DO,
+  'aloud': TokenType.ALOUD,
+  'note': TokenType.NOTE,
+  'sound': TokenType.SOUND,
+  'boolean': TokenType.BOOLEAN_TYPE,
+  'canvas': TokenType.CANVAS,
+  'color': TokenType.COLOR,
+  'size': TokenType.SIZE,
+  'line': TokenType.LINE,
+  'circle': TokenType.CIRCLE,
+  'rectangle': TokenType.RECTANGLE,
+  'fill': TokenType.FILL,
+  'stroke': TokenType.STROKE,
+  'width': TokenType.WIDTH,
+  'height': TokenType.HEIGHT,
+  'debug': TokenType.DEBUG,
+  'step': TokenType.STEP,
+  'breakpoint': TokenType.BREAKPOINT,
+  'classroom': TokenType.CLASSROOM,
+  'submit': TokenType.SUBMIT,
+  'collect': TokenType.COLLECT,
+  'listen': TokenType.LISTEN,
 };

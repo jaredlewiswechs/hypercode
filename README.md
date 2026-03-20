@@ -695,6 +695,218 @@ kind Counter
 end
 ```
 
+### Graphics (Draw)
+
+Draw shapes to a canvas. When running from the CLI, an SVG file is automatically saved.
+
+```say
+draw circle at 200, 200 size 80
+draw rectangle at 50, 50 size 100
+draw line from 0, 400 to 400, 0
+```
+
+Supported shapes: `circle`, `rectangle`, `line`, `text`, `ellipse`, `triangle`, `star`.
+
+### Sound
+
+Play sounds (outputs descriptions in CLI mode):
+
+```say
+play sound ding
+```
+
+### AI Integration (`think`)
+
+Ask an AI a question (requires `ANTHROPIC_API_KEY` environment variable):
+
+```say
+set answer to think "What is the capital of France?"
+show .answer
+
+put ask Ask me anything into question
+set response to think question
+show .response
+```
+
+### HTTP Fetch
+
+Make HTTP requests and work with web data:
+
+```say
+set data to fetch "https://api.example.com/data"
+show .data
+```
+
+JSON responses are automatically converted to maps and lists.
+
+### Web Server
+
+Serve web pages from HyperCode:
+
+```say
+serve on port 8080
+
+route GET "/"
+  respond with "<h1>Hello from HyperCode!</h1>"
+end
+
+route GET "/about"
+  respond with "<h1>About</h1><p>Made with HyperCode.</p>"
+end
+```
+
+### Persistent Storage (`remember` / `recall`)
+
+Store values that survive between program runs:
+
+```say
+-- Save a value
+remember "high_score" as 100
+
+-- Load it later (even after restarting)
+set best to recall "high_score"
+show Best score: .best
+
+-- Delete a stored value
+forget "high_score"
+```
+
+### Packages (`grab`)
+
+Import community packages:
+
+```say
+grab "colors"
+grab "trivia-api"
+```
+
+Packages are loaded from `packages/<name>/index.say`.
+
+### Concurrent Execution (`do together`)
+
+Run multiple blocks of code at the same time:
+
+```say
+do together
+  show Task 1 running
+  repeat 3 times
+    show Working on task 1...
+  end
+and
+  show Task 2 running
+  repeat 3 times
+    show Working on task 2...
+  end
+end
+```
+
+### Event Listeners
+
+Listen for events and run code when they happen:
+
+```say
+listen for click as data
+  show Clicked: .data
+end
+```
+
+### Timers (`every`)
+
+Run code on a recurring interval:
+
+```say
+every 2 seconds
+  show Tick!
+end
+```
+
+### Pattern Matching on Kinds
+
+Match objects by their type in `when` blocks:
+
+```say
+when animal
+is a Dog
+  show It's a dog!
+is a Bird
+  show It's a bird!
+else
+  show Unknown animal
+end
+```
+
+## CLI Commands
+
+```bash
+say <file.say>              Run a program
+say run <file.say>          Run a program
+say test <file.say>         Run tests in a file
+say repl                    Start interactive REPL
+say debug <file.say>        Debug a program step-by-step
+say playground [port]       Start browser playground (default: 3000)
+say share <file.say> [port] Share a file via local server
+say classroom start [port]  Start classroom dashboard
+say submit <file.say> ...   Submit code to classroom
+say tutor <file.say>        Get AI feedback on your code
+say create "<description>"  Generate a program from a description
+```
+
+### Browser Playground
+
+Start a browser-based IDE where students can write and run HyperCode without installing anything:
+
+```bash
+say playground
+# Opens at http://localhost:3000
+```
+
+### Debugger
+
+Step through a program line by line:
+
+```bash
+say debug myprogram.say
+```
+
+Commands: `s`tep, `c`ontinue, `b N` (breakpoint), `v`ariables, `q`uit.
+
+### AI Tutor
+
+Get AI-powered feedback on your code:
+
+```bash
+say tutor myprogram.say
+```
+
+### Code Generation
+
+Generate a program from a description:
+
+```bash
+say create "a quiz game about geography with 5 questions"
+```
+
+### Live Sharing
+
+Share a program via a local web server:
+
+```bash
+say share myprogram.say
+# Outputs a URL others can visit to view the code
+```
+
+### Classroom Dashboard
+
+Teachers can collect and view student submissions:
+
+```bash
+# Teacher starts the dashboard:
+say classroom start
+
+# Students submit their work:
+say submit myfile.say --name "Alice" --to localhost:5000
+```
+
 ## Examples
 
 See the `examples/` directory for complete programs:
@@ -712,6 +924,12 @@ See the `examples/` directory for complete programs:
 | `zoo.say` | Animal hierarchy with inheritance |
 | `todo.say` | To-do list manager with kinds |
 | `error_handling.say` | Try/catch error patterns |
+| `drawing.say` | Graphics with draw commands |
+| `storage.say` | Persistent storage with remember/recall |
+| `web_server.say` | Simple web server |
+| `ai_demo.say` | AI integration with think |
+| `concurrent.say` | Concurrent tasks with do together |
+| `pattern_matching.say` | Pattern matching with when/is a |
 
 ## Architecture
 
@@ -729,6 +947,13 @@ Source Code → Lexer → Tokens → Parser → AST → Interpreter → Output
 | AST | `src/ast.ts` | Type definitions for all AST nodes |
 | Tokens | `src/tokens.ts` | Token types and keyword mappings |
 | CLI | `src/cli.ts` | Command-line interface and REPL |
+| Graphics | `src/graphics.ts` | SVG canvas rendering for draw commands |
+| AI | `src/ai.ts` | Claude API integration for think/tutor/create |
+| Server | `src/server.ts` | HTTP server for serve/route/respond |
+| Storage | `src/storage.ts` | Persistent key-value storage |
+| Playground | `src/playground.ts` | Browser-based IDE |
+| Share | `src/share.ts` | Live sharing and classroom dashboard |
+| Debugger | `src/debugger.ts` | Step-through debugger |
 
 ## Using as a Library
 
@@ -858,6 +1083,61 @@ npm test
 |---------|-------|-------------|
 | `test` | `test NAME ... end` | Define a test block |
 | `check` | `check EXPRESSION` | Assert a condition is true |
+
+### AI
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `think` | `think "prompt"` | Ask AI a question (returns text) |
+
+### HTTP
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `fetch` | `fetch "url"` | Make an HTTP request |
+
+### Web Server
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `serve` | `serve on port N` | Start a web server |
+| `route` | `route GET "/" ... end` | Define a route handler |
+| `respond` | `respond with "text"` | Send an HTTP response |
+
+### Storage
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `remember` | `remember "key" as VALUE` | Persist a value |
+| `recall` | `recall "key"` | Retrieve a persisted value |
+| `forget` | `forget "key"` | Delete a persisted value |
+
+### Packages
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `grab` | `grab "name"` | Import a package |
+
+### Concurrency
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `do together` | `do together ... and ... end` | Run blocks concurrently |
+
+### Events
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `listen` | `listen for EVENT ... end` | Register an event listener |
+| `every` | `every N seconds ... end` | Run code on an interval |
+
+### Graphics
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `draw` | `draw circle at X, Y size N` | Draw a shape on the canvas |
+| `clear` | `clear canvas` | Clear the canvas |
+| `play` | `play sound NAME` | Play a sound |
 
 ### Debugging
 

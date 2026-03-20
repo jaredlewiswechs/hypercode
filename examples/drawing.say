@@ -1,0 +1,15 @@
+-- drawing.say — Graphics with draw commands
+
+-- Draw some shapes
+draw circle at 200, 200 size 80
+draw rectangle at 50, 50 size 100
+draw line from 0, 400 to 400, 0
+
+-- Draw a pattern of circles
+repeat 5 times with i
+  set x to i * 80
+  set y to 300
+  draw circle at x, y size 30
+end
+
+show Drawing complete! Check the .svg file.

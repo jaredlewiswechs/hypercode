@@ -1,0 +1,59 @@
+-- pattern_matching.say — Pattern matching with when blocks
+
+-- Match on values
+put ask Pick a season (spring, summer, fall, winter) into season
+
+when season
+is spring
+  show Time for flowers!
+is summer
+  show Time for swimming!
+is fall
+  show Time for sweaters!
+is winter
+  show Time for hot cocoa!
+else
+  show I don't know that season.
+end
+
+-- Match on kinds (type-based pattern matching)
+kind Dog
+  name is Unknown
+  on speak
+    show .me.name says Woof!
+  end
+end
+
+kind Cat
+  name is Unknown
+  on speak
+    show .me.name says Meow!
+  end
+end
+
+kind Bird
+  name is Unknown
+  on speak
+    show .me.name says Tweet!
+  end
+end
+
+make a Dog called pet1 with name Rex
+make a Cat called pet2 with name Luna
+make a Bird called pet3 with name Tweety
+
+put list pet1, pet2, pet3 into pets
+
+for each pet in pets
+  when pet
+  is a Dog
+    show .pet is a good dog!
+    send speak to pet
+  is a Cat
+    show .pet is a mysterious cat!
+    send speak to pet
+  is a Bird
+    show .pet is a cheerful bird!
+    send speak to pet
+  end
+end

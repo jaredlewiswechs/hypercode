@@ -7,15 +7,15 @@ show Average: (.scores.average)
 show Highest: (.scores.max)
 show Lowest: (.scores.min)
 
-put scores where it >= 70 into passing
-put scores where it < 70 into failing
+set passing to scores where it >= 70
+set failing to scores where it < 70
 
 show Passing scores: .passing
 show Failing scores: .failing
 show Pass rate: (.passing.count) out of (.scores.count)
 
 -- Double each score (as percentages of 50)
-put scores each it / 2 into halved
+set halved to scores each it / 2
 show Halved: .halved
 
 sort scores

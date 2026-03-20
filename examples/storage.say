@@ -1,0 +1,29 @@
+-- storage.say — Persistent storage with remember/recall
+
+-- Check if we have a previous visit count
+set visits to recall "visit_count"
+
+if visits is nothing
+  set visits to 0
+end
+
+set visits to visits + 1
+remember "visit_count" as visits
+
+show Welcome! This program has been run .visits times.
+
+-- Remember a high score
+set score to random 1 to 100
+show Your score this round: .score
+
+set best to recall "high_score"
+if best is nothing
+  set best to 0
+end
+
+if score > best
+  show New high score!
+  remember "high_score" as score
+else
+  show Best score so far: .best
+end

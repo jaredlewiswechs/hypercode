@@ -5,14 +5,14 @@ kind Task
   done is false
 
   on finish
-    put true into me.done
+    set me.done to true
   end
 
   on status
     if me.done
-      show [x] .me.title
+      show DONE .me.title
     else
-      show [ ] .me.title
+      show TODO .me.title
     end
   end
 end
@@ -22,19 +22,19 @@ make a Task called t2 with title Walk the dog
 make a Task called t3 with title Write HyperCode
 make a Task called t4 with title Do homework
 
-put list t1, t2, t3, t4 into tasks
+set tasks to list t1, t2, t3, t4
 
 -- Complete some tasks
 send finish to t1
 send finish to t3
 
-show To-Do List
+show Task List
 for each t in tasks
   send status to t
 end
 
-put tasks where it.done == true into completed
-put tasks where it.done == false into remaining
+set completed to tasks where it.done == true
+set remaining to tasks where it.done == false
 
 show Completed: (.completed.count)
 show Remaining: (.remaining.count)

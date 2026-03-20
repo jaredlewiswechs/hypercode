@@ -1,6 +1,6 @@
 # HyperCode (Say)
 
-An English-like programming language designed to be readable, intuitive, and fun. HyperCode uses natural language keywords — you `put` values `into` variables, `show` output, `ask` for input, define `kind`s (classes), and `send` messages to objects.
+An English-like programming language designed to be readable, intuitive, and fun. HyperCode uses natural language keywords — you `put` text `into` variables, `set` variables `to` expressions, `show` output, `ask` for input, define `kind`s (classes), and `send` messages to objects.
 
 Files use the `.say` extension and run with the `say` CLI.
 
@@ -40,24 +40,101 @@ show Hello .name, welcome to HyperCode!
 
 ### Variables
 
-Use `put VALUE into NAME` to store values. Variable names are plain identifiers.
+HyperCode has two ways to store values:
+
+- **`put VALUE into NAME`** — stores literal text or numbers as-is (no math evaluation)
+- **`set NAME to EXPRESSION`** — evaluates an expression and stores the result
 
 ```say
+-- put is for literal values
 put 42 into age
 put Hello World into greeting
 put true into active
 put nothing into empty
+
+-- set is for expressions and computed values
+set total to price * quantity
+set doubled to n * 2
+set result to add 5 and 3
 ```
+
+Use `put` when you have a plain value. Use `set` when you need math, function calls, or any computation.
 
 ### Data Types
 
 | Type | Examples | Notes |
 |------|----------|-------|
 | Number | `42`, `3.14`, `-5` | Integers and decimals |
-| Text | `Hello`, `Some words` | Unquoted strings |
+| Text | `Hello`, `"with spaces"` | Unquoted or quoted strings |
 | Boolean | `true`, `false` | |
 | Nothing | `nothing` | Null value |
 | List | `list 1, 2, 3` | Ordered collection |
+| Map | `map`, `map name: "Alice"` | Key-value dictionary |
+| Pair | `pair 1 and 2` | Two-element tuple |
+| Set | `unique 1, 2, 3` | Collection with no duplicates |
+| Enum | `enum Color is red, green, blue` | Named set of constants |
+| Lambda | `{ x -> x * 2 }` | Anonymous function |
+
+### Strings
+
+Strings can be unquoted (in `put` and `show`) or quoted with double quotes (in `set` and expressions).
+
+```say
+put Hello World into greeting
+set name to "Alice"
+set message to "She said \"hello\""
+```
+
+**String interpolation** with `{variable}` inside quoted strings:
+
+```say
+set name to "World"
+set msg to "Hello {name}!"
+show .msg
+-- Shows: Hello World!
+```
+
+**Triple-quoted strings** for multiline text:
+
+```say
+set poem to """roses are red
+violets are blue"""
+show .poem
+```
+
+**String concatenation** with `+`:
+
+```say
+set full to first + " " + last
+show (.full)
+```
+
+**Regex matching** with `matches`:
+
+```say
+set valid to "hello123" matches "[a-z]+[0-9]+"
+show .valid
+-- Shows: true
+```
+
+**String properties:**
+
+```say
+put hello world into text
+show (.text.upper)       -- HELLO WORLD
+show (.text.lower)       -- hello world
+show (.text.length)      -- 11
+show (.text.trim)        -- hello world
+show (.text.first)       -- h
+show (.text.last)        -- d
+```
+
+**String indexing:**
+
+```say
+set letter to text.at 3       -- l (1-based)
+set part to text.from 1 to 5  -- hello
+```
 
 ### Output
 
@@ -97,13 +174,59 @@ multi-line comment
 ### Arithmetic
 
 ```say
-put 10 + 3 into sum        -- 13
-put 10 - 3 into diff       -- 7
-put 10 * 3 into product    -- 30
-put 10 / 3 into quotient   -- 3.333...
-put 10 % 3 into remainder  -- 1
-put 2 ^ 8 into power       -- 256
-put (3 + 4) * 2 into grouped -- 14
+set sum to 10 + 3          -- 13
+set diff to 10 - 3         -- 7
+set product to 10 * 3      -- 30
+set quotient to 10 / 3     -- 3.333...
+set remainder to 10 % 3    -- 1
+set power to 2 ^ 8         -- 256
+set grouped to (3 + 4) * 2 -- 14
+```
+
+### Math Builtins
+
+Access math functions through the `math` module:
+
+```say
+set x to math.round 3.7      -- 4
+set x to math.floor 3.7      -- 3
+set x to math.ceil 3.2       -- 4
+set x to math.abs (-5)       -- 5
+set x to math.sqrt 16        -- 4
+```
+
+### Random
+
+Generate random values:
+
+```say
+-- Random integer in a range (inclusive)
+set roll to random 1 to 6
+
+-- Random pick from a list
+set color to random pick from colors
+
+-- Random decimal between 0 and 1
+set chance to random float
+```
+
+### Formatted Numbers
+
+Round numbers to a specific number of decimal places:
+
+```say
+set pi to 3.14159
+set short to pi rounded to 2    -- 3.14
+show Pi is approximately (pi rounded to 3)
+```
+
+Use `format` for explicit formatting:
+
+```say
+set x to 3.14159
+set result to x format 2 places
+show .result
+-- Shows: 3.14
 ```
 
 ### Comparison
@@ -125,6 +248,30 @@ if x is not 10 ... end
 if x is greater than 10 ... end
 if x is less than 10 ... end
 ```
+
+### Type Checking
+
+Check the type of a value at runtime:
+
+```say
+if x is a number
+  show x is a number
+end
+
+if name is a text
+  show name is text
+end
+
+if items is a list
+  show items is a list
+end
+
+if x is not a boolean
+  show x is not a boolean
+end
+```
+
+Supported types: `number`, `text`, `list`, `map`, `boolean`, `nothing`, `pair`, `set`, `enum`, `lambda`.
 
 ### Logic
 
@@ -158,6 +305,40 @@ else
 end
 ```
 
+### When Blocks (Pattern Matching)
+
+Match a value against multiple cases:
+
+```say
+set day to "Monday"
+
+when day
+is Monday
+  show Start of the work week
+is Friday
+  show Almost the weekend!
+is Saturday
+  show Weekend!
+is Sunday
+  show Weekend!
+else
+  show Regular day
+end
+```
+
+**Or fallthrough** — match multiple values in a single case:
+
+```say
+set x to 2
+
+when x
+  is 1 or 2
+    show one or two
+  is 3
+    show three
+end
+```
+
 ### Loops
 
 **Repeat N times:**
@@ -168,18 +349,27 @@ repeat 5 times
 end
 ```
 
+**Repeat with counter:**
+
+```say
+repeat 5 times with i
+  show Iteration .i
+end
+-- i goes from 1 to 5
+```
+
 **While / Until:**
 
 ```say
 put 1 into n
 repeat while n <= 10
   show .n
-  put n + 1 into n
+  set n to n + 1
 end
 
 put 0 into count
 repeat until count == 5
-  put count + 1 into count
+  set count to count + 1
 end
 ```
 
@@ -188,7 +378,7 @@ end
 ```say
 put 0 into n
 repeat forever
-  put n + 1 into n
+  set n to n + 1
   if n > 10
     stop
   end
@@ -204,11 +394,40 @@ for each color in colors
 end
 ```
 
+**For each with index:**
+
+```say
+for each item at i in items
+  show Item .i is .item
+end
+```
+
 **Ranges:**
 
 ```say
 for each i in 1 to 10
   show .i
+end
+```
+
+**Step value** — skip items in a range:
+
+```say
+for each i in 1 to 10 by 3
+  show .i
+end
+-- Shows: 1, 4, 7, 10
+```
+
+**Labeled loops** — break from outer loops:
+
+```say
+repeat 5 times as outer
+  repeat 5 times as inner
+    if something
+      stop outer
+    end
+  end
 end
 ```
 
@@ -255,7 +474,7 @@ shuffle nums
 
 ```say
 put list 92, 45, 78, 55, 88 into scores
-put scores where it >= 70 into passing
+set passing to scores where it >= 70
 show .passing
 ```
 
@@ -263,7 +482,7 @@ show .passing
 
 ```say
 put list 1, 2, 3, 4, 5 into nums
-put nums each it * 10 into scaled
+set scaled to nums each it * 10
 show .scaled
 ```
 
@@ -272,6 +491,123 @@ show .scaled
 ```say
 if scores contains 100
   show Perfect score found!
+end
+```
+
+### Maps (Dictionaries)
+
+Create key-value stores with `map`:
+
+```say
+set data to map
+set data.name to "Alice"
+set data.age to 30
+show (.data.name) is (.data.age) years old
+```
+
+**Map properties:**
+
+| Property | Description |
+|----------|-------------|
+| `.count` | Number of entries |
+| `.keys` | List of all keys |
+| `.values` | List of all values |
+
+```say
+show Keys: (.data.keys)
+show Count: (.data.count)
+```
+
+**Check and remove entries:**
+
+```say
+if data contains "name"
+  show Has a name
+end
+
+remove "age" from data
+```
+
+### Pairs
+
+A pair holds exactly two values:
+
+```say
+set p to pair "hello" and "world"
+show .p           -- (hello, world)
+show .p.first     -- hello
+show .p.second    -- world
+```
+
+### Sets
+
+Sets are collections with no duplicate values. Create them with `unique`:
+
+```say
+set s to unique 1, 2, 3, 2, 1
+show .s.count     -- 3 (duplicates removed)
+```
+
+**Set properties:**
+
+| Property | Description |
+|----------|-------------|
+| `.count` | Number of unique items |
+| `.list` | Convert to a list |
+
+```say
+if s contains 2
+  show found
+end
+
+for each item in s
+  show .item
+end
+```
+
+### Enums
+
+Declare named constants with `enum`:
+
+```say
+enum Color is red, green, blue
+show .color
+-- Shows: [Enum Color: red, green, blue]
+```
+
+### Map Literals with Entries
+
+Create maps with initial key-value pairs inline:
+
+```say
+set m to map name: "Alice", age: 25
+show .m.name   -- Alice
+show .m.age    -- 25
+```
+
+### Destructuring
+
+Unpack lists and pairs into individual variables:
+
+```say
+set data to list 10, 20, 30
+set a, b, c from data
+show .a   -- 10
+show .b   -- 20
+show .c   -- 30
+
+set p to pair "x" and "y"
+set first, second from p
+```
+
+### Exists Check
+
+Check if a variable has been defined:
+
+```say
+set x to 5
+if x exists
+  show x is defined
 end
 ```
 
@@ -289,14 +625,13 @@ kind Dog
   end
 
   on run
-    put me.energy - 10 into me.energy
+    set me.energy to me.energy - 10
     show .me.name runs! Energy: .me.energy
   end
 end
 
 make a Dog called rex with name Rex
 send bark to rex
-send run to rex
 send run to rex
 ```
 
@@ -308,7 +643,6 @@ Use `from` to inherit fields and methods from a parent kind.
 kind Animal
   name is Unknown
   sound is ...
-  legs is 4
 
   on speak
     show .me.name says .me.sound
@@ -320,22 +654,66 @@ kind Dog from Animal
   tricks is 0
 
   on learn
-    put me.tricks + 1 into me.tricks
+    set me.tricks to me.tricks + 1
     show .me.name learned trick number .me.tricks
   end
 end
 
-kind Bird from Animal
-  sound is Tweet
-  legs is 2
+make a Dog called rex with name Rex
+send speak to rex
+send learn to rex
+```
+
+### Contracts (Interfaces)
+
+Define a contract that kinds must implement:
+
+```say
+contract Describable
+  method describe
 end
 
-make a Dog called rex with name Rex
-make a Bird called tweety with name Tweety
+kind Dog implements Describable
+  name is "Rex"
 
-send speak to rex
-send speak to tweety
-send learn to rex
+  on describe
+    show I am .me.name
+  end
+end
+
+make Dog called d
+send describe to d
+```
+
+### Secret (Private) Fields
+
+Mark fields as private with `secret`:
+
+```say
+kind Account
+  secret balance is 100
+
+  on getBalance
+    return me.balance
+  end
+end
+
+make Account called a
+set b to send getBalance to a
+show .b   -- 100
+-- Direct access from outside is prevented
+```
+
+### Static Methods
+
+Define methods on the kind itself, not on instances:
+
+```say
+kind MathHelper
+  static on double x
+    return x * 2
+  end
+end
 ```
 
 ### Methods with Parameters
@@ -347,7 +725,7 @@ kind Calculator
   result is 0
 
   on add n
-    put me.result + n into me.result
+    set me.result to me.result + n
   end
 
   on reset
@@ -376,19 +754,164 @@ command add a and b
   return a + b
 end
 
-put add 10 and 25 into result
+set result to add 10 and 25
 show .result
 ```
 
-### String Properties
+### Guard Clause Returns
+
+Return early from a command based on a condition:
 
 ```say
-put hello world into text
-show (.text.upper)
-show (.text.lower)
-show (.text.length)
-show (.text.trim)
+command check x
+  return "small" if x < 10
+  return "big"
+end
+
+show (check 5)    -- small
+show (check 15)   -- big
 ```
+
+### Type Annotations
+
+Add optional type annotations to command parameters:
+
+```say
+command add (a as number, b as number)
+  return a + b
+end
+show (add 3, 4)   -- 7
+```
+
+### Lambda Expressions
+
+Create anonymous functions with `{ params -> body }`:
+
+```say
+set double to { x -> x * 2 }
+show (double 5)   -- 10
+
+set factor to 3
+set mult to { x -> x * factor }
+show (mult 4)     -- 12
+```
+
+### Pipeline Operator
+
+Chain values through a series of functions with `|`:
+
+```say
+command double x
+  return x * 2
+end
+command add1 x
+  return x + 1
+end
+
+set result to 5 | double | add1
+show .result   -- 11
+```
+
+### Curry (Partial Application)
+
+Create a new function by fixing some arguments of an existing one:
+
+```say
+command add a, b
+  return a + b
+end
+
+set add5 to curry add 5
+show (add5 3)   -- 8
+```
+
+### Compose
+
+Combine two functions into one that applies them in sequence:
+
+```say
+set double to { x -> x * 2 }
+set inc to { x -> x + 1 }
+set doubleThenInc to compose double, inc
+show (doubleThenInc 3)   -- 7
+```
+
+### Templates
+
+Declare reusable code templates:
+
+```say
+template greeting name
+  show Hello .name
+end
+```
+
+### Environment Variables
+
+Read environment variables:
+
+```say
+set p to env "PATH"
+if p exists
+  show has path
+end
+```
+
+### Date and Time
+
+Access current date/time values:
+
+```say
+set y to current year
+set t to today
+show .y
+show .t
+```
+
+### JSON and CSV Parsing
+
+Parse data formats:
+
+```say
+-- Parse JSON
+set raw to "[1, 2, 3]"
+set data to json raw
+show .data.count   -- 3
+
+-- Parse CSV
+set csv_data to "name,age\nAlice,30"
+set rows to csv csv_data
+show .rows.count   -- 1 (data rows, first line is headers)
+```
+
+### File I/O
+
+Read and write files:
+
+```say
+-- Write to a file
+write "output.txt" with "Hello, world!"
+
+-- Append to a file
+append "log.txt" with "New entry"
+
+-- Read a file as text
+set content to read "data.txt"
+
+-- Read a file as a list of lines
+set lines to read "data.txt" as list
+```
+
+### Imports
+
+Import code from other `.say` files:
+
+```say
+use "helpers.say"
+use "utils/math.say"
+```
+
+The imported file is executed, making its commands and kinds available.
 
 ### String Interpolation
 
@@ -435,8 +958,8 @@ command double n
 end
 
 test double works
-  put double into result
-  check result == 0
+  set result to double 5
+  check result == 10
 end
 
 test lists have correct count
@@ -460,6 +983,68 @@ Output:
 2 passed, 0 failed, 2 total
 ```
 
+### Mock Commands
+
+Replace commands with mock implementations in tests:
+
+```say
+command fetch_data
+  return "real data"
+end
+mock fetch_data returns "fake data"
+show (fetch_data)   -- fake data
+```
+
+### Benchmark
+
+Measure how long code takes to run:
+
+```say
+benchmark "sorting"
+  sort big_list
+end
+-- Shows: Benchmark "sorting": 12ms
+```
+
+### Snapshot Testing
+
+Save and verify values against snapshots:
+
+```say
+set x to 42
+snapshot x as "my_value"
+```
+
+### Turtle Graphics
+
+Draw with Logo-style turtle commands:
+
+```say
+forward 100
+turn right 90
+forward 50
+pen up
+forward 20
+pen down
+forward 50
+```
+
+### Animation
+
+Animate properties over time:
+
+```say
+animate ball.x from 0 to 100 over 500
+```
+
+### Scene Switching
+
+Switch between scenes in games/apps:
+
+```say
+switch scene "menu"
+```
+
 ### Inspect and Explain
 
 Use `explain` for detailed info about a value. Use `?` for a quick inspection.
@@ -472,8 +1057,6 @@ end
 
 make a Cat called whiskers with name Whiskers
 explain whiskers
--- Output: Cat with name: Whiskers, lives: 9
--- Output: Can: (list of methods)
 ```
 
 ### The `it` Variable
@@ -485,8 +1068,8 @@ ask What is your favorite color
 show You said .it
 
 put list 1, 2, 3, 4, 5 into nums
-put nums where it > 3 into big
-put nums each it * 2 into doubled
+set big to nums where it > 3
+set doubled to nums each it * 2
 ```
 
 ### The `me` Keyword
@@ -498,7 +1081,7 @@ kind Counter
   value is 0
 
   on increment
-    put me.value + 1 into me.value
+    set me.value to me.value + 1
   end
 
   on report
@@ -507,341 +1090,284 @@ kind Counter
 end
 ```
 
+### Graphics (Draw)
+
+Draw shapes to a canvas. When running from the CLI, an SVG file is automatically saved.
+
+```say
+draw circle at 200, 200 size 80
+draw rectangle at 50, 50 size 100
+draw line from 0, 400 to 400, 0
+```
+
+Supported shapes: `circle`, `rectangle`, `line`, `text`, `ellipse`, `triangle`, `star`.
+
+### Sound
+
+Play sounds (outputs descriptions in CLI mode):
+
+```say
+play sound ding
+```
+
+### AI Integration (`think`)
+
+Ask an AI a question (requires `ANTHROPIC_API_KEY` environment variable):
+
+```say
+set answer to think "What is the capital of France?"
+show .answer
+
+put ask Ask me anything into question
+set response to think question
+show .response
+```
+
+### HTTP Fetch
+
+Make HTTP requests and work with web data:
+
+```say
+set data to fetch "https://api.example.com/data"
+show .data
+```
+
+JSON responses are automatically converted to maps and lists.
+
+### Web Server
+
+Serve web pages from HyperCode:
+
+```say
+serve on port 8080
+
+route GET "/"
+  respond with "<h1>Hello from HyperCode!</h1>"
+end
+
+route GET "/about"
+  respond with "<h1>About</h1><p>Made with HyperCode.</p>"
+end
+```
+
+### WebSocket Connections
+
+Connect to WebSocket servers:
+
+```say
+connect "ws://localhost:8080" as ws
+```
+
+### Emit Events
+
+Emit events to listeners:
+
+```say
+emit "click"
+emit "message" with "hello"
+```
+
+### Cookies
+
+Manage browser cookies:
+
+```say
+cookie set "user" to "Alice"
+show .cookie_user         -- Alice
+cookie delete "user"
+```
+
+### CORS (Cross-Origin)
+
+Allow cross-origin requests:
+
+```say
+allow "https://example.com"
+```
+
+### Streaming
+
+Start a data stream:
+
+```say
+stream "heartbeat"
+```
+
+### Persistent Storage (`remember` / `recall`)
+
+Store values that survive between program runs:
+
+```say
+-- Save a value
+remember "high_score" as 100
+
+-- Load it later (even after restarting)
+set best to recall "high_score"
+show Best score: .best
+
+-- Delete a stored value
+forget "high_score"
+```
+
+### Packages (`grab`)
+
+Import community packages:
+
+```say
+grab "colors"
+grab "trivia-api"
+```
+
+Packages are loaded from `packages/<name>/index.say`.
+
+### Concurrent Execution (`do together`)
+
+Run multiple blocks of code at the same time:
+
+```say
+do together
+  show Task 1 running
+  repeat 3 times
+    show Working on task 1...
+  end
+and
+  show Task 2 running
+  repeat 3 times
+    show Working on task 2...
+  end
+end
+```
+
+### Event Listeners
+
+Listen for events and run code when they happen:
+
+```say
+listen for click as data
+  show Clicked: .data
+end
+```
+
+### Timers (`every`)
+
+Run code on a recurring interval:
+
+```say
+every 2 seconds
+  show Tick!
+end
+```
+
+### Pattern Matching on Kinds
+
+Match objects by their type in `when` blocks:
+
+```say
+when animal
+is a Dog
+  show It's a dog!
+is a Bird
+  show It's a bird!
+else
+  show Unknown animal
+end
+```
+
+## CLI Commands
+
+```bash
+say <file.say>              Run a program
+say run <file.say>          Run a program
+say test <file.say>         Run tests in a file
+say repl                    Start interactive REPL
+say debug <file.say>        Debug a program step-by-step
+say playground [port]       Start browser playground (default: 3000)
+say share <file.say> [port] Share a file via local server
+say classroom start [port]  Start classroom dashboard
+say submit <file.say> ...   Submit code to classroom
+say tutor <file.say>        Get AI feedback on your code
+say create "<description>"  Generate a program from a description
+```
+
+### Browser Playground
+
+Start a browser-based IDE where students can write and run HyperCode without installing anything:
+
+```bash
+say playground
+# Opens at http://localhost:3000
+```
+
+### Debugger
+
+Step through a program line by line:
+
+```bash
+say debug myprogram.say
+```
+
+Commands: `s`tep, `c`ontinue, `b N` (breakpoint), `v`ariables, `q`uit.
+
+### AI Tutor
+
+Get AI-powered feedback on your code:
+
+```bash
+say tutor myprogram.say
+```
+
+### Code Generation
+
+Generate a program from a description:
+
+```bash
+say create "a quiz game about geography with 5 questions"
+```
+
+### Live Sharing
+
+Share a program via a local web server:
+
+```bash
+say share myprogram.say
+# Outputs a URL others can visit to view the code
+```
+
+### Classroom Dashboard
+
+Teachers can collect and view student submissions:
+
+```bash
+# Teacher starts the dashboard:
+say classroom start
+
+# Students submit their work:
+say submit myfile.say --name "Alice" --to localhost:5000
+```
+
 ## Examples
 
-### Fibonacci Sequence
-
-```say
-put 0 into a
-put 1 into b
-put list a, b into fibs
-
-repeat 13 times
-  put a + b into temp
-  put b into a
-  put temp into b
-  add b to fibs
-end
-
-show Fibonacci sequence:
-for each n in fibs
-  show .n
-end
-
-show Sum: (.fibs.sum)
-show Count: (.fibs.count)
-show Max: (.fibs.max)
-```
-
-Output:
-
-```
-Fibonacci sequence
-0
-1
-1
-2
-3
-5
-8
-13
-21
-34
-55
-89
-144
-233
-377
-Sum 986
-Count 15
-Max 377
-```
-
-### Grade Report with List Operations
-
-```say
-put list 92, 87, 45, 78, 95, 63, 88, 71, 55, 100 into scores
-
-show All scores: .scores
-show Average: (.scores.average)
-show Highest: (.scores.max)
-show Lowest: (.scores.min)
-
-put scores where it >= 70 into passing
-put scores where it < 70 into failing
-
-show Passing: .passing
-show Failing: .failing
-show Pass rate: (.passing.count) out of (.scores.count)
-
-sort scores
-show Sorted: .scores
-
-reverse scores
-show Descending: .scores
-
-if scores contains 100
-  show Someone got a perfect score!
-end
-```
-
-Output:
-
-```
-All scores 92, 87, 45, 78, 95, 63, 88, 71, 55, 100
-Average 77.4
-Highest 100
-Lowest 45
-Passing scores 92, 87, 78, 95, 88, 71, 100
-Failing scores 45, 63, 55
-Pass rate 7 out of 10
-Sorted 45, 55, 63, 71, 78, 87, 88, 92, 95, 100
-Descending 100, 95, 92, 88, 87, 78, 71, 63, 55, 45
-Someone got a perfect score!
-```
-
-### Zoo with Inheritance
-
-```say
-kind Animal
-  name is Unknown
-  sound is ...
-  legs is 4
-
-  on speak
-    show .me.name says .me.sound
-  end
-
-  on describe
-    show .me.name has .me.legs legs
-  end
-end
-
-kind Dog from Animal
-  sound is Woof
-  tricks is 0
-
-  on learn
-    put me.tricks + 1 into me.tricks
-    show .me.name learned trick number .me.tricks
-  end
-end
-
-kind Bird from Animal
-  sound is Tweet
-  legs is 2
-end
-
-make a Dog called rex with name Rex
-make a Dog called luna with name Luna, tricks 3
-make a Bird called tweety with name Tweety
-
-put list rex, luna, tweety into animals
-
-for each a in animals
-  send speak to a
-  send describe to a
-end
-
-send learn to rex
-send learn to rex
-show Luna already knows (.luna.tricks) tricks
-```
-
-Output:
-
-```
-Rex says Woof
-Rex has 4 legs
-Luna says Woof
-Luna has 4 legs
-Tweety says Tweet
-Tweety has 2 legs
-Rex learned trick number 1
-Rex learned trick number 2
-Luna already knows 3 tricks
-```
-
-### To-Do List Manager
-
-```say
-kind Task
-  title is Untitled
-  done is false
-
-  on finish
-    put true into me.done
-  end
-
-  on status
-    if me.done
-      show [x] .me.title
-    else
-      show [ ] .me.title
-    end
-  end
-end
-
-make a Task called t1 with title Buy groceries
-make a Task called t2 with title Walk the dog
-make a Task called t3 with title Write HyperCode
-make a Task called t4 with title Do homework
-
-put list t1, t2, t3, t4 into tasks
-
-send finish to t1
-send finish to t3
-
-for each t in tasks
-  send status to t
-end
-
-put tasks where it.done == true into completed
-put tasks where it.done == false into remaining
-
-show Completed: (.completed.count)
-show Remaining: (.remaining.count)
-```
-
-Output:
-
-```
-[x] Buy groceries
-[ ] Walk the dog
-[x] Write HyperCode
-[ ] Do homework
-Completed 2
-Remaining 2
-```
-
-### Calculator with Commands
-
-```say
-command add a and b
-  return a + b
-end
-
-command multiply a and b
-  return a * b
-end
-
-command power base and exp
-  put 1 into result
-  repeat exp times
-    put result * base into result
-  end
-  return result
-end
-
-command clamp value and low and high
-  if value < low
-    return low
-  end
-  if value > high
-    return high
-  end
-  return value
-end
-
-put add 10 and 25 into sum
-show 10 + 25 = .sum
-
-put multiply 6 and 7 into product
-show 6 x 7 = .product
-
-put power 2 and 10 into big
-show 2^10 = .big
-
-put clamp 150 and 0 and 100 into c1
-show Clamp 150 to 0-100: .c1
-
-put -20 into neg
-put clamp neg and 0 and 100 into c2
-show Clamp -20 to 0-100: .c2
-
-put 17 % 5 into remainder
-show 17 mod 5 = .remainder
-
-put (3 + 4) * 2 into grouped
-show Grouped math = .grouped
-```
-
-Output:
-
-```
-10 + 25 = 35
-6 x 7 = 42
-2 ^ 10 = 1024
-Clamp 150 to 0 - 100 100
-Clamp - 20 to 0 - 100 0
-17 mod 5 = 2
-Grouped math = 14
-```
-
-### Error Handling
-
-```say
-try
-  make a Unicorn called sparkle
-or
-  show Caught an error! Unicorn kind does not exist.
-end
-
-try
-  send fly to nothing
-catch err
-  show Error caught: (.err.message)
-end
-
-show Program continues running after errors!
-```
-
-Output:
-
-```
-Caught an error! Unicorn kind doesn t exist.
-Error caught Cannot send message to non-instance: nothing
-Program continues running after errors!
-```
-
-### Interactive Quiz
-
-```say
-kind Question
-  text is Empty
-  answer is Empty
-
-  on check guess
-    if guess == me.answer
-      show Correct!
-      return true
-    else
-      show Wrong. The answer was .me.answer
-      return false
-    end
-  end
-end
-
-put 0 into score
-put 0 into total
-
-put list into questions
-  make a Question with text What planet is closest to the sun, answer Mercury
-  make a Question with text What language is this, answer HyperCode
-  make a Question with text How many legs does a spider have, answer 8
-end
-
-for each q in questions
-  ask .q.text
-  put it into guess
-  put total + 1 into total
-  if send check guess to q
-    put score + 1 into score
-  end
-end
-
-show You got .score out of .total
-```
+See the `examples/` directory for complete programs:
+
+| File | Description |
+|------|-------------|
+| `hello.say` | Hello world with user input |
+| `calculator.say` | Reusable math commands |
+| `fibonacci.say` | Fibonacci sequence generation |
+| `grades.say` | List filtering and statistics |
+| `string_fun.say` | Text manipulation and loops |
+| `guessing_game.say` | Number guessing with loops |
+| `quiz.say` | Interactive quiz with kinds |
+| `classroom.say` | Student reports with inheritance |
+| `zoo.say` | Animal hierarchy with inheritance |
+| `todo.say` | To-do list manager with kinds |
+| `error_handling.say` | Try/catch error patterns |
+| `drawing.say` | Graphics with draw commands |
+| `storage.say` | Persistent storage with remember/recall |
+| `web_server.say` | Simple web server |
+| `ai_demo.say` | AI integration with think |
+| `concurrent.say` | Concurrent tasks with do together |
+| `pattern_matching.say` | Pattern matching with when/is a |
 
 ## Architecture
 
@@ -859,6 +1385,13 @@ Source Code → Lexer → Tokens → Parser → AST → Interpreter → Output
 | AST | `src/ast.ts` | Type definitions for all AST nodes |
 | Tokens | `src/tokens.ts` | Token types and keyword mappings |
 | CLI | `src/cli.ts` | Command-line interface and REPL |
+| Graphics | `src/graphics.ts` | SVG canvas rendering for draw commands |
+| AI | `src/ai.ts` | Claude API integration for think/tutor/create |
+| Server | `src/server.ts` | HTTP server for serve/route/respond |
+| Storage | `src/storage.ts` | Persistent key-value storage |
+| Playground | `src/playground.ts` | Browser-based IDE |
+| Share | `src/share.ts` | Live sharing and classroom dashboard |
+| Debugger | `src/debugger.ts` | Step-through debugger |
 
 ## Using as a Library
 
@@ -866,18 +1399,21 @@ Source Code → Lexer → Tokens → Parser → AST → Interpreter → Output
 import { Lexer, Parser, Interpreter } from 'hypercode';
 
 const source = `
-put 10 into x
+set x to 10
 show .x
 `;
 
 const lexer = new Lexer(source);
 const tokens = lexer.tokenize();
-const parser = new Parser(tokens);
-const program = parser.parse();
+const parser = new Parser();
+const program = parser.parse(tokens);
 
 const interpreter = new Interpreter({
   output: (text) => console.log(text),
   input: (prompt) => 'user input here',
+  readFile: (path) => fs.readFileSync(path, 'utf-8'),
+  writeFile: (path, content) => fs.writeFileSync(path, content, 'utf-8'),
+  appendFile: (path, content) => fs.appendFileSync(path, content, 'utf-8'),
   maxIterations: 100000,
 });
 
@@ -892,17 +1428,23 @@ npm test
 
 ## Keyword Reference
 
+### Assignment
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `put` | `put VALUE into NAME` | Store literal text/numbers (no evaluation) |
+| `set` | `set NAME to EXPR` | Evaluate expression and store result |
+
 ### Core Verbs
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
-| `put` | `put VALUE into NAME` | Assign a value to a variable |
 | `show` | `show TEXT` | Print output |
 | `ask` | `ask PROMPT` | Get user input (stored in `it`) |
 | `make` | `make a KIND called NAME` | Create an instance |
 | `send` | `send METHOD to TARGET` | Call a method on an instance |
 | `add` | `add VALUE to LIST` | Append to a list |
-| `remove` | `remove VALUE from LIST` | Remove from a list |
+| `remove` | `remove VALUE from LIST` | Remove from a list or map |
 
 ### Structure
 
@@ -910,13 +1452,19 @@ npm test
 |---------|-------|-------------|
 | `kind` | `kind NAME ... end` | Define a class |
 | `from` | `kind Child from Parent` | Inherit from a parent kind |
+| `implements` | `kind X implements Y` | Implement a contract |
+| `contract` | `contract NAME ... end` | Define an interface |
 | `on` | `on METHOD ... end` | Define a method |
+| `static on` | `static on METHOD ... end` | Define a static method |
+| `secret` | `secret field is val` | Declare a private field |
 | `command` | `command NAME PARAMS ... end` | Define a function |
 | `return` | `return VALUE` | Return a value |
 | `end` | `end` | Close any block |
 | `me` | `me.property` | Reference to the current instance |
 | `it` | `it` | Last input or current iteration item |
 | `with` | `make a X called Y with ...` | Set properties inline |
+| `use` | `use "file.say"` | Import another file |
+| `template` | `template NAME PARAMS ... end` | Declare a reusable template |
 
 ### Control Flow
 
@@ -925,25 +1473,68 @@ npm test
 | `if` | `if COND ... end` | Conditional |
 | `else` | `else ... end` | Alternative branch |
 | `else if` | `else if COND ... end` | Chained conditional |
+| `when` | `when VALUE ... end` | Pattern matching |
+| `is ... or` | `is 1 or 2` | Match multiple values in when |
 | `repeat` | `repeat N times ... end` | Fixed loop |
 | `while` | `repeat while COND ... end` | Conditional loop |
 | `until` | `repeat until COND ... end` | Inverse conditional loop |
 | `forever` | `repeat forever ... end` | Infinite loop |
 | `for each` | `for each X in LIST ... end` | Iteration |
 | `to` | `1 to 10` | Range expression |
-| `stop` | `stop` | Break out of a loop |
+| `by` | `1 to 10 by 2` | Step value in range |
+| `as` | `repeat 5 times as label` | Label a loop |
+| `stop` | `stop` / `stop label` | Break out of a loop |
+| `\|` | `value \| fn1 \| fn2` | Pipeline operator |
+| `return ... if` | `return X if COND` | Guard clause return |
 
-### Lists
+### Data
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `list` | `list 1, 2, 3` | Create a list |
+| `map` | `map` / `map key: val` | Create a map (empty or with entries) |
+| `pair` | `pair A and B` | Create a two-element pair |
+| `unique` | `unique 1, 2, 3` | Create a set (no duplicates) |
+| `enum` | `enum Name is a, b, c` | Declare named constants |
 | `sort` | `sort LIST` | Sort in place |
 | `reverse` | `reverse LIST` | Reverse in place |
 | `shuffle` | `shuffle LIST` | Randomize order |
 | `contains` | `LIST contains VALUE` | Check membership |
 | `where` | `LIST where COND` | Filter items |
 | `each` | `LIST each TRANSFORM` | Map/transform items |
+| `random` | `random 1 to 6` | Generate random values |
+| `rounded` | `x rounded to 2` | Round to decimal places |
+| `format` | `x format 2 places` | Format to decimal places |
+| `set ... from` | `set a, b from list` | Destructure into variables |
+| `exists` | `if x exists` | Check if variable is defined |
+
+### Strings
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `matches` | `str matches "pattern"` | Regex match test |
+| `"""..."""` | `"""multiline"""` | Triple-quoted multiline string |
+| `"{var}"` | `"Hello {name}"` | Interpolated string |
+
+### Type Checking
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `is a` | `x is a number` | Check if value is a type |
+| `is not a` | `x is not a text` | Negated type check |
+
+### File I/O & System
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `read` | `read "file.txt"` | Read file contents |
+| `write` | `write "file" with "text"` | Write to a file |
+| `append` | `append "file" with "text"` | Append to a file |
+| `env` | `env "PATH"` | Read environment variable |
+| `json` | `json raw_string` | Parse JSON string |
+| `csv` | `csv raw_string` | Parse CSV string |
+| `current year` | `current year` | Get current year |
+| `today` | `today` | Get today's date |
 
 ### Error Handling
 
@@ -953,12 +1544,90 @@ npm test
 | `or` | `or ... end` | Catch block (no variable) |
 | `catch` | `catch VAR ... end` | Catch block with error |
 
+### Functional
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `{ -> }` | `{ x -> x * 2 }` | Lambda expression |
+| `curry` | `curry fn arg` | Partial application |
+| `compose` | `compose f, g` | Function composition |
+
 ### Testing
 
 | Keyword | Usage | Description |
 |---------|-------|-------------|
 | `test` | `test NAME ... end` | Define a test block |
 | `check` | `check EXPRESSION` | Assert a condition is true |
+| `mock` | `mock fn returns val` | Mock a command |
+| `before` | `before ... end` | Setup block |
+| `after` | `after ... end` | Teardown block |
+| `benchmark` | `benchmark "name" ... end` | Measure execution time |
+| `snapshot` | `snapshot val as "name"` | Snapshot testing |
+
+### AI
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `think` | `think "prompt"` | Ask AI a question (returns text) |
+
+### HTTP
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `fetch` | `fetch "url"` | Make an HTTP request |
+
+### Web Server
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `serve` | `serve on port N` | Start a web server |
+| `route` | `route GET "/" ... end` | Define a route handler |
+| `respond` | `respond with "text"` | Send an HTTP response |
+| `connect` | `connect "ws://..." as name` | WebSocket connection |
+| `emit` | `emit "event"` | Emit an event |
+| `cookie` | `cookie set/delete "name"` | Manage cookies |
+| `allow` | `allow "origin"` | Set CORS origin |
+| `stream` | `stream "name"` | Start a data stream |
+
+### Storage
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `remember` | `remember "key" as VALUE` | Persist a value |
+| `recall` | `recall "key"` | Retrieve a persisted value |
+| `forget` | `forget "key"` | Delete a persisted value |
+
+### Packages
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `grab` | `grab "name"` | Import a package |
+
+### Concurrency
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `do together` | `do together ... and ... end` | Run blocks concurrently |
+
+### Events
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `listen` | `listen for EVENT ... end` | Register an event listener |
+| `every` | `every N seconds ... end` | Run code on an interval |
+
+### Graphics
+
+| Keyword | Usage | Description |
+|---------|-------|-------------|
+| `draw` | `draw circle at X, Y size N` | Draw a shape on the canvas |
+| `clear` | `clear canvas` | Clear the canvas |
+| `play` | `play sound NAME` | Play a sound |
+| `forward` | `forward 100` | Turtle: move forward |
+| `turn` | `turn right 90` | Turtle: turn direction |
+| `pen` | `pen up` / `pen down` | Turtle: lift/lower pen |
+| `animate` | `animate obj.prop from A to B over N` | Animate a property |
+| `switch scene` | `switch scene "menu"` | Switch to a scene |
 
 ### Debugging
 
@@ -969,16 +1638,18 @@ npm test
 
 ## Operator Precedence (Highest to Lowest)
 
-1. Parentheses, literals, property access
+1. Parentheses, literals, property access, lambdas
 2. Unary (`-`, `not`)
 3. Exponent (`^`)
 4. Multiplication (`*`, `/`, `%`)
 5. Addition (`+`, `-`)
-6. Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`)
-7. `contains`
-8. `where`, `each`
-9. `and`
-10. `or`
+6. `format`, `matches`
+7. Comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`, `is`, `is not`)
+8. `contains`, `exists`
+9. `where`, `each`
+10. `and`
+11. `or`
+12. Pipeline (`|`)
 
 ## License
 

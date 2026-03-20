@@ -1,0 +1,17 @@
+-- web_server.say — A simple web server
+
+serve on port 8080
+
+route GET "/"
+  respond with "<h1>Welcome to HyperCode!</h1><p>This page is served by a .say program.</p><a href='/about'>About</a> | <a href='/time'>Time</a>"
+end
+
+route GET "/about"
+  respond with "<h1>About</h1><p>HyperCode is an English-like programming language.</p><a href='/'>Home</a>"
+end
+
+route GET "/time"
+  respond with "<h1>Server is running!</h1><p>Everything is working.</p><a href='/'>Home</a>"
+end
+
+-- The server keeps running until you press Ctrl+C

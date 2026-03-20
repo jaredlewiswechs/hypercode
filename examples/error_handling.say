@@ -4,13 +4,12 @@
 try
   make a Unicorn called sparkle
 or
-  show Caught an error! Unicorn kind doesn't exist.
+  show Caught an error! Unicorn kind does not exist.
 end
 
 -- Try/catch with error variable
 try
-  put nothing into x
-  send fly to x
+  send fly to nothing
 catch err
   show Error caught: (.err.message)
 end
@@ -23,7 +22,7 @@ try
   try
     make a Ghost called casper
   or
-    show Inner catch: Ghost kind doesn't exist either
+    show Inner catch: Ghost kind does not exist either
   end
   show Outer block continues
 or

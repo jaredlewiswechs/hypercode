@@ -1,0 +1,20 @@
+-- concurrent.say — Running tasks concurrently with do together
+
+show Starting concurrent tasks...
+
+do together
+  -- Task 1
+  show Task 1: Counting to 5
+  repeat 5 times with i
+    show Task 1: .i
+  end
+and
+  -- Task 2
+  show Task 2: Counting items
+  put list Apple, Banana, Cherry, Date, Elderberry into fruits
+  for each fruit in fruits
+    show Task 2: .fruit
+  end
+end
+
+show All tasks complete!

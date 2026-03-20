@@ -1,0 +1,8 @@
+-- ai_demo.say — AI integration with the think command
+-- Requires ANTHROPIC_API_KEY environment variable
+
+put ask Ask me anything into question
+set answer to think question
+show
+show AI says:
+show .answer

@@ -1,8 +1,15 @@
 export { Lexer } from './lexer';
 export { Parser } from './parser';
-export { Interpreter, InterpreterOptions, SayValue, SayList, SayInstance, SayKind, SayUIElement, toString, toNumber, isTruthy, valuesEqual } from './interpreter';
+export { Interpreter, InterpreterOptions, SayValue, SayList, SayMap, SayInstance, SayKind, SayUIElement, SaySet, SayPair, SayEnum, SayLambda, toString, toNumber, isTruthy, valuesEqual } from './interpreter';
 export { Token, TokenType } from './tokens';
 export * as AST from './ast';
+export { createCanvas, canvasToSVG, canvasToText } from './graphics';
+export { Storage } from './storage';
+export { AIEngine } from './ai';
+export { SayServer } from './server';
+export { startPlayground } from './playground';
+export { shareFile, startClassroom } from './share';
+export { Debugger } from './debugger';
 
 import { Lexer } from './lexer';
 import { Parser } from './parser';

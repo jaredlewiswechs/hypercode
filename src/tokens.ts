@@ -9,6 +9,7 @@ export enum TokenType {
 
   // Keywords - Core verbs
   PUT = 'PUT',
+  SET = 'SET',
   INTO = 'INTO',
   SHOW = 'SHOW',
   ASK = 'ASK',
@@ -64,6 +65,7 @@ export enum TokenType {
 
   // Keywords - Lists
   LIST = 'LIST',
+  MAP = 'MAP',
   SORT = 'SORT',
   REVERSE = 'REVERSE',
   SHUFFLE = 'SHUFFLE',
@@ -85,6 +87,16 @@ export enum TokenType {
 
   // Keywords - Misc
   EXPLAIN = 'EXPLAIN',
+  RANDOM = 'RANDOM',
+  PICK = 'PICK',
+  TEXT = 'TEXT',
+  NUMBER_TYPE = 'NUMBER_TYPE',
+  WHEN = 'WHEN',
+  ROUNDED = 'ROUNDED',
+  READ = 'READ',
+  WRITE = 'WRITE',
+  APPEND = 'APPEND',
+  AS = 'AS',
 
   // Operators
   PLUS = 'PLUS',
@@ -128,6 +140,183 @@ export enum TokenType {
 
   // Timer
   TIMER = 'TIMER',
+
+  // Keywords - AI
+  THINK = 'THINK',
+
+  // Keywords - HTTP
+  FETCH = 'FETCH',
+
+  // Keywords - Web server
+  SERVE = 'SERVE',
+  RESPOND = 'RESPOND',
+  REQUEST = 'REQUEST',
+  ROUTE = 'ROUTE',
+  STATUS = 'STATUS',
+
+  // Keywords - Storage
+  REMEMBER = 'REMEMBER',
+  RECALL = 'RECALL',
+  FORGET = 'FORGET',
+
+  // Keywords - Packages
+  GRAB = 'GRAB',
+
+  // Keywords - Sharing
+  SHARE = 'SHARE',
+
+  // Keywords - Concurrency
+  TOGETHER = 'TOGETHER',
+  DO = 'DO',
+
+  // Keywords - Sound
+  ALOUD = 'ALOUD',
+  NOTE = 'NOTE',
+  SOUND = 'SOUND',
+
+  // Keywords - Types
+  BOOLEAN_TYPE = 'BOOLEAN_TYPE',
+
+  // Keywords - Modules
+  NAMESPACE = 'NAMESPACE',
+
+  // Keywords - Canvas
+  CANVAS = 'CANVAS',
+  COLOR = 'COLOR',
+  SIZE = 'SIZE',
+  LINE = 'LINE',
+  CIRCLE = 'CIRCLE',
+  RECTANGLE = 'RECTANGLE',
+  FILL = 'FILL',
+  STROKE = 'STROKE',
+  WIDTH = 'WIDTH',
+  HEIGHT = 'HEIGHT',
+
+  // Keywords - Debugging
+  DEBUG = 'DEBUG',
+  STEP = 'STEP',
+  BREAKPOINT = 'BREAKPOINT',
+
+  // Keywords - Classroom
+  CLASSROOM = 'CLASSROOM',
+  SUBMIT = 'SUBMIT',
+  COLLECT = 'COLLECT',
+
+  // Keywords - Say aloud
+  SAY_ALOUD = 'SAY_ALOUD',
+
+  // Keywords - Listen
+  LISTEN = 'LISTEN',
+
+  // Keywords - Data types
+  PAIR = 'PAIR',
+  ENUM = 'ENUM',
+  EXISTS = 'EXISTS',
+  UNIQUE = 'UNIQUE',
+
+  // Keywords - String/Text
+  MATCHES = 'MATCHES',
+  FORMAT = 'FORMAT',
+  PLACES = 'PLACES',
+  TEMPLATE = 'TEMPLATE',
+  INTERPOLATED_STRING = 'INTERPOLATED_STRING',
+
+  // Keywords - Control flow
+  BY = 'BY',
+  LABELED = 'LABELED',
+  PIPE = 'PIPE',
+  AWAIT = 'AWAIT',
+
+  // Keywords - OOP
+  CONTRACT = 'CONTRACT',
+  IMPLEMENTS = 'IMPLEMENTS',
+  SECRET = 'SECRET',
+  STATIC = 'STATIC',
+  USES = 'USES',
+  GETTER = 'GETTER',
+  OVERLOAD = 'OVERLOAD',
+
+  // Keywords - Functional
+  LAMBDA = 'LAMBDA',
+  ARROW = 'ARROW',
+  APPLY = 'APPLY',
+  CURRY = 'CURRY',
+  COMPOSE = 'COMPOSE',
+
+  // Keywords - I/O & System
+  CSV = 'CSV',
+  JSON_TYPE = 'JSON_TYPE',
+  ENV = 'ENV',
+  ARGUMENTS = 'ARGUMENTS',
+  CURRENT = 'CURRENT',
+  TIME = 'TIME',
+  TODAY = 'TODAY',
+  DATE = 'DATE',
+  FILES = 'FILES',
+  FOLDER = 'FOLDER',
+  DELETE_FILE = 'DELETE_FILE',
+  EXECUTE = 'EXECUTE',
+  SHELL = 'SHELL',
+
+  // Keywords - Graphics enhancements
+  ANIMATE = 'ANIMATE',
+  MOVING = 'MOVING',
+  OVER = 'OVER',
+  SPRITE = 'SPRITE',
+  LOAD = 'LOAD',
+  TOUCHES = 'TOUCHES',
+  SCENE = 'SCENE',
+  SWITCH = 'SWITCH',
+  FORWARD = 'FORWARD',
+  BACKWARD = 'BACKWARD',
+  TURN = 'TURN',
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+  PEN = 'PEN',
+  UP = 'UP',
+  DOWN = 'DOWN',
+  LAYER = 'LAYER',
+
+  // Keywords - Web enhancements
+  CONNECT = 'CONNECT',
+  SOCKET = 'SOCKET',
+  EMIT = 'EMIT',
+  STATIC_FILES = 'STATIC_FILES',
+  COOKIE = 'COOKIE',
+  SESSION = 'SESSION',
+  ALLOW = 'ALLOW',
+  STREAM = 'STREAM',
+  CLIENT = 'CLIENT',
+
+  // Keywords - Testing enhancements
+  MOCK = 'MOCK',
+  BEFORE = 'BEFORE',
+  AFTER = 'AFTER',
+  SNAPSHOT = 'SNAPSHOT',
+  BENCHMARK = 'BENCHMARK',
+  PROPERTY = 'PROPERTY',
+  ANY = 'ANY',
+
+  // Keywords - DevEx
+  WATCH = 'WATCH',
+  PROFILE = 'PROFILE',
+  LINT = 'LINT',
+  SAVE = 'SAVE',
+  HISTORY = 'HISTORY',
+
+  // Keywords - Education
+  VISUALIZE = 'VISUALIZE',
+  CHALLENGE = 'CHALLENGE',
+  GRADE = 'GRADE',
+  RUBRIC = 'RUBRIC',
+  BLOCK_MODE = 'BLOCK_MODE',
+
+  // Delimiters - New
+  LBRACE = 'LBRACE',
+  RBRACE = 'RBRACE',
+  COLON = 'COLON',
+  LBRACKET = 'LBRACKET',
+  RBRACKET = 'RBRACKET',
 }
 
 export interface Token {
@@ -139,6 +328,7 @@ export interface Token {
 
 export const KEYWORDS: Record<string, TokenType> = {
   'put': TokenType.PUT,
+  'set': TokenType.SET,
   'into': TokenType.INTO,
   'show': TokenType.SHOW,
   'ask': TokenType.ASK,
@@ -185,6 +375,7 @@ export const KEYWORDS: Record<string, TokenType> = {
   'with': TokenType.WITH,
   'it': TokenType.IT,
   'list': TokenType.LIST,
+  'map': TokenType.MAP,
   'sort': TokenType.SORT,
   'reverse': TokenType.REVERSE,
   'shuffle': TokenType.SHUFFLE,
@@ -200,6 +391,16 @@ export const KEYWORDS: Record<string, TokenType> = {
   'less': TokenType.LESS,
   'than': TokenType.THAN,
   'explain': TokenType.EXPLAIN,
+  'random': TokenType.RANDOM,
+  'pick': TokenType.PICK,
+  'text': TokenType.TEXT,
+  'number': TokenType.NUMBER_TYPE,
+  'when': TokenType.WHEN,
+  'rounded': TokenType.ROUNDED,
+  'read': TokenType.READ,
+  'write': TokenType.WRITE,
+  'append': TokenType.APPEND,
+  'as': TokenType.AS,
   'clicked': TokenType.CLICKED,
   'pressed': TokenType.PRESSED,
   'changed': TokenType.CHANGED,
@@ -208,4 +409,123 @@ export const KEYWORDS: Record<string, TokenType> = {
   'second': TokenType.SECOND,
   'seconds': TokenType.SECONDS,
   'timer': TokenType.TIMER,
+  'think': TokenType.THINK,
+  'fetch': TokenType.FETCH,
+  'serve': TokenType.SERVE,
+  'respond': TokenType.RESPOND,
+  'request': TokenType.REQUEST,
+  'route': TokenType.ROUTE,
+  'status': TokenType.STATUS,
+  'remember': TokenType.REMEMBER,
+  'recall': TokenType.RECALL,
+  'forget': TokenType.FORGET,
+  'grab': TokenType.GRAB,
+  'share': TokenType.SHARE,
+  'together': TokenType.TOGETHER,
+  'do': TokenType.DO,
+  'aloud': TokenType.ALOUD,
+  'note': TokenType.NOTE,
+  'sound': TokenType.SOUND,
+  'boolean': TokenType.BOOLEAN_TYPE,
+  'canvas': TokenType.CANVAS,
+  'color': TokenType.COLOR,
+  'size': TokenType.SIZE,
+  'line': TokenType.LINE,
+  'circle': TokenType.CIRCLE,
+  'rectangle': TokenType.RECTANGLE,
+  'fill': TokenType.FILL,
+  'stroke': TokenType.STROKE,
+  'width': TokenType.WIDTH,
+  'height': TokenType.HEIGHT,
+  'debug': TokenType.DEBUG,
+  'step': TokenType.STEP,
+  'breakpoint': TokenType.BREAKPOINT,
+  'classroom': TokenType.CLASSROOM,
+  'submit': TokenType.SUBMIT,
+  'collect': TokenType.COLLECT,
+  'listen': TokenType.LISTEN,
+  // Data types
+  'pair': TokenType.PAIR,
+  'enum': TokenType.ENUM,
+  'exists': TokenType.EXISTS,
+  'unique': TokenType.UNIQUE,
+  // String/Text
+  'matches': TokenType.MATCHES,
+  'format': TokenType.FORMAT,
+  'places': TokenType.PLACES,
+  'template': TokenType.TEMPLATE,
+  // Control flow
+  'by': TokenType.BY,
+  'await': TokenType.AWAIT,
+  // OOP
+  'contract': TokenType.CONTRACT,
+  'implements': TokenType.IMPLEMENTS,
+  'secret': TokenType.SECRET,
+  'static': TokenType.STATIC,
+  'uses': TokenType.USES,
+  'getter': TokenType.GETTER,
+  'overload': TokenType.OVERLOAD,
+  // Functional
+  'apply': TokenType.APPLY,
+  'curry': TokenType.CURRY,
+  'compose': TokenType.COMPOSE,
+  // I/O & System
+  'csv': TokenType.CSV,
+  'json': TokenType.JSON_TYPE,
+  'env': TokenType.ENV,
+  'arguments': TokenType.ARGUMENTS,
+  'current': TokenType.CURRENT,
+  'time': TokenType.TIME,
+  'today': TokenType.TODAY,
+  'date': TokenType.DATE,
+  'files': TokenType.FILES,
+  'folder': TokenType.FOLDER,
+  'execute': TokenType.EXECUTE,
+  'shell': TokenType.SHELL,
+  // Graphics
+  'animate': TokenType.ANIMATE,
+  'moving': TokenType.MOVING,
+  'over': TokenType.OVER,
+  'sprite': TokenType.SPRITE,
+  'load': TokenType.LOAD,
+  'touches': TokenType.TOUCHES,
+  'scene': TokenType.SCENE,
+  'switch': TokenType.SWITCH,
+  'forward': TokenType.FORWARD,
+  'backward': TokenType.BACKWARD,
+  'turn': TokenType.TURN,
+  'left': TokenType.LEFT,
+  'right': TokenType.RIGHT,
+  'pen': TokenType.PEN,
+  'up': TokenType.UP,
+  'down': TokenType.DOWN,
+  'layer': TokenType.LAYER,
+  // Web
+  'connect': TokenType.CONNECT,
+  'socket': TokenType.SOCKET,
+  'emit': TokenType.EMIT,
+  'cookie': TokenType.COOKIE,
+  'session': TokenType.SESSION,
+  'allow': TokenType.ALLOW,
+  'stream': TokenType.STREAM,
+  'client': TokenType.CLIENT,
+  // Testing
+  'mock': TokenType.MOCK,
+  'before': TokenType.BEFORE,
+  'after': TokenType.AFTER,
+  'snapshot': TokenType.SNAPSHOT,
+  'benchmark': TokenType.BENCHMARK,
+  'property': TokenType.PROPERTY,
+  'any': TokenType.ANY,
+  // DevEx
+  'watch': TokenType.WATCH,
+  'profile': TokenType.PROFILE,
+  'lint': TokenType.LINT,
+  'save': TokenType.SAVE,
+  'history': TokenType.HISTORY,
+  // Education
+  'visualize': TokenType.VISUALIZE,
+  'challenge': TokenType.CHALLENGE,
+  'grade': TokenType.GRADE,
+  'rubric': TokenType.RUBRIC,
 };

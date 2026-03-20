@@ -510,10 +510,28 @@ show Hello, World!
                 'into': { token: 'keyword', next: '@pop' },
                 'list': { token: 'type', next: '@pop' },
                 'map': { token: 'type', next: '@pop' },
-                'ask': { token: 'keyword', next: '@showLine' },
+                'ask': { token: 'keyword', next: '@askInPut' },
                 'pair': { token: 'keyword.connector', next: '@pop' },
                 'unique': { token: 'keyword.connector', next: '@pop' },
                 '@atoms': 'constant',
+                '@default': 'identifier',
+              }
+            }],
+            [/\s+/, 'white'],
+            [/$/, { token: '', next: '@pop' }],
+            [/./, 'identifier'],
+          ],
+
+          // After ask within put: literal prompt text until 'into'
+          // e.g. "put ask What is your name into name"
+          //       prompt text ^^^^^^^^^^^^^^^^ is plain identifiers
+          askInPut: [
+            [/\.[a-zA-Z_]\w*(?:\.[a-zA-Z_]\w*)*/, 'variable.interpolation'],
+            [/\(/, { token: '@brackets', next: '@showExpr' }],
+            [/"/, 'string', '@string'],
+            [/[a-zA-Z_]\w*/, {
+              cases: {
+                'into': { token: 'keyword', next: '@pop' },
                 '@default': 'identifier',
               }
             }],
